@@ -342,6 +342,7 @@
   <div class="intro-icon pi-anim">⚗️</div>
   <div class="logo">BreakingLab</div>
   <div class="logo-sub">El Duelo Molecular</div>
+  <div style="color:var(--mut);font-size:.72rem;letter-spacing:1px;margin-top:-.4rem">by Rafa Armero &amp; Tomás Aznar</div>
   <div style="display:flex;flex-direction:column;gap:.55rem;margin-top:1.2rem;align-items:center">
     <button class="btn" onclick="showScreen('names')">🚀 Iniciar Partida</button>
     <button class="btn sec" onclick="openRules()">📖 Ver Reglas</button>
@@ -350,14 +351,14 @@
 
 <!-- ═══ NAMES ═══ -->
 <div id="screen-names" class="screen">
-  <div class="names-box ai">
-    <h2>⚗️ Registro de Científicos</h2>
-    <p>Introduce los nombres de los dos jugadores.</p>
-    <div class="nf"><label class="c1">⚗ Jugador 1</label><input id="inp-p1" type="text" placeholder="Nombre Jugador 1" maxlength="20"/></div>
-    <div class="nf"><label class="c2">☠ Jugador 2</label><input id="inp-p2" type="text" placeholder="Nombre Jugador 2" maxlength="20"/></div>
-    <div style="display:flex;gap:.55rem;margin-top:.5rem">
-      <button class="btn" style="flex:1" onclick="startGame()">¡Comenzar!</button>
-      <button class="btn sec" onclick="showScreen('intro')">Volver</button>
+  <div class="names-box ai" style="position:relative">
+    <button class="btn sec" onclick="showScreen('intro')" style="position:absolute;top:.6rem;right:.6rem;padding:.25rem .6rem;font-size:.85rem;line-height:1;border-radius:8px;min-width:unset">✕</button>
+    <h2 style="margin-bottom:1.2rem">🔬 Registro de Laboratorios</h2>
+    <div class="nf"><label class="c1">Laboratorio 1</label><input id="inp-p1" type="text" placeholder="Nombre Laboratorio 1" maxlength="20"/></div>
+    <div class="nf"><label class="c2">Laboratorio 2</label><input id="inp-p2" type="text" placeholder="Nombre Laboratorio 2" maxlength="20"/></div>
+    <div id="names-error" style="color:var(--red);font-size:.75rem;min-height:1rem;margin-top:.3rem;text-align:center"></div>
+    <div style="margin-top:.5rem">
+      <button class="btn" style="width:100%" onclick="startGame()">¡A por el Nobel!</button>
     </div>
   </div>
 </div>
@@ -400,7 +401,7 @@
           <div class="cpile-lbl">Robar</div>
         </div>
         <div class="cpile disc" title="Pila de descarte compartida">
-          <div class="cpile-icon">♻️</div>
+          <div class="cpile-icon">🧪</div>
           <div class="cpile-cnt" id="disc-cnt">0</div>
           <div class="cpile-lbl">Descarte</div>
         </div>
@@ -806,9 +807,6 @@ function onDeckClick(p){
   if(G.phase==='build_p1'&&p!==0)return;
   if(G.phase==='build_p2'&&p!==1)return;
   if(!G.phase.startsWith('build'))return;
-  G.deckSize[p]=Math.max(0,G.deckSize[p]-1);
-  G.sharedDeck=Math.max(0,G.sharedDeck-1);
-  renderDecks();
   openBuildPanel(p);
 }
 
@@ -884,8 +882,12 @@ function rotateTable(toP2){
    GAME FLOW
 ════════════════════════════════ */
 function startGame(){
-  const n1=document.getElementById('inp-p1').value.trim()||'Jugador 1';
-  const n2=document.getElementById('inp-p2').value.trim()||'Jugador 2';
+  const n1=document.getElementById('inp-p1').value.trim();
+  const n2=document.getElementById('inp-p2').value.trim();
+  const err=document.getElementById('names-error');
+  if(!n1||!n2){err.textContent='Ambos laboratorios deben tener nombre.';return;}
+  if(n1.toLowerCase()===n2.toLowerCase()){err.textContent='Los nombres de los laboratorios no pueden ser iguales.';return;}
+  err.textContent='';
   initState(n1,n2);
   showScreen('game');
   rotateTable(false);
