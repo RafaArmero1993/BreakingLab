@@ -239,6 +239,8 @@
     .zone-empty .zi{font-size:clamp(.9rem,2.4vw,1.2rem);display:block;margin-bottom:3px;}
 
     .card-stack{position:relative;width:var(--cw);}
+    .pzone-cards{display:flex;gap:.4rem;align-items:center;justify-content:center;flex-wrap:wrap;width:100%;padding:0 .4rem;}
+    .zone-spells{display:flex;gap:.25rem;flex-wrap:wrap;align-items:flex-start;}
 
     /* ── Center row ── */
     .center-row{
@@ -384,7 +386,10 @@
       <div class="pzone" id="pzone2">
         <div class="pzone-lbl" id="pzlbl2">Zona rival</div>
         <div class="zone-empty" id="zempty2"><span class="zi">🔬</span>esperando…</div>
-        <div class="card-stack" id="stack2" style="display:none"></div>
+        <div class="pzone-cards">
+          <div class="card-stack" id="stack2" style="display:none"></div>
+          <div class="zone-spells" id="zspells2"></div>
+        </div>
       </div>
 
       <!-- Center: shared draw deck + shared discard -->
@@ -405,7 +410,10 @@
       <div class="pzone" id="pzone1">
         <div class="pzone-lbl" id="pzlbl1">Tu zona</div>
         <div class="zone-empty" id="zempty1"><span class="zi">⚗️</span>pulsa tu mazo para construir</div>
-        <div class="card-stack" id="stack1" style="display:none"></div>
+        <div class="pzone-cards">
+          <div class="card-stack" id="stack1" style="display:none"></div>
+          <div class="zone-spells" id="zspells1"></div>
+        </div>
       </div>
 
     </div><!-- .arena -->
@@ -460,18 +468,16 @@
   </div>
 </div>
 
-<!-- SPELL MODAL -->
-<div class="ov" id="ov-spells">
-  <div class="modal ai" style="max-width:560px">
-    <h2 id="sp-title">🔮 Hechizos</h2>
-    <p  id="sp-desc"></p>
-    <div class="sdesc" id="sp-hover">Toca una carta para ver su efecto.</div>
-    <div class="spell-grid" id="sp-grid"></div>
-    <div class="mbtns">
-      <button class="btn gold" id="btn-cast" onclick="castSpell()" style="display:none">✨ Lanzar Hechizo</button>
-      <button class="btn sec" onclick="passSpell()">Pasar turno</button>
-    </div>
+<!-- SPELL PANEL -->
+<div class="build-panel" id="spell-panel">
+  <div class="bp-handle"></div>
+  <div class="bp-react-row">
+    <span id="sp-panel-title" style="font-weight:700;font-size:.82rem"></span>
+    <button class="btn gold" id="btn-cast-panel" disabled style="opacity:.45;margin-left:auto" onclick="castSpell()">✨ Lanzar</button>
+    <button class="btn sec" onclick="passSpell()">Pasar →</button>
   </div>
+  <div class="sdesc" id="sp-hover-panel">Toca un hechizo para seleccionarlo.</div>
+  <div class="hand-row" id="sp-hand"></div>
 </div>
 
 <!-- RULES -->
@@ -582,7 +588,7 @@ let G={};
 function initState(n1,n2){
   G={round:1,names:[n1||'J1',n2||'J2'],an:[MAX_AN,MAX_AN],
      hands:[[],[]],spells:[[],[]],deckSize:[16,16],sharedDeck:32,discardSize:0,
-     build:[],mols:[null,null],phase:'build_p1',
+     build:[],mols:[null,null],phase:'build_p1',spellsInArena:[[],[]],
      attacker:0,spellTurn:0,spellPassed:[false,false],helioCast:[false,false],
      dmg:[0,0],selSpell:null,stats:{rounds:0,anLost:[0,0],spells:0}};
   dealHand(0);dealHand(1);
@@ -954,54 +960,94 @@ function showReveal(){
   setTimeout(()=>document.getElementById('ov-reveal').classList.add('open'),700);
 }
 
-function startSpellPhase(){
-  document.getElementById('ov-reveal').classList.remove('open');
-  G.phase='spells';G.helioCast=[false,false];G.spellPassed=[false,false];
-  G.spellTurn=1-G.attacker;openSpellModal(G.spellTurn);
+function renderZoneSpells(p){
+  const zs=document.getElementById('zspells'+(p+1));
+  if(!zs)return;
+  zs.innerHTML='';
+  (G.spellsInArena[p]||[]).forEach(sp=>{
+    const el=makeElemCard(sp,p,false,false);
+    el.classList.remove('clickable','dimmed');
+    zs.appendChild(el);
+  });
 }
 
-function openSpellModal(p){
+function startSpellPhase(){
+  document.getElementById('ov-reveal').classList.remove('open');
+  G.phase='spells';
+  G.helioCast=[false,false];
+  G.spellPassed=[false,false];
+  G.spellsInArena=[[],[]];
+  G.spellTurn=1-G.attacker; // defender goes first
+  openSpellPanel(G.spellTurn);
+}
+
+function openSpellPanel(p){
+  // DOM swap so this player's zone is at the bottom
+  if(p===1) rotateTable(true); else rotateTable(false);
+
+  G.selSpell=null;
+  const castBtn=document.getElementById('btn-cast-panel');
+  castBtn.disabled=true;castBtn.style.opacity='.45';
+  document.getElementById('sp-panel-title').textContent=
+    `🔮 ${G.names[p]} — ${p!==G.attacker?'Defensor':'Atacante'}`;
+  document.getElementById('sp-hover-panel').textContent='Toca un hechizo para seleccionarlo.';
+
+  const hand=document.getElementById('sp-hand');hand.innerHTML='';
   const rival=1-p;
-  document.getElementById('sp-title').textContent=`🔮 ${G.names[p]} — Hechizos`;
-  document.getElementById('sp-desc').textContent=p!==G.attacker?'Eres el defensor. Usa un hechizo o pasa.':'El defensor jugó. Contraataca o pasa.';
-  G.selSpell=null;document.getElementById('btn-cast').style.display='none';
-  document.getElementById('sp-hover').textContent='Toca una carta para ver su efecto.';
-  const grid=document.getElementById('sp-grid');grid.innerHTML='';
-  if(!G.spells[p].length){grid.innerHTML='<div style="color:var(--mut);font-size:.83rem">Sin hechizos disponibles.</div>';}
-  else{G.spells[p].forEach(sp=>{
-    if(G.helioCast[rival]&&sp.id==='He')return;
-    const el=makeElemCard(sp,p,false,false);
-    el.onmouseenter=()=>{document.getElementById('sp-hover').textContent=sp.name+': '+sp.eff;};
-    el.onclick=()=>{G.selSpell=sp.id;grid.querySelectorAll('.card').forEach(c=>c.classList.remove('sel'));el.classList.add('sel');document.getElementById('btn-cast').style.display='';document.getElementById('sp-hover').textContent=sp.name+': '+sp.eff;};
-    grid.appendChild(el);
-  });}
-  document.getElementById('ov-spells').classList.add('open');
+  const avail=G.spells[p].filter(sp=>!(G.helioCast[rival]&&sp.id==='He'));
+  if(!avail.length){
+    hand.innerHTML='<div class="no-mol-msg">Sin hechizos disponibles.</div>';
+  } else {
+    avail.forEach(sp=>{
+      const el=makeElemCard(sp,p,false,false);
+      el.onclick=()=>{
+        G.selSpell=sp.id;
+        hand.querySelectorAll('.card').forEach(c=>c.classList.remove('sel'));
+        el.classList.add('sel');
+        castBtn.disabled=false;castBtn.style.opacity='1';
+        document.getElementById('sp-hover-panel').textContent=sp.name+': '+sp.eff;
+      };
+      hand.appendChild(el);
+    });
+  }
+  document.getElementById('spell-panel').classList.add('open');
 }
 
 function castSpell(){
   const id=G.selSpell;if(!id)return;
   const p=G.spellTurn,sp=G.spells[p].find(s=>s.id===id);if(!sp)return;
-  G.spells[p]=G.spells[p].filter(s=>s.id!==id);G.discardSize++;G.stats.spells++;
+  G.spells[p]=G.spells[p].filter(s=>s.id!==id);
+  G.discardSize++;G.stats.spells++;
   const rival=1-p;
   if(sp.id==='Pb')G.dmg[p]=Math.max(0,G.dmg[p]-4);
   else if(sp.id==='He'){G.dmg[rival]+=3;G.helioCast[p]=true;}
-  G.spellPassed[p]=false;renderDecks();
-  document.getElementById('ov-spells').classList.remove('open');
+  G.spellPassed[p]=false;
+  G.spellsInArena[p].push(sp);
+  renderZoneSpells(p);
+  renderDecks();
+  document.getElementById('spell-panel').classList.remove('open');
   G.spellTurn=rival;
-  if(G.spellPassed[rival]||!G.spells[rival].length||G.helioCast[p])setTimeout(resolveCombat,500);
-  else setTimeout(()=>openSpellModal(rival),500);
+  if(G.spellPassed[rival]||!G.spells[rival].length||G.helioCast[p]){
+    setTimeout(resolveCombat,600);
+  } else {
+    setTimeout(()=>openSpellPanel(rival),500);
+  }
 }
 
 function passSpell(){
-  const p=G.spellTurn;G.spellPassed[p]=true;
-  document.getElementById('ov-spells').classList.remove('open');
+  const p=G.spellTurn;
+  G.spellPassed[p]=true;
+  document.getElementById('spell-panel').classList.remove('open');
   const rival=1-p;G.spellTurn=rival;
-  if(G.spellPassed[rival]||!G.spells[rival].length)resolveCombat();
-  else setTimeout(()=>openSpellModal(rival),400);
+  if(G.spellPassed[rival]||!G.spells[rival].length){
+    resolveCombat();
+  } else {
+    setTimeout(()=>openSpellPanel(rival),400);
+  }
 }
 
 function resolveCombat(){
-  document.getElementById('ov-spells').classList.remove('open');
+  document.getElementById('spell-panel').classList.remove('open');
   for(let p=0;p<2;p++){if(G.dmg[p]>0){const l=Math.max(1,Math.floor(G.dmg[p]/2));G.an[p]=Math.max(0,G.an[p]-l);G.stats.anLost[p]+=l;}}
   G.stats.rounds++;
   renderStrip(0);renderStrip(1);
@@ -1010,7 +1056,9 @@ function resolveCombat(){
 }
 
 function nextRound(){
-  G.round++;G.mols=[null,null];G.dmg=[0,0];
+  G.round++;G.mols=[null,null];G.dmg=[0,0];G.spellsInArena=[[],[]];
+  document.getElementById('zspells1').innerHTML='';
+  document.getElementById('zspells2').innerHTML='';
   for(let p=0;p<2;p++){
     const fr=shuffle(ELEMENTS).slice(0,3).map(e=>({...e}));
     G.hands[p]=[...G.hands[p],...fr].slice(0,7);
