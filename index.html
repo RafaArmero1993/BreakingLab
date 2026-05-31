@@ -283,27 +283,20 @@
       position:fixed;bottom:0;left:0;right:0;
       background:var(--panel);border-top:2px solid var(--brd);
       border-radius:22px 22px 0 0;
-      padding:.85rem .95rem 1.4rem;
+      padding:.7rem .9rem 1.3rem;
       z-index:90;transform:translateY(100%);
       transition:transform .35s cubic-bezier(.4,0,.2,1);
-      max-height:80vh;overflow-y:auto;
+      max-height:82vh;overflow-y:auto;
       box-shadow:0 -6px 30px rgba(91,106,240,.15);
     }
     .build-panel.open{transform:translateY(0);}
-    .bp-handle{width:36px;height:5px;background:var(--brd);border-radius:3px;margin:0 auto .65rem;}
-    .bp-top{font-size:.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--mut);margin-bottom:.5rem;display:flex;justify-content:space-between;align-items:center;font-weight:700;}
-    .build-row{display:flex;gap:.35rem;flex-wrap:wrap;min-height:40px;align-items:center;margin-bottom:.45rem;background:var(--felt);border-radius:10px;padding:.5rem .6rem;}
-    .bchip{background:#fff;border:2px solid var(--brd);border-radius:8px;padding:.24rem .48rem;font-size:.8rem;font-weight:700;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;align-items:center;box-shadow:0 2px 6px rgba(91,106,240,.1);}
-    .bchip:hover{background:var(--red);border-color:var(--red);color:#fff;}
-    .bchip .bs{font-size:.86rem;}
-    .bchip .bl{font-size:.38rem;color:var(--mut);}
-    .bchip:hover .bl{color:rgba(255,255,255,.7);}
-    .build-acts{display:flex;gap:.45rem;align-items:center;flex-wrap:wrap;margin-top:.35rem;}
-    .mprev{margin-left:auto;font-size:.72rem;color:var(--acc);font-weight:800;}
+    .bp-handle{width:36px;height:5px;background:var(--brd);border-radius:3px;margin:0 auto .55rem;}
+    .bp-react-row{display:flex;align-items:center;gap:.6rem;margin-bottom:.55rem;}
+    .mprev{font-size:.72rem;font-weight:800;color:var(--mut);}
     .mprev.valid{color:var(--ok);}
     .mprev.invalid{color:var(--red);}
-    .hand-row{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.55rem;padding-bottom:.3rem;}
-    .hand-section-lbl{font-size:.58rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--mut);margin:.5rem 0 .22rem;font-weight:700;}
+    .hand-row{display:flex;gap:.4rem;flex-wrap:wrap;padding-bottom:.3rem;}
+    .hand-section-lbl{font-size:.6rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--mut);margin:.6rem 0 .25rem;font-weight:700;}
 
     /* ════════════════════════════════════
        MODALS
@@ -434,20 +427,12 @@
 <!-- BUILD PANEL -->
 <div class="build-panel" id="build-panel">
   <div class="bp-handle"></div>
-  <div class="bp-top">
-    <span>🧬 Construyendo — <span id="bp-pname"></span></span>
-    <button class="btn sm sec" onclick="closeBuildPanel()">✕</button>
-  </div>
-  <div class="hand-section-lbl">Seleccionados (toca para quitar):</div>
-  <div class="build-row" id="build-row"></div>
-  <div class="build-acts">
-    <button class="btn sm" onclick="confirmBuild()" id="btn-confirm">✅ Construir</button>
-    <button class="btn sm sec" onclick="clearBuild()">🗑 Limpiar</button>
+  <div class="bp-react-row">
+    <button class="btn" id="btn-confirm" onclick="confirmBuild()" disabled style="opacity:.45">⚡ Reaccionar</button>
     <div class="mprev" id="mprev"></div>
   </div>
-  <div class="hand-section-lbl">Elementos disponibles:</div>
   <div class="hand-row" id="hand-cards"></div>
-  <div class="hand-section-lbl" id="spell-section-lbl" style="display:none">Hechizos:</div>
+  <div class="hand-section-lbl" id="spell-section-lbl" style="display:none">🔮 Hechizos:</div>
   <div class="hand-row" id="spell-cards"></div>
 </div>
 
@@ -526,13 +511,18 @@ function matchMol(elems){
 }
 
 /* Given a set of already-selected element ids, which extra ids can still
-   lead to a valid molecule? Returns Set of element ids that are useful. */
+   lead to a valid molecule? Returns Set of element ids that are useful.
+   Special rule: U is always usable alone (solo attack), but once U is
+   selected nothing else can be added. */
 function usableIds(selectedIds){
+  // If U already selected, nothing else can be added
+  if(selectedIds.includes('U')) return new Set();
   const useful = new Set();
+  // U is always selectable on its own when nothing is selected yet
+  if(selectedIds.length === 0) useful.add('U');
   for(const mol of VALID_MOLECULES){
     const molSorted = sortIds(mol.ids);
     const selSorted = sortIds(selectedIds);
-    // selSorted must be a sub-multiset of molSorted
     const remaining = [...molSorted];
     let ok = true;
     for(const id of selSorted){
@@ -595,6 +585,8 @@ function buildMol(elems){
   const bD = elems.reduce((s,x)=>s+x.def,0);
   const hasU = elems.some(x=>x.id==='U');
   if(m) return {name:m.name,formula:m.formula,atk:m.atk,def:m.def,combo:true,hasU,valid:true};
+  // Uranium solo: valid as standalone attack (no molecule bonus)
+  if(elems.length===1 && hasU) return {name:'Uranio',formula:'U',atk:bA,def:bD,combo:false,hasU,valid:true};
   return {name:'Compuesto',formula:elems.map(x=>x.sym).join(''),atk:bA,def:bD,combo:false,hasU,valid:false};
 }
 
@@ -728,7 +720,6 @@ function renderHand(p){
   const hc=document.getElementById('hand-cards');hc.innerHTML='';
   G.hands[p].forEach(card=>{
     const inBuild = G.build.includes(card);
-    // dim if not in build AND not useful AND not already selected
     const dimmed = !inBuild && !useful.has(card.id);
     hc.appendChild(makeElemCard(card,p,inBuild,dimmed));
   });
@@ -737,41 +728,28 @@ function renderHand(p){
   const slbl=document.getElementById('spell-section-lbl');
   if(G.spells[p].length){
     slbl.style.display='';
-    G.spells[p].forEach(card=>{
-      const el=makeElemCard(card,p,false,false);
-      el.classList.remove('dimmed');
-      sc.appendChild(el);
-    });
+    G.spells[p].forEach(card=>{sc.appendChild(makeElemCard(card,p,false,false));});
   } else {
     slbl.style.display='none';
   }
-}
 
-function renderBuildRow(){
-  const r=document.getElementById('build-row');r.innerHTML='';
+  // Update Reaccionar button
   const confirmBtn=document.getElementById('btn-confirm');
-  if(!G.build.length){
-    const s=document.createElement('span');s.style.cssText='color:var(--mut);font-size:.72rem';
-    s.textContent='Toca un elemento para añadirlo…';r.appendChild(s);
-    document.getElementById('mprev').textContent='';
-    confirmBtn.disabled=true;confirmBtn.style.opacity='.5';
-    return;
-  }
-  G.build.forEach(e=>{
-    const d=document.createElement('div');d.className='bchip';
-    d.innerHTML=`<span class="bs">${e.sym}</span><span class="bl">${e.name}</span>`;
-    d.onclick=()=>toggleSelect(e,G.phase==='build_p1'?0:1);r.appendChild(d);
-  });
-  const pv=buildMol(G.build);
   const prev=document.getElementById('mprev');
-  if(pv.valid){
-    prev.className='mprev valid';
-    prev.textContent=`✅ ${pv.formula} ⚔${pv.atk} 🛡${pv.def}`;
-    confirmBtn.disabled=false;confirmBtn.style.opacity='1';
+  if(!G.build.length){
+    confirmBtn.disabled=true;confirmBtn.style.opacity='.45';
+    prev.textContent='';prev.className='mprev';
   } else {
-    prev.className='mprev invalid';
-    prev.textContent=`⚠ No válida`;
-    confirmBtn.disabled=true;confirmBtn.style.opacity='.5';
+    const pv=buildMol(G.build);
+    if(pv.valid){
+      confirmBtn.disabled=false;confirmBtn.style.opacity='1';
+      prev.className='mprev valid';
+      prev.textContent=`✅ ${pv.formula} ⚔${pv.atk} 🛡${pv.def}`;
+    } else {
+      confirmBtn.disabled=true;confirmBtn.style.opacity='.45';
+      prev.className='mprev invalid';
+      prev.textContent=`⚠ Combinación no válida`;
+    }
   }
 }
 
@@ -780,17 +758,14 @@ function toggleSelect(card,p){
   if(idx>-1) G.build.splice(idx,1);
   else G.build.push(card);
   renderStack(p,G.build.length);
-  renderBuildRow();
   renderHand(p);
 }
-function clearBuild(){const p=G.phase==='build_p1'?0:1;G.build=[];renderStack(p,0);renderBuildRow();renderHand(p);}
 
 /* ════════════════════════════════
    BUILD PANEL
 ════════════════════════════════ */
 function openBuildPanel(p){
-  document.getElementById('bp-pname').textContent=G.names[p];
-  renderBuildRow();renderHand(p);
+  renderHand(p);
   document.getElementById('build-panel').classList.add('open');
 }
 function closeBuildPanel(){document.getElementById('build-panel').classList.remove('open');}
