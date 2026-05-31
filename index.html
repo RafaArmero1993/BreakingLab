@@ -3,1171 +3,1144 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BreakingLab — El Juego</title>
+  <title>BreakingLab — El Duelo Molecular</title>
   <style>
     :root {
-      --bg: #0d0f1a;
-      --panel: #141829;
-      --card: #1c2138;
-      --card-hover: #242b47;
+      --bg: #0b0d18;
+      --panel: #12152a;
+      --card-bg: #181c35;
+      --card-border: #2a3060;
       --accent: #00e5ff;
       --accent2: #7c4dff;
       --danger: #ff4757;
       --success: #2ed573;
       --gold: #ffd32a;
-      --text: #e0e6f0;
-      --muted: #606880;
-      --border: #2a3050;
+      --text: #dde4f5;
+      --muted: #5a647a;
+      --border: #252a45;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
+    body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
 
-    /* ── SCREEN MANAGER ── */
     .screen { display: none; }
     .screen.active { display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
 
-    /* ══════════════════════════════════
-       INTRO SCREEN
-    ══════════════════════════════════ */
-    #screen-intro {
-      justify-content: center;
-      background: radial-gradient(ellipse at 50% 40%, #1a1f3a 0%, var(--bg) 70%);
-    }
-    .intro-logo {
-      font-size: 4rem;
-      font-weight: 900;
-      letter-spacing: -2px;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin-bottom: 0.25rem;
-    }
-    .intro-sub {
-      color: var(--muted);
-      font-size: 1rem;
-      margin-bottom: 3rem;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-    }
-    .intro-atoms {
-      font-size: 3rem;
-      margin-bottom: 2rem;
-    }
+    /* ── BUTTONS ── */
     .btn {
       background: linear-gradient(135deg, var(--accent), var(--accent2));
-      border: none;
-      color: #fff;
-      font-size: 1.1rem;
-      font-weight: 700;
-      padding: 0.85rem 2.5rem;
-      border-radius: 50px;
-      cursor: pointer;
-      letter-spacing: 1px;
-      transition: opacity .2s, transform .15s;
+      border: none; color: #fff; font-size: 1rem; font-weight: 700;
+      padding: 0.8rem 2.2rem; border-radius: 50px; cursor: pointer;
+      letter-spacing: .5px; transition: opacity .2s, transform .15s;
     }
     .btn:hover { opacity: .85; transform: translateY(-2px); }
-    .btn:active { transform: translateY(0); }
-    .btn.secondary {
-      background: transparent;
-      border: 2px solid var(--border);
-      color: var(--muted);
-      font-size: 0.9rem;
-      padding: 0.6rem 1.8rem;
-      margin-top: 0.75rem;
-    }
-    .btn.danger { background: linear-gradient(135deg, #ff4757, #c0392b); }
-    .btn.gold { background: linear-gradient(135deg, #ffd32a, #ff9f43); color: #222; }
-    .btn.small { font-size: .85rem; padding: 0.5rem 1.2rem; }
+    .btn.secondary { background: transparent; border: 2px solid var(--border); color: var(--muted); }
+    .btn.gold { background: linear-gradient(135deg, var(--gold), #ff9f43); color: #111; }
+    .btn.danger { background: linear-gradient(135deg, var(--danger), #c0392b); }
+    .btn.small { font-size: .8rem; padding: 0.5rem 1.2rem; }
 
-    /* ══════════════════════════════════
-       GAME SCREEN
-    ══════════════════════════════════ */
-    #screen-game {
-      padding: 0;
+    /* ══════════════════════════════
+       INTRO
+    ══════════════════════════════ */
+    #screen-intro {
+      justify-content: center; gap: 1.5rem;
+      background: radial-gradient(ellipse at 50% 35%, #1a2040 0%, var(--bg) 70%);
+    }
+    .logo { font-size: 3.5rem; font-weight: 900; letter-spacing: -2px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .logo-sub { color: var(--muted); letter-spacing: 4px; text-transform: uppercase; font-size: .85rem; }
+
+    /* ══════════════════════════════
+       NAME INPUT
+    ══════════════════════════════ */
+    #screen-names {
+      justify-content: center; gap: 1.5rem;
+      background: radial-gradient(ellipse at 50% 35%, #1a2040 0%, var(--bg) 70%);
+    }
+    .names-box {
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: 20px; padding: 2.5rem; width: 400px; max-width: 90vw;
+    }
+    .names-box h2 { font-size: 1.4rem; margin-bottom: 0.5rem; text-align: center; }
+    .names-box p { color: var(--muted); font-size: .85rem; text-align: center; margin-bottom: 2rem; }
+    .name-field { display: flex; flex-direction: column; gap: .4rem; margin-bottom: 1.2rem; }
+    .name-field label { font-size: .75rem; text-transform: uppercase; letter-spacing: 2px; color: var(--muted); }
+    .name-field input {
+      background: var(--card-bg); border: 1.5px solid var(--card-border); color: var(--text);
+      font-size: 1rem; padding: 0.65rem 1rem; border-radius: 10px; outline: none;
+      transition: border-color .2s;
+    }
+    .name-field input:focus { border-color: var(--accent); }
+    .player1-label { color: var(--accent); }
+    .player2-label { color: var(--danger); }
+
+    /* ══════════════════════════════
+       PASS-DEVICE SCREEN
+    ══════════════════════════════ */
+    #screen-pass {
+      justify-content: center; gap: 1rem;
       background: var(--bg);
     }
+    .pass-box {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 20px;
+      padding: 3rem 2rem; text-align: center; max-width: 380px;
+    }
+    .pass-icon { font-size: 4rem; margin-bottom: 1rem; }
+    .pass-box h2 { font-size: 1.6rem; margin-bottom: .5rem; }
+    .pass-box p { color: var(--muted); margin-bottom: 2rem; font-size: .9rem; }
+
+    /* ══════════════════════════════
+       GAME SCREEN
+    ══════════════════════════════ */
+    #screen-game { padding: 0; background: var(--bg); }
     .game-layout {
       display: grid;
-      grid-template-rows: auto 1fr auto 1fr auto;
-      width: 100%;
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 1rem;
-      gap: 0.6rem;
-      min-height: 100vh;
+      grid-template-rows: auto auto 1fr auto 1fr auto auto;
+      width: 100%; max-width: 1140px; margin: 0 auto;
+      padding: .75rem; gap: .5rem; min-height: 100vh;
     }
 
-    /* ── HEADER / STATUS ── */
+    /* ── HEADER ── */
     .game-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0.5rem 0.75rem;
-      background: var(--panel);
-      border-radius: 12px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: .5rem .75rem; background: var(--panel); border-radius: 12px;
       border: 1px solid var(--border);
     }
-    .player-info { display: flex; align-items: center; gap: 0.75rem; }
-    .avatar {
-      width: 36px; height: 36px;
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.2rem;
-      font-weight: 900;
-    }
-    .avatar.player { background: linear-gradient(135deg, var(--accent), #0056b3); }
-    .avatar.enemy  { background: linear-gradient(135deg, var(--danger), #7f0000); }
-    .hp-bar-wrap { display: flex; flex-direction: column; gap: 2px; }
-    .hp-label { font-size: 0.7rem; color: var(--muted); }
-    .hp-bar { width: 120px; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
-    .hp-fill { height: 100%; border-radius: 4px; transition: width .4s ease; }
-    .hp-fill.player { background: linear-gradient(90deg, var(--success), #1dd1a1); }
-    .hp-fill.enemy  { background: linear-gradient(90deg, var(--danger), #ff6b81); }
-    .hp-num { font-size: 0.75rem; color: var(--text); font-weight: 700; }
+    .player-info { display: flex; align-items: center; gap: .75rem; }
+    .avatar { width: 38px; height: 38px; border-radius: 50%; display: flex;
+      align-items: center; justify-content: center; font-size: 1.1rem; font-weight: 900; }
+    .avatar.p1 { background: linear-gradient(135deg, var(--accent), #0056b3); }
+    .avatar.p2 { background: linear-gradient(135deg, var(--danger), #7f0000); }
+    .hp-wrap { display: flex; flex-direction: column; gap: 2px; }
+    .hp-label { font-size: .68rem; color: var(--muted); }
+    .hp-bar { width: 110px; height: 7px; background: var(--border); border-radius: 4px; overflow: hidden; }
+    .hp-fill { height: 100%; border-radius: 4px; transition: width .4s; }
+    .hp-fill.p1 { background: linear-gradient(90deg, var(--success), #1dd1a1); }
+    .hp-fill.p2 { background: linear-gradient(90deg, var(--danger), #ff6b81); }
     .phase-badge {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 0.35rem 1rem;
-      font-size: 0.8rem;
-      color: var(--accent);
-      font-weight: 700;
-      letter-spacing: 1px;
-      text-transform: uppercase;
+      background: var(--card-bg); border: 1px solid var(--border); border-radius: 20px;
+      padding: .3rem .9rem; font-size: .75rem; color: var(--accent); font-weight: 700;
+      letter-spacing: 1px; text-transform: uppercase;
     }
-    .round-label { font-size: 0.7rem; color: var(--muted); text-align: center; }
+    .round-lbl { font-size: .65rem; color: var(--muted); text-align: center; }
 
-    /* ── FIELD ZONES ── */
-    .field-zone {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.75rem;
-      min-height: 120px;
+    /* ── ANALYSTS ── */
+    .analysts-row {
+      display: flex; align-items: center; gap: .5rem; padding: .4rem .75rem;
+      background: var(--panel); border-radius: 10px; border: 1px solid var(--border);
     }
-    .molecule-slot {
-      width: 120px; min-height: 110px;
-      border: 2px dashed var(--border);
-      border-radius: 12px;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      padding: 0.5rem;
-      transition: border-color .3s;
-      position: relative;
+    .analysts-row .ar-label { font-size: .65rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-right: .25rem; }
+    .analyst {
+      width: 34px; height: 34px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
+      border: 2px solid transparent; transition: all .3s;
     }
-    .molecule-slot.occupied { border-color: var(--accent); border-style: solid; }
-    .molecule-slot.enemy-slot { border-color: var(--danger); }
-    .molecule-slot.enemy-slot.occupied { border-color: var(--danger); }
-    .molecule-slot .mol-name { font-size: 0.8rem; font-weight: 700; color: var(--accent); margin-bottom: 4px; }
-    .molecule-slot .mol-formula { font-size: 1.1rem; font-weight: 900; margin-bottom: 6px; }
-    .molecule-slot .mol-stats { display: flex; gap: 8px; font-size: 0.7rem; }
-    .stat-atk { color: var(--danger); font-weight: 700; }
-    .stat-def { color: var(--success); font-weight: 700; }
-    .mol-face-down {
-      display: flex; flex-direction: column; align-items: center; gap: 4px;
-      color: var(--muted);
-    }
-    .mol-face-down .fd-icon { font-size: 2rem; }
-    .mol-face-down .fd-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; }
-    .vs-badge {
-      font-size: 1.4rem; font-weight: 900;
-      color: var(--gold);
-      text-shadow: 0 0 20px #ffd32a88;
-    }
+    .analyst.active.p1 { background: #0d2a3a; border-color: var(--accent); }
+    .analyst.active.p2 { background: #2a0d0d; border-color: var(--danger); }
+    .analyst.dead { background: var(--border); filter: grayscale(1) opacity(.4); border-color: transparent; }
 
-    /* ── BUILD ZONE ── */
+    /* ── FIELD ── */
+    .field-row {
+      display: flex; align-items: center; justify-content: center; gap: 1rem; min-height: 110px;
+    }
+    .mol-slot {
+      width: 130px; min-height: 110px;
+      background: var(--card-bg); border: 2px dashed var(--border); border-radius: 14px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: .5rem; transition: border-color .3s;
+    }
+    .mol-slot.built { border-style: solid; }
+    .mol-slot.built.p1 { border-color: var(--accent); }
+    .mol-slot.built.p2 { border-color: var(--danger); }
+    .mol-slot .ms-formula { font-size: 1.2rem; font-weight: 900; margin-bottom: 3px; }
+    .mol-slot .ms-name { font-size: .72rem; color: var(--muted); margin-bottom: 5px; }
+    .mol-slot .ms-stats { display: flex; gap: 8px; font-size: .72rem; }
+    .ms-atk { color: var(--danger); font-weight: 700; }
+    .ms-def { color: var(--success); font-weight: 700; }
+    .ms-face-down { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--muted); }
+    .ms-face-down .fdicon { font-size: 1.8rem; }
+    .ms-face-down .fdlbl { font-size: .6rem; text-transform: uppercase; letter-spacing: 1px; }
+    .vs-badge { font-size: 1.3rem; font-weight: 900; color: var(--gold); text-shadow: 0 0 20px #ffd32a66; }
+
+    /* ── BUILD AREA ── */
     .build-area {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 0.75rem 1rem;
+      background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
+      padding: .65rem .85rem;
     }
-    .build-label {
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      color: var(--muted);
-      margin-bottom: 0.5rem;
+    .section-label { font-size: .65rem; text-transform: uppercase; letter-spacing: 2px; color: var(--muted); margin-bottom: .45rem; }
+    .build-slots { display: flex; gap: .4rem; flex-wrap: wrap; min-height: 52px; align-items: center; }
+    .build-chip {
+      background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px;
+      padding: .3rem .6rem; font-size: .82rem; font-weight: 700; cursor: pointer;
+      transition: background .15s; display: flex; flex-direction: column; align-items: center;
     }
-    .build-slots {
-      display: flex;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-      min-height: 60px;
-      align-items: center;
-    }
-    .build-elem {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 0.4rem 0.6rem;
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: var(--text);
-      cursor: pointer;
-      transition: background .15s;
-      display: flex; flex-direction: column; align-items: center; gap: 1px;
-    }
-    .build-elem:hover { background: var(--danger); border-color: var(--danger); }
-    .build-elem .be-sym { font-size: 1rem; }
-    .build-elem .be-name { font-size: 0.55rem; color: var(--muted); }
-    .build-actions {
-      display: flex;
-      gap: 0.5rem;
-      margin-top: 0.6rem;
-      align-items: center;
-    }
-    .mol-preview {
-      margin-left: auto;
-      font-size: 0.8rem;
-      color: var(--accent);
-      font-weight: 700;
-    }
+    .build-chip:hover { background: var(--danger); border-color: var(--danger); }
+    .build-chip .bc-sym { font-size: .95rem; }
+    .build-chip .bc-lbl { font-size: .5rem; color: var(--muted); }
+    .build-actions { display: flex; gap: .5rem; margin-top: .5rem; align-items: center; flex-wrap: wrap; }
+    .mol-preview-lbl { margin-left: auto; font-size: .78rem; color: var(--accent); font-weight: 700; }
 
     /* ── HAND ── */
     .hand-area {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 0.75rem 1rem;
+      background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
+      padding: .65rem .85rem;
     }
     .hand-label {
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      color: var(--muted);
-      margin-bottom: 0.5rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      font-size: .65rem; text-transform: uppercase; letter-spacing: 2px; color: var(--muted);
+      margin-bottom: .5rem; display: flex; justify-content: space-between;
     }
-    .hand-cards {
-      display: flex;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-    }
+    .hand-cards { display: flex; gap: .55rem; flex-wrap: wrap; }
 
-    /* ── ELEMENT CARD ── */
+    /* ══════════════════════════════
+       ELEMENT CARD — NEW DESIGN
+    ══════════════════════════════ */
     .elem-card {
-      width: 68px; height: 90px;
-      background: var(--card);
-      border: 2px solid var(--border);
-      border-radius: 10px;
+      width: 100px; min-height: 145px;
+      background: var(--card-bg);
+      border: 2px solid var(--card-border);
+      border-radius: 13px;
       cursor: pointer;
       transition: transform .15s, border-color .15s, box-shadow .15s;
       display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      padding: 0.4rem;
       position: relative;
       user-select: none;
+      overflow: hidden;
     }
     .elem-card:hover {
-      transform: translateY(-6px);
+      transform: translateY(-7px);
       border-color: var(--accent);
-      box-shadow: 0 8px 24px #00e5ff30;
+      box-shadow: 0 10px 28px #00e5ff28;
     }
     .elem-card.selected {
       border-color: var(--accent2);
-      background: #1e1545;
-      box-shadow: 0 0 16px #7c4dff50;
+      background: #1c1840;
+      box-shadow: 0 0 18px #7c4dff55;
     }
-    .elem-card.spell-card {
-      background: #1a1030;
-      border-color: var(--accent2);
-    }
-    .elem-card.spell-card:hover {
-      border-color: var(--gold);
-      box-shadow: 0 8px 24px #ffd32a30;
-    }
-    .ec-num { font-size: 0.6rem; color: var(--muted); align-self: flex-start; margin-left: 2px; }
-    .ec-sym { font-size: 1.6rem; font-weight: 900; line-height: 1; }
-    .ec-name { font-size: 0.5rem; color: var(--muted); text-align: center; }
-    .ec-stats { display: flex; gap: 4px; margin-top: 3px; }
-    .ec-atk { font-size: 0.55rem; color: var(--danger); font-weight: 700; }
-    .ec-def { font-size: 0.55rem; color: var(--success); font-weight: 700; }
-    .ec-type {
-      position: absolute; top: 3px; right: 3px;
-      font-size: 0.5rem;
-      padding: 1px 4px;
-      border-radius: 4px;
-      font-weight: 700;
-      text-transform: uppercase;
-    }
-    .type-nonmetal { background: #0d3b26; color: var(--success); }
-    .type-metal    { background: #2d1f00; color: var(--gold); }
-    .type-noble    { background: #1a0a2e; color: var(--accent2); }
-    .type-spell    { background: #2a0a3e; color: #e040fb; }
+    .elem-card.spell-card { border-color: #4a2080; background: #14102a; }
+    .elem-card.spell-card:hover { border-color: var(--gold); box-shadow: 0 10px 28px #ffd32a28; }
+    .elem-card.uranium-card { border-color: #2a5a00; background: #0e1a05; }
+    .elem-card.uranium-card:hover { border-color: #7fff00; box-shadow: 0 10px 28px #7fff0028; }
 
-    /* ── COMBAT MODAL ── */
+    /* Stats — top right */
+    .ec-stats-corner {
+      position: absolute; top: 5px; right: 5px;
+      display: flex; flex-direction: column; align-items: flex-end; gap: 1px;
+    }
+    .ec-atk { font-size: .6rem; color: var(--danger); font-weight: 900; background: #1a0a0a; padding: 1px 4px; border-radius: 4px; }
+    .ec-def { font-size: .6rem; color: var(--success); font-weight: 900; background: #0a1a0a; padding: 1px 4px; border-radius: 4px; }
+
+    /* Atomic number — top left */
+    .ec-num { position: absolute; top: 5px; left: 7px; font-size: .58rem; color: var(--muted); }
+
+    /* Symbol area */
+    .ec-symbol-area {
+      display: flex; align-items: center; justify-content: center;
+      padding: 1.6rem 0 .5rem;
+      min-height: 70px;
+    }
+    .ec-sym-img {
+      width: 44px; height: 44px; border-radius: 8px;
+      background: var(--border); display: flex; align-items: center; justify-content: center;
+      font-size: 1.7rem; font-weight: 900; line-height: 1;
+      /* Will be replaced by actual img when PNGs are uploaded */
+      overflow: hidden;
+    }
+    .ec-sym-img img { width: 100%; height: 100%; object-fit: contain; }
+
+    /* Descriptions */
+    .ec-desc-area {
+      border-top: 1px solid var(--border);
+      padding: .4rem .5rem;
+      display: flex; flex-direction: column; gap: .2rem;
+      flex: 1;
+    }
+    .ec-effect-text {
+      font-size: .58rem; color: var(--text); line-height: 1.35;
+      font-weight: 600;
+    }
+    .ec-info-text {
+      font-size: .52rem; color: var(--muted); line-height: 1.3;
+      border-top: 1px solid var(--border); padding-top: .25rem; margin-top: .15rem;
+    }
+
+    /* type chip */
+    .ec-type-chip {
+      font-size: .48rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
+      padding: 1px 5px; border-radius: 3px; align-self: flex-start; margin-top: 2px;
+    }
+    .type-nonmetal { background: #0a2a18; color: #2ed573; }
+    .type-spell    { background: #1a0a30; color: #e040fb; }
+    .type-radioactive { background: #1a2a00; color: #aaff00; }
+    .type-noble    { background: #0a0a2a; color: var(--accent); }
+
+    /* ── LOG ── */
+    .log-bar {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+      padding: .4rem .7rem; font-size: .72rem; color: var(--muted); max-height: 65px; overflow-y: auto;
+      line-height: 1.6;
+    }
+    .log-entry.imp  { color: var(--accent); }
+    .log-entry.bad  { color: var(--danger); }
+    .log-entry.good { color: var(--success); }
+    .log-entry.spell{ color: #e040fb; }
+
+    /* ══════════════════════════════
+       OVERLAYS
+    ══════════════════════════════ */
     .overlay {
-      position: fixed; inset: 0;
-      background: #00000099;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 100;
+      position: fixed; inset: 0; background: #000000aa;
+      display: none; align-items: center; justify-content: center; z-index: 100;
     }
     .overlay.active { display: flex; }
     .modal {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 2rem;
-      max-width: 540px;
-      width: 90%;
-      text-align: center;
+      background: var(--panel); border: 1px solid var(--border); border-radius: 20px;
+      padding: 2rem; max-width: 540px; width: 92%; text-align: center;
     }
-    .modal h2 { font-size: 1.4rem; margin-bottom: 0.5rem; }
-    .modal p { color: var(--muted); font-size: 0.9rem; margin-bottom: 1.25rem; line-height: 1.5; }
-    .combat-summary {
-      background: var(--card);
-      border-radius: 12px;
-      padding: 1rem;
-      margin: 1rem 0;
-      text-align: left;
+    .modal h2 { font-size: 1.35rem; margin-bottom: .5rem; }
+    .modal p  { color: var(--muted); font-size: .88rem; margin-bottom: 1.2rem; line-height: 1.5; }
+    .combat-box {
+      background: var(--card-bg); border-radius: 12px; padding: .9rem; margin: .9rem 0; text-align: left;
     }
-    .combat-row {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.85rem;
-      padding: 0.3rem 0;
-      border-bottom: 1px solid var(--border);
+    .c-row {
+      display: flex; justify-content: space-between; font-size: .83rem;
+      padding: .28rem 0; border-bottom: 1px solid var(--border);
     }
-    .combat-row:last-child { border-bottom: none; font-weight: 700; font-size: 1rem; }
-    .combat-row .val { color: var(--accent); }
-    .combat-row .val.bad { color: var(--danger); }
-    .modal-btns { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; }
+    .c-row:last-child { border: none; font-weight: 700; font-size: .95rem; }
+    .c-row .cv { color: var(--accent); }
+    .c-row .cv.bad { color: var(--danger); }
+    .modal-btns { display: flex; gap: .7rem; justify-content: center; flex-wrap: wrap; margin-top: .75rem; }
 
-    /* ── SPELL MODAL ── */
-    .spell-hand {
-      display: flex;
-      gap: 0.75rem;
-      flex-wrap: wrap;
-      justify-content: center;
-      margin: 1rem 0;
-    }
-    .spell-desc {
-      background: var(--card);
-      border-radius: 10px;
-      padding: 0.75rem;
-      font-size: 0.8rem;
-      color: var(--muted);
-      min-height: 50px;
-      text-align: left;
-      line-height: 1.5;
-      margin-bottom: 0.75rem;
+    .spell-grid { display: flex; gap: .6rem; flex-wrap: wrap; justify-content: center; margin: .9rem 0; }
+    .spell-desc-box {
+      background: var(--card-bg); border-radius: 10px; padding: .7rem; font-size: .78rem;
+      color: var(--muted); min-height: 48px; text-align: left; line-height: 1.5; margin-bottom: .7rem;
     }
 
-    /* ── LOG ── */
-    .log-area {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 0.5rem 0.75rem;
-      font-size: 0.75rem;
-      color: var(--muted);
-      line-height: 1.6;
-      max-height: 70px;
-      overflow-y: auto;
-    }
-    .log-area .log-entry { margin-bottom: 1px; }
-    .log-area .log-entry.important { color: var(--accent); }
-    .log-area .log-entry.bad { color: var(--danger); }
-    .log-area .log-entry.good { color: var(--success); }
-    .log-area .log-entry.spell { color: #e040fb; }
-
-    /* ── ANIMATIONS ── */
-    @keyframes fadeIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
-    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.4; } }
-    @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)} 60%{transform:translateX(6px)} }
-    @keyframes glow { 0%,100%{box-shadow:0 0 10px var(--accent)} 50%{box-shadow:0 0 30px var(--accent)} }
-
-    .animate-in { animation: fadeIn .3s ease; }
-    .pulse { animation: pulse 1.5s infinite; }
-    .shake { animation: shake .4s ease; }
-    .glow  { animation: glow 1.5s infinite; }
-
-    /* ── RESULT SCREEN ── */
+    /* ══════════════════════════════
+       RESULT
+    ══════════════════════════════ */
     #screen-result {
-      justify-content: center;
+      justify-content: center; gap: 1rem;
       background: radial-gradient(ellipse at 50% 40%, #1a1f3a 0%, var(--bg) 70%);
-      gap: 1rem;
     }
-    .result-title { font-size: 3rem; font-weight: 900; }
-    .result-sub { color: var(--muted); font-size: 1rem; }
-    .result-stats {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 1.5rem;
-      width: 340px;
-      text-align: left;
-    }
+    .result-title { font-size: 2.8rem; font-weight: 900; }
+    .result-sub   { color: var(--muted); font-size: .95rem; }
+    .result-stats { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 1.4rem; width: 340px; text-align: left; }
 
-    /* Responsive */
+    @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+    .animate-in { animation: fadeIn .3s ease; }
+
     @media(max-width:600px) {
-      .game-layout { padding: 0.5rem; gap: 0.4rem; }
+      .elem-card { width: 82px; min-height: 130px; }
       .hp-bar { width: 80px; }
-      .molecule-slot { width: 90px; min-height: 90px; }
     }
   </style>
 </head>
 <body>
 
-<!-- ══════════════════════════════════
-     INTRO SCREEN
-══════════════════════════════════ -->
+<!-- ══════════════════════════════
+     INTRO
+══════════════════════════════ -->
 <div id="screen-intro" class="screen active">
-  <div class="intro-atoms">⚗️ 🧪 ⚗️</div>
-  <div class="intro-logo">BreakingLab</div>
-  <div class="intro-sub">El Duelo Molecular</div>
-  <button class="btn" onclick="startGame()">Iniciar Partida</button>
-  <button class="btn secondary" onclick="showRules()">Ver Reglas</button>
+  <div style="font-size:3rem;margin-bottom:.5rem">⚗️</div>
+  <div class="logo">BreakingLab</div>
+  <div class="logo-sub">El Duelo Molecular</div>
+  <button class="btn" style="margin-top:1rem" onclick="showScreen('names')">Iniciar Partida</button>
+  <button class="btn secondary" style="margin-top:.5rem" onclick="openRules()">Ver Reglas</button>
 </div>
 
-<!-- ══════════════════════════════════
-     GAME SCREEN
-══════════════════════════════════ -->
+<!-- ══════════════════════════════
+     NAME INPUT
+══════════════════════════════ -->
+<div id="screen-names" class="screen">
+  <div class="names-box animate-in" style="margin-top:auto;margin-bottom:auto">
+    <h2>⚗️ Registro de Jugadores</h2>
+    <p>Introduce los nombres de los dos científicos que se enfrentarán en el laboratorio.</p>
+    <div class="name-field">
+      <label class="player1-label">⚗ Jugador 1</label>
+      <input id="input-p1" type="text" placeholder="Nombre del Jugador 1" maxlength="20" />
+    </div>
+    <div class="name-field">
+      <label class="player2-label">☠ Jugador 2</label>
+      <input id="input-p2" type="text" placeholder="Nombre del Jugador 2" maxlength="20" />
+    </div>
+    <div style="display:flex;gap:.6rem;margin-top:.5rem">
+      <button class="btn" style="flex:1" onclick="startGame()">¡Comenzar!</button>
+      <button class="btn secondary" onclick="showScreen('intro')">Volver</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     PASS DEVICE
+══════════════════════════════ -->
+<div id="screen-pass" class="screen">
+  <div class="pass-box animate-in">
+    <div class="pass-icon">🔄</div>
+    <h2 id="pass-title">Pasar el dispositivo</h2>
+    <p id="pass-desc">Es el turno del siguiente jugador. Asegúrate de que no vea tu selección.</p>
+    <button class="btn" onclick="resumeAfterPass()">Listo, soy <span id="pass-player-name">Jugador</span></button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     GAME
+══════════════════════════════ -->
 <div id="screen-game" class="screen">
   <div class="game-layout">
 
     <!-- HEADER -->
     <div class="game-header">
       <div class="player-info">
-        <div class="avatar enemy">☠</div>
-        <div>
-          <div class="hp-label">RIVAL — <span id="enemy-hp-num">20</span> HP</div>
-          <div class="hp-bar"><div class="hp-fill enemy" id="enemy-hp-bar" style="width:100%"></div></div>
+        <div class="avatar p2" id="av-p2">☠</div>
+        <div class="hp-wrap">
+          <div class="hp-label" id="lbl-p2hp">P2 — 20 HP</div>
+          <div class="hp-bar"><div class="hp-fill p2" id="bar-p2" style="width:100%"></div></div>
         </div>
       </div>
-      <div>
+      <div style="text-align:center">
         <div class="phase-badge" id="phase-badge">Construir</div>
-        <div class="round-label">Ronda <span id="round-num">1</span></div>
+        <div class="round-lbl">Ronda <span id="round-num">1</span></div>
       </div>
       <div class="player-info">
-        <div>
-          <div class="hp-label" style="text-align:right">TÚ — <span id="player-hp-num">20</span> HP</div>
-          <div class="hp-bar"><div class="hp-fill player" id="player-hp-bar" style="width:100%"></div></div>
+        <div class="hp-wrap" style="align-items:flex-end">
+          <div class="hp-label" id="lbl-p1hp">P1 — 20 HP</div>
+          <div class="hp-bar"><div class="hp-fill p1" id="bar-p1" style="width:100%"></div></div>
         </div>
-        <div class="avatar player">⚗</div>
+        <div class="avatar p1" id="av-p1">⚗</div>
       </div>
     </div>
 
-    <!-- ENEMY FIELD -->
-    <div class="field-zone" id="enemy-field">
-      <div class="molecule-slot enemy-slot" id="enemy-mol-slot">
-        <div class="mol-face-down">
-          <div class="fd-icon">🔬</div>
-          <div class="fd-label">Rival construye…</div>
+    <!-- P2 ANALYSTS -->
+    <div class="analysts-row" id="analysts-p2-row">
+      <span class="ar-label" id="analysts-p2-name">P2</span>
+      <div id="analysts-p2"></div>
+    </div>
+
+    <!-- P2 FIELD -->
+    <div class="field-row" id="field-p2-row">
+      <div class="mol-slot" id="slot-p2">
+        <div class="ms-face-down">
+          <div class="fdicon">🔬</div>
+          <div class="fdlbl" id="p2-building-lbl">Construyendo…</div>
         </div>
       </div>
-      <div style="font-size:.7rem;color:var(--muted);text-align:center;max-width:200px" id="enemy-status-text"></div>
+      <div style="font-size:.7rem;color:var(--muted);text-align:center;max-width:180px" id="field-p2-status"></div>
     </div>
 
     <!-- VS -->
     <div style="display:flex;align-items:center;justify-content:center;gap:1.5rem">
-      <div id="player-mol-preview-area" style="display:none">
-        <div class="molecule-slot occupied" id="player-mol-slot-main"></div>
+      <div id="slot-p1-area" style="display:none">
+        <div class="mol-slot built p1" id="slot-p1"></div>
       </div>
       <div class="vs-badge">VS</div>
-      <div id="combat-info" style="font-size:.75rem;color:var(--muted);text-align:center;max-width:200px"></div>
+      <div id="combat-hint" style="font-size:.72rem;color:var(--muted);text-align:center;max-width:200px"></div>
     </div>
 
     <!-- BUILD AREA -->
     <div class="build-area" id="build-area">
-      <div class="build-label">🧬 Molécula en construcción (clic para quitar)</div>
+      <div class="section-label">🧬 Molécula en construcción — <span id="build-player-lbl">Tu turno</span> (clic en elemento para quitar)</div>
       <div class="build-slots" id="build-slots">
-        <span style="color:var(--muted);font-size:.8rem">Selecciona elementos de tu mano…</span>
+        <span style="color:var(--muted);font-size:.78rem">Selecciona elementos de tu mano…</span>
       </div>
       <div class="build-actions">
-        <button class="btn small" id="btn-build" onclick="confirmBuild()">Construir Molécula</button>
+        <button class="btn small" onclick="confirmBuild()">Construir Molécula</button>
         <button class="btn small secondary" onclick="clearBuild()">Limpiar</button>
-        <div class="mol-preview" id="mol-preview-label"></div>
+        <div class="mol-preview-lbl" id="mol-preview-lbl"></div>
       </div>
     </div>
 
-    <!-- PLAYER HAND -->
+    <!-- HAND -->
     <div class="hand-area">
       <div class="hand-label">
-        <span>🃏 Tu mano</span>
-        <span style="font-size:.65rem;color:var(--muted)" id="hand-count"></span>
+        <span>🃏 Mano de <span id="hand-player-name">Jugador</span></span>
+        <span id="hand-count" style="font-size:.62rem;color:var(--muted)"></span>
       </div>
       <div class="hand-cards" id="player-hand"></div>
     </div>
 
+    <!-- P1 ANALYSTS -->
+    <div class="analysts-row" id="analysts-p1-row">
+      <span class="ar-label" id="analysts-p1-name">P1</span>
+      <div id="analysts-p1"></div>
+    </div>
+
     <!-- LOG -->
-    <div class="log-area" id="game-log"></div>
+    <div class="log-bar" id="game-log"></div>
 
   </div>
 </div>
 
-<!-- ══════════════════════════════════
-     RESULT SCREEN
-══════════════════════════════════ -->
+<!-- ══════════════════════════════
+     RESULT
+══════════════════════════════ -->
 <div id="screen-result" class="screen">
   <div class="result-title" id="result-title">🏆 Victoria</div>
   <div class="result-sub" id="result-sub"></div>
   <div class="result-stats" id="result-stats"></div>
-  <button class="btn" onclick="startGame()" style="margin-top:1rem">Jugar de nuevo</button>
+  <button class="btn" style="margin-top:1rem" onclick="showScreen('names')">Jugar de nuevo</button>
 </div>
 
-<!-- ══════════════════════════════════
-     OVERLAYS / MODALS
-══════════════════════════════════ -->
+<!-- ══════════════════════════════
+     MODALS
+══════════════════════════════ -->
 
-<!-- REVEAL MODAL -->
+<!-- REVEAL -->
 <div class="overlay" id="overlay-reveal">
   <div class="modal animate-in">
     <h2>⚔️ ¡Combate!</h2>
     <p id="reveal-text"></p>
-    <div class="combat-summary" id="combat-summary"></div>
+    <div class="combat-box" id="combat-summary"></div>
     <div class="modal-btns">
-      <button class="btn" id="btn-to-spells" onclick="startSpellPhase()">Fase de Hechizos</button>
+      <button class="btn" onclick="startSpellPhase()">Fase de Hechizos →</button>
     </div>
   </div>
 </div>
 
-<!-- SPELL MODAL -->
+<!-- SPELLS -->
 <div class="overlay" id="overlay-spells">
-  <div class="modal animate-in" style="max-width:600px">
-    <h2 id="spell-modal-title">🔮 Turno de Hechizos</h2>
-    <p id="spell-modal-desc"></p>
-    <div class="spell-desc" id="spell-hover-desc">Pasa el cursor sobre una carta para ver qué hace.</div>
-    <div class="spell-hand" id="spell-hand-cards"></div>
+  <div class="modal animate-in" style="max-width:620px">
+    <h2 id="spell-title">🔮 Hechizos</h2>
+    <p id="spell-desc"></p>
+    <div class="spell-desc-box" id="spell-hover-box">Pasa el cursor sobre una carta para ver qué hace.</div>
+    <div class="spell-grid" id="spell-grid"></div>
     <div class="modal-btns">
-      <button class="btn gold" id="btn-cast-spell" onclick="castSelectedSpell()" style="display:none">Lanzar Hechizo</button>
-      <button class="btn secondary" onclick="passSpellTurn()">Pasar turno</button>
+      <button class="btn gold" id="btn-cast" onclick="castSpell()" style="display:none">Lanzar Hechizo</button>
+      <button class="btn secondary" onclick="passSpell()">Pasar turno</button>
     </div>
   </div>
 </div>
 
-<!-- RULES MODAL -->
+<!-- RULES -->
 <div class="overlay" id="overlay-rules">
   <div class="modal animate-in" style="max-width:580px;text-align:left">
-    <h2 style="text-align:center;margin-bottom:1rem">📖 Reglas</h2>
-    <div style="font-size:.85rem;line-height:1.7;color:var(--muted)">
-      <p><strong style="color:var(--text)">1. Construcción de Molécula</strong><br>
-      Selecciona elementos de tu mano y pulsa «Construir». Tu molécula se forma en secreto. El rival construye la suya automáticamente.</p>
-      <br>
-      <p><strong style="color:var(--text)">2. Revelación y Combate</strong><br>
-      Ambas moléculas se revelan. Se calcula: <em>Ataque del atacante + Defensa del defensor</em>. El bando con mayor total determina el daño al rival.</p>
-      <br>
-      <p><strong style="color:var(--text)">3. Fase de Hechizos</strong><br>
-      Empieza el defensor. Puede usar una carta hechizo o pasar. Si usa hechizo, el atacante puede responder. El intercambio continúa hasta que alguien pasa.</p>
-      <br>
-      <p><strong style="color:var(--text)">4. Victoria</strong><br>
-      El primero en llegar a 0 HP pierde. ¡Combina los elementos correctos para crear las moléculas más poderosas!</p>
-      <br>
-      <p><strong style="color:var(--text)">Tipos de hechizos</strong><br>
-      🛡️ Escudo — bloquea daño extra | ⚡ Catálisis — aumenta ataque | 🧊 Cristalizar — reduce defensa rival | 💥 Oxidar — daño directo</p>
+    <h2 style="text-align:center;margin-bottom:1rem">📖 Reglas del Laboratorio</h2>
+    <div style="font-size:.83rem;line-height:1.75;color:var(--muted)">
+      <p><strong style="color:var(--text)">1. Analistas</strong><br>
+      Cada jugador cuenta con 5 analistas al inicio. Cuando pierde HP, los analistas caen (1 por cada 4 HP perdidos).</p><br>
+      <p><strong style="color:var(--text)">2. Construcción de Molécula</strong><br>
+      En secreto, selecciona elementos de tu mano y pulsa «Construir». El rival no puede ver qué eliges. Hay moléculas reconocidas con bonus (H₂O, CO₂, NH₃…).</p><br>
+      <p><strong style="color:var(--text)">3. Combate</strong><br>
+      Ambas moléculas se revelan. El atacante (mayor ATK) inflige daño = ATK − DEF rival (mín. 0). El daño se descuenta de los HP.</p><br>
+      <p><strong style="color:var(--text)">4. Fase de Hechizos</strong><br>
+      Empieza el defensor. Puede usar Plomo (🔩) o Helio (🎈) o pasar. Si usa hechizo, el otro puede responder. Se alterna hasta que alguien pasa.</p><br>
+      <p><strong style="color:var(--text)">5. Victoria</strong><br>
+      El jugador con 0 HP (o sin analistas) pierde. El primero que quede en pie gana.</p>
     </div>
     <div style="text-align:center;margin-top:1.5rem">
-      <button class="btn" onclick="closeRules()">Entendido</button>
+      <button class="btn" onclick="document.getElementById('overlay-rules').classList.remove('active')">Entendido</button>
     </div>
   </div>
 </div>
 
 <script>
-// ═══════════════════════════════════════════════════════════════
-//  DATA
-// ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
+//  CARD DATA
+// ═══════════════════════════════════════════
 
 const ELEMENTS = [
-  { id:'H',  sym:'H',  name:'Hidrógeno',  num:1,  atk:1, def:1, type:'nonmetal' },
-  { id:'C',  sym:'C',  name:'Carbono',    num:6,  atk:2, def:2, type:'nonmetal' },
-  { id:'N',  sym:'N',  name:'Nitrógeno',  num:7,  atk:2, def:3, type:'nonmetal' },
-  { id:'O',  sym:'O',  name:'Oxígeno',    num:8,  atk:3, def:1, type:'nonmetal' },
-  { id:'Na', sym:'Na', name:'Sodio',      num:11, atk:1, def:4, type:'metal' },
-  { id:'Mg', sym:'Mg', name:'Magnesio',   num:12, atk:2, def:4, type:'metal' },
-  { id:'S',  sym:'S',  name:'Azufre',     num:16, atk:4, def:2, type:'nonmetal' },
-  { id:'Cl', sym:'Cl', name:'Cloro',      num:17, atk:4, def:1, type:'nonmetal' },
-  { id:'K',  sym:'K',  name:'Potasio',    num:19, atk:2, def:3, type:'metal' },
-  { id:'Ca', sym:'Ca', name:'Calcio',     num:20, atk:1, def:5, type:'metal' },
-  { id:'Fe', sym:'Fe', name:'Hierro',     num:26, atk:3, def:4, type:'metal' },
-  { id:'P',  sym:'P',  name:'Fósforo',    num:15, atk:3, def:2, type:'nonmetal' },
-];
-
-// Molecules: defined by element combos → bonus stats
-const MOLECULES = [
-  { name:'Agua',         formula:'H₂O',   combo:['H','H','O'],          bonus:{atk:2, def:4}, desc:'Vida y defensa' },
-  { name:'Dióxido de C', formula:'CO₂',   combo:['C','O','O'],           bonus:{atk:4, def:2}, desc:'Nube tóxica' },
-  { name:'Sal',          formula:'NaCl',  combo:['Na','Cl'],             bonus:{atk:3, def:5}, desc:'Cristal defensivo' },
-  { name:'Amoníaco',     formula:'NH₃',   combo:['N','H','H','H'],       bonus:{atk:5, def:3}, desc:'Gas irritante' },
-  { name:'Metano',       formula:'CH₄',   combo:['C','H','H','H','H'],   bonus:{atk:3, def:5}, desc:'Combustible' },
-  { name:'Ácido Sulf.',  formula:'H₂SO₄', combo:['H','H','S','O','O','O','O'], bonus:{atk:8, def:2}, desc:'Corrosivo' },
-  { name:'HCl',          formula:'HCl',   combo:['H','Cl'],              bonus:{atk:6, def:1}, desc:'Ácido clorhídrico' },
-  { name:'CO',           formula:'CO',    combo:['C','O'],               bonus:{atk:4, def:2}, desc:'Monóxido' },
-  { name:'NaOH',         formula:'NaOH',  combo:['Na','O','H'],          bonus:{atk:3, def:5}, desc:'Hidróxido de sodio' },
-  { name:'Glucosa',      formula:'C₆H₁₂O₆', combo:['C','C','C','C','C','C','H','H','H','H','H','H','H','H','H','H','H','H','O','O','O','O','O','O'], bonus:{atk:4, def:7}, desc:'Energía pura' },
-  { name:'CaCO₃',        formula:'CaCO₃', combo:['Ca','C','O','O','O'],  bonus:{atk:2, def:8}, desc:'Mármol' },
-  { name:'Fe₂O₃',        formula:'Fe₂O₃', combo:['Fe','Fe','O','O','O'], bonus:{atk:6, def:4}, desc:'Óxido de hierro' },
-  { name:'H₃PO₄',        formula:'H₃PO₄', combo:['H','H','H','P','O','O','O','O'], bonus:{atk:5, def:5}, desc:'Ácido fosfórico' },
+  {
+    id:'O', sym:'O', name:'Oxígeno', num:8, atk:3, def:1, type:'nonmetal',
+    img:'img/O.png',
+    effect:'Potencia moléculas oxidantes. +1 ATK por cada O adicional en la molécula.',
+    info:'Gas esencial para la respiración. Representa el 21% de la atmósfera terrestre y es clave en reacciones de combustión.'
+  },
+  {
+    id:'H', sym:'H', name:'Hidrógeno', num:1, atk:1, def:2, type:'nonmetal',
+    img:'img/H.png',
+    effect:'Base de toda molécula. Aumenta DEF +1 al combinarse con O.',
+    info:'El elemento más abundante del universo. Combustible limpio del futuro y componente esencial del agua.'
+  },
+  {
+    id:'N', sym:'N', name:'Nitrógeno', num:7, atk:2, def:3, type:'nonmetal',
+    img:'img/N.png',
+    effect:'Estabilizador. Aumenta la DEF de la molécula en +1 al activarse.',
+    info:'Compone el 78% del aire que respiramos. Esencial para proteínas y ADN. En estado líquido alcanza −196 °C.'
+  },
+  {
+    id:'C', sym:'C', name:'Carbono', num:6, atk:2, def:2, type:'nonmetal',
+    img:'img/C.png',
+    effect:'Base orgánica. Conecta más elementos: cada C adicional da +1 ATK y +1 DEF.',
+    info:'El elemento de la vida. Puede formar millones de compuestos y existe como grafito, diamante o nanotubos.'
+  },
+  {
+    id:'S', sym:'S', name:'Azufre', num:16, atk:4, def:1, type:'nonmetal',
+    img:'img/S.png',
+    effect:'Reactivo corrosivo. Al combinarse con H, inflige 1 daño directo al rival.',
+    info:'Elemento volcánico de olor característico. Clave en fertilizantes y en la síntesis de ácido sulfúrico, el más producido del mundo.'
+  },
+  {
+    id:'P', sym:'P', name:'Fósforo', num:15, atk:3, def:2, type:'nonmetal',
+    img:'img/P.png',
+    effect:'Potenciador. Aumenta ATK de la molécula en +2 al combinarse con O.',
+    info:'Elemento esencial del ADN y los huesos. El fósforo blanco es extremadamente inflamable y fue usado en armamento incendiario.'
+  },
+  {
+    id:'U', sym:'U', name:'Uranio', num:92, atk:6, def:3, type:'radioactive',
+    img:'img/U.png',
+    effect:'⚡ CRÍTICO: Si la molécula incluye U, el daño ignora la mitad de la DEF rival.',
+    info:'Metal radiactivo más pesado de los elementos naturales. Fuente de energía nuclear. Su fisión libera millones de veces más energía que el carbón.'
+  },
 ];
 
 const SPELLS = [
-  { id:'shield',    name:'Escudo',     sym:'🛡️', type:'spell', desc:'Reduce el daño recibido esta ronda en 3 puntos.', effect:'shield', power:3 },
-  { id:'catalysis', name:'Catálisis',  sym:'⚡', type:'spell', desc:'Aumenta el ataque de tu molécula en +3 esta ronda.', effect:'boost_atk', power:3 },
-  { id:'freeze',    name:'Cristalizar',sym:'🧊', type:'spell', desc:'Reduce la defensa de la molécula rival en 2.', effect:'reduce_def', power:2 },
-  { id:'oxidize',   name:'Oxidar',     sym:'💥', type:'spell', desc:'Inflige 2 puntos de daño directo al rival.', effect:'direct_dmg', power:2 },
-  { id:'chain',     name:'Reacción',   sym:'🔥', type:'spell', desc:'Descarta 1 elemento de la molécula rival reduciendo su ataque en 2.', effect:'reduce_atk', power:2 },
-  { id:'neutralize',name:'Neutralizar',sym:'⚗️', type:'spell', desc:'Cancela el último hechizo lanzado por el rival.', effect:'cancel', power:0 },
+  {
+    id:'Pb', sym:'Pb', name:'Plomo', num:82, atk:0, def:5, type:'spell',
+    img:'img/Pb.png',
+    effect:'🛡️ ESCUDO: Reduce el daño entrante en 4 puntos esta ronda.',
+    info:'Metal pesado y blando. Históricamente usado como blindaje contra radiación. Altamente tóxico para el sistema nervioso.'
+  },
+  {
+    id:'He', sym:'He', name:'Helio', num:2, atk:3, def:0, type:'noble',
+    img:'img/He.png',
+    effect:'🎈 EVASIÓN: Añade +3 al ATK de tu molécula y hace que el rival no pueda usar hechizos en esta ronda.',
+    info:'Gas noble inerte, más ligero que el aire. No reacciona con casi nada. Usado en globos, instrumentos criogénicos y láseres.'
+  },
 ];
 
-// ═══════════════════════════════════════════════════════════════
-//  GAME STATE
-// ═══════════════════════════════════════════════════════════════
+const MOLECULES = [
+  { name:'Agua',        formula:'H₂O',   combo:['H','H','O'],          bonus:{atk:2,def:4}, desc:'Vida y defensa' },
+  { name:'CO₂',         formula:'CO₂',   combo:['C','O','O'],          bonus:{atk:4,def:2}, desc:'Nube asfixiante' },
+  { name:'Amoníaco',    formula:'NH₃',   combo:['N','H','H','H'],      bonus:{atk:5,def:3}, desc:'Gas irritante' },
+  { name:'Metano',      formula:'CH₄',   combo:['C','H','H','H','H'],  bonus:{atk:3,def:5}, desc:'Combustible' },
+  { name:'H₂SO₄',       formula:'H₂SO₄', combo:['H','H','S','O','O','O','O'], bonus:{atk:8,def:2}, desc:'Ácido sulfúrico corrosivo' },
+  { name:'HCl',         formula:'HCl',   combo:['H','O'],              bonus:{atk:4,def:2}, desc:'Ácido clorhídrico' },
+  { name:'H₃PO₄',       formula:'H₃PO₄', combo:['H','H','H','P','O','O','O','O'], bonus:{atk:5,def:5}, desc:'Ácido fosfórico' },
+  { name:'NO₂',         formula:'NO₂',   combo:['N','O','O'],          bonus:{atk:4,def:3}, desc:'Dióxido de nitrógeno' },
+  { name:'UO₂',         formula:'UO₂',   combo:['U','O','O'],          bonus:{atk:10,def:4}, desc:'Dióxido de uranio — ¡CRÍTICO!' },
+  { name:'CO',          formula:'CO',    combo:['C','O'],              bonus:{atk:4,def:2}, desc:'Monóxido de carbono' },
+  { name:'N₂O',         formula:'N₂O',   combo:['N','N','O'],          bonus:{atk:3,def:4}, desc:'Óxido nitroso' },
+  { name:'H₂S',         formula:'H₂S',   combo:['H','H','S'],          bonus:{atk:5,def:2}, desc:'Sulfuro de hidrógeno tóxico' },
+  { name:'CH₂O',        formula:'CH₂O',  combo:['C','H','H','O'],      bonus:{atk:4,def:3}, desc:'Formaldehído' },
+];
+
+// ═══════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════
+
 const MAX_HP = 20;
+const MAX_ANALYSTS = 5;
 
-let G = {}; // game state
+let G = {};
 
-function initState() {
+function initState(p1name, p2name) {
   G = {
     round: 1,
-    playerHP: MAX_HP,
-    enemyHP: MAX_HP,
-    playerHand: [],
-    playerSpells: [],
-    enemySpells: [],
-    buildSlots: [],        // elements chosen for molecule
-    playerMolecule: null,
-    enemyMolecule: null,
-    phase: 'build',        // build | reveal | spells | end
-    spellTurn: 'defender', // defender | attacker
-    attacker: null,        // 'player' | 'enemy'
-    spellLog: [],          // list of cast spell effects this round
-    lastEnemySpell: null,
-    selectedSpellId: null,
-    pendingDmgPlayer: 0,
-    pendingDmgEnemy: 0,
-    stats: { rounds: 0, dmgDone: 0, spellsCast: 0 },
+    names: [p1name || 'Jugador 1', p2name || 'Jugador 2'],
+    hp:  [MAX_HP, MAX_HP],
+    analysts: [MAX_ANALYSTS, MAX_ANALYSTS],
+    hands:  [[], []],
+    spells: [[], []],
+    buildSlots: [],
+    molecules: [null, null],
+    phase: 'build_p1',  // build_p1 | pass_p2 | build_p2 | reveal | spells | end
+    attacker: 0,
+    spellTurn: null,    // 0 | 1
+    spellPassed: [false, false],
+    pendingDmg: [0, 0],
+    helioCast: [false, false],
+    stats: { rounds:0, dmgDone:[0,0], spellsCast:0 },
   };
 }
 
-// ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
 //  HELPERS
-// ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
 
-function rand(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
-
+function rand(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
 function shuffle(arr) {
-  const a = [...arr];
-  for (let i = a.length-1; i > 0; i--) {
-    const j = Math.floor(Math.random()*(i+1));
-    [a[i],a[j]] = [a[j],a[i]];
-  }
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
   return a;
 }
 
-function log(msg, cls='') {
-  const el = document.getElementById('game-log');
-  const div = document.createElement('div');
-  div.className = 'log-entry' + (cls ? ' '+cls : '');
-  div.textContent = msg;
-  el.prepend(div);
-  if (el.children.length > 20) el.lastChild.remove();
-}
-
-function dealHand() {
-  // Give player 7 random elements + 2 spell cards
-  const elems = shuffle(ELEMENTS).slice(0, 7);
-  const spells = shuffle(SPELLS).slice(0, 2);
-  G.playerHand = elems.map(e => ({...e}));
-  G.playerSpells = spells.map(s => ({...s}));
-  // Enemy gets random hand too
-  G.enemySpells = shuffle(SPELLS).slice(0, 2);
+function dealHand(playerIdx) {
+  const elems  = shuffle(ELEMENTS).slice(0, 6).map(e=>({...e}));
+  const spl    = shuffle(SPELLS).slice(0, 1).map(s=>({...s}));
+  G.hands[playerIdx]  = elems;
+  G.spells[playerIdx] = spl;
 }
 
 function matchMolecule(elems) {
-  // Check if selected elements match a known molecule
-  const ids = elems.map(e => e.id).sort();
-  for (const mol of MOLECULES) {
+  const ids = elems.map(e=>e.id).sort();
+  for(const mol of MOLECULES) {
     const req = [...mol.combo].sort();
-    if (JSON.stringify(ids) === JSON.stringify(req)) return mol;
+    if(JSON.stringify(ids)===JSON.stringify(req)) return mol;
   }
   return null;
 }
 
-function buildMoleculeFromElems(elems) {
+function buildMolFromElems(elems) {
   const mol = matchMolecule(elems);
-  const baseAtk = elems.reduce((s,e) => s+e.atk, 0);
-  const baseDef = elems.reduce((s,e) => s+e.def, 0);
-  if (mol) {
-    return {
-      name: mol.name,
-      formula: mol.formula,
-      atk: baseAtk + mol.bonus.atk,
-      def: baseDef + mol.bonus.def,
-      desc: mol.desc,
-      combo: true,
-    };
+  const baseAtk = elems.reduce((s,e)=>s+e.atk,0);
+  const baseDef = elems.reduce((s,e)=>s+e.def,0);
+  const hasU = elems.some(e=>e.id==='U');
+  if(mol) {
+    return { name:mol.name, formula:mol.formula, atk:baseAtk+mol.bonus.atk, def:baseDef+mol.bonus.def,
+             desc:mol.desc, combo:true, hasU };
   }
-  // No known molecule — just a mix
-  return {
-    name: 'Compuesto',
-    formula: elems.map(e=>e.sym).join(''),
-    atk: baseAtk,
-    def: baseDef,
-    desc: 'Mezcla sin nombre',
-    combo: false,
-  };
+  return { name:'Compuesto', formula:elems.map(e=>e.sym).join(''),
+           atk:baseAtk, def:baseDef, desc:'Mezcla sin nombre conocido', combo:false, hasU };
 }
 
-// AI picks best molecule it can from random elements
-function aiPickMolecule() {
-  const aiElems = shuffle(ELEMENTS).slice(0, 5 + Math.floor(Math.random()*3));
-  // Try to find a known molecule subset
-  for (const mol of shuffle(MOLECULES)) {
-    const needed = mol.combo;
-    const avail = [...aiElems];
-    let ok = true;
-    const used = [];
-    for (const sym of needed) {
-      const idx = avail.findIndex(e => e.id === sym);
-      if (idx === -1) { ok = false; break; }
-      used.push(avail.splice(idx,1)[0]);
-    }
-    if (ok) return buildMoleculeFromElems(used);
-  }
-  // Use best 3-4 elements
-  const chosen = aiElems.sort((a,b)=>(b.atk+b.def)-(a.atk+a.def)).slice(0,3);
-  return buildMoleculeFromElems(chosen);
+function log(msg, cls='') {
+  const el = document.getElementById('game-log');
+  const d = document.createElement('div');
+  d.className = 'log-entry'+(cls?' '+cls:'');
+  d.textContent = msg;
+  el.prepend(d);
+  while(el.children.length>25) el.lastChild.remove();
 }
 
-// ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
 //  RENDER
-// ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
 
-function renderHand() {
-  const container = document.getElementById('player-hand');
-  container.innerHTML = '';
-  const all = [...G.playerHand, ...G.playerSpells];
-  document.getElementById('hand-count').textContent = `${all.length} cartas`;
-  for (const card of all) {
-    const div = document.createElement('div');
-    const isSpell = card.type === 'spell';
-    div.className = 'elem-card animate-in' + (isSpell ? ' spell-card' : '');
-    if (G.buildSlots.some(e => e === card)) div.classList.add('selected');
-    div.innerHTML = `
-      <div class="ec-num">${card.num || '✦'}</div>
-      <div class="ec-sym">${isSpell ? card.sym : card.sym}</div>
-      <div class="ec-name">${card.name}</div>
-      ${!isSpell ? `<div class="ec-stats"><span class="ec-atk">⚔${card.atk}</span><span class="ec-def">🛡${card.def}</span></div>` : ''}
-      <div class="ec-type type-${isSpell ? 'spell' : card.type}">${isSpell ? 'Hechizo' : card.type}</div>
-    `;
-    if (!isSpell) div.onclick = () => toggleElemSelect(card);
-    else div.onclick = () => log(`💡 Guarda "${card.name}" para la fase de hechizos.`, 'spell');
-    container.appendChild(div);
+function renderAnalysts() {
+  for(let p=0;p<2;p++) {
+    const cnt = document.getElementById('analysts-p'+(p===0?1:2));
+    cnt.innerHTML='';
+    for(let i=0;i<MAX_ANALYSTS;i++) {
+      const d=document.createElement('div');
+      d.className='analyst '+(i<G.analysts[p]?'active p'+(p===0?1:2):'dead');
+      d.textContent = i<G.analysts[p] ? (p===0?'⚗':'☠') : '💀';
+      cnt.appendChild(d);
+    }
+    document.getElementById('analysts-p'+(p===0?1:2)+'-name').textContent = G.names[p];
   }
-}
-
-function toggleElemSelect(card) {
-  if (G.phase !== 'build') return;
-  const idx = G.buildSlots.indexOf(card);
-  if (idx > -1) {
-    G.buildSlots.splice(idx, 1);
-  } else {
-    G.buildSlots.push(card);
-  }
-  renderBuildSlots();
-  renderHand();
-}
-
-function renderBuildSlots() {
-  const container = document.getElementById('build-slots');
-  container.innerHTML = '';
-  if (G.buildSlots.length === 0) {
-    container.innerHTML = '<span style="color:var(--muted);font-size:.8rem">Selecciona elementos de tu mano…</span>';
-    document.getElementById('mol-preview-label').textContent = '';
-    return;
-  }
-  for (const elem of G.buildSlots) {
-    const div = document.createElement('div');
-    div.className = 'build-elem';
-    div.innerHTML = `<span class="be-sym">${elem.sym}</span><span class="be-name">${elem.name}</span>`;
-    div.onclick = () => toggleElemSelect(elem);
-    container.appendChild(div);
-  }
-  // Preview
-  const preview = buildMoleculeFromElems(G.buildSlots);
-  const match = matchMolecule(G.buildSlots);
-  document.getElementById('mol-preview-label').textContent =
-    match ? `✅ ${preview.formula} — ⚔${preview.atk} 🛡${preview.def}` : `📦 ${preview.formula} — ⚔${preview.atk} 🛡${preview.def}`;
-}
-
-function clearBuild() {
-  G.buildSlots = [];
-  renderBuildSlots();
-  renderHand();
-}
-
-function renderMolSlot(slotId, mol, isEnemy) {
-  const slot = document.getElementById(slotId);
-  if (!mol) {
-    slot.innerHTML = isEnemy
-      ? `<div class="mol-face-down"><div class="fd-icon">🔬</div><div class="fd-label">Rival construye…</div></div>`
-      : '';
-    if (!isEnemy) slot.style.display = 'none';
-    slot.className = 'molecule-slot' + (isEnemy ? ' enemy-slot' : ' occupied');
-    return;
-  }
-  slot.className = 'molecule-slot occupied' + (isEnemy ? ' enemy-slot' : '');
-  slot.style.display = '';
-  slot.innerHTML = `
-    <div class="mol-name">${mol.name}</div>
-    <div class="mol-formula">${mol.formula}</div>
-    <div class="mol-stats">
-      <span class="stat-atk">⚔ ${mol.atk}</span>
-      <span class="stat-def">🛡 ${mol.def}</span>
-    </div>
-    ${mol.combo ? '<div style="font-size:.6rem;color:var(--success);margin-top:3px">★ Combinación</div>' : ''}
-  `;
 }
 
 function renderHP() {
-  const ph = Math.max(0, G.playerHP);
-  const eh = Math.max(0, G.enemyHP);
-  document.getElementById('player-hp-bar').style.width = (ph / MAX_HP * 100) + '%';
-  document.getElementById('enemy-hp-bar').style.width  = (eh / MAX_HP * 100) + '%';
-  document.getElementById('player-hp-num').textContent = ph;
-  document.getElementById('enemy-hp-num').textContent  = eh;
+  for(let p=0;p<2;p++) {
+    const hp = Math.max(0, G.hp[p]);
+    const pf = p===0 ? 1 : 2;
+    document.getElementById('bar-p'+pf).style.width = (hp/MAX_HP*100)+'%';
+    document.getElementById('lbl-p'+pf+'hp').textContent = G.names[p]+' — '+hp+' HP';
+  }
 }
 
-function setPhase(label) {
-  document.getElementById('phase-badge').textContent = label;
+function renderMolSlot(slotId, mol, playerCls) {
+  const slot = document.getElementById(slotId);
+  if(!mol) {
+    slot.className = 'mol-slot';
+    slot.innerHTML = `<div class="ms-face-down"><div class="fdicon">🔬</div><div class="fdlbl">Construyendo…</div></div>`;
+    return;
+  }
+  slot.className = 'mol-slot built '+playerCls;
+  slot.innerHTML = `
+    <div class="ms-formula">${mol.formula}</div>
+    <div class="ms-name">${mol.name}</div>
+    <div class="ms-stats">
+      <span class="ms-atk">⚔ ${mol.atk}</span>
+      <span class="ms-def">🛡 ${mol.def}</span>
+    </div>
+    ${mol.combo?'<div style="font-size:.58rem;color:var(--success);margin-top:3px">★ Molécula conocida</div>':''}
+    ${mol.hasU?'<div style="font-size:.58rem;color:#aaff00;margin-top:1px">☢ Contiene Uranio</div>':''}
+  `;
 }
 
-// ═══════════════════════════════════════════════════════════════
+function renderHand(playerIdx) {
+  const container = document.getElementById('player-hand');
+  container.innerHTML = '';
+  const all = [...G.hands[playerIdx], ...G.spells[playerIdx]];
+  document.getElementById('hand-count').textContent = all.length+' cartas';
+  document.getElementById('hand-player-name').textContent = G.names[playerIdx];
+
+  for(const card of all) {
+    const isSpell = card.type==='spell'||card.type==='noble';
+    const div = document.createElement('div');
+    let extra = isSpell ? ' spell-card' : (card.type==='radioactive' ? ' uranium-card' : '');
+    div.className = 'elem-card animate-in'+extra;
+    if(G.buildSlots.some(e=>e===card)) div.classList.add('selected');
+
+    // Symbol: use img if file exists, else text fallback
+    const symContent = `<div class="ec-sym-img" title="${card.sym}">
+      <img src="${card.img}" alt="${card.sym}"
+           onerror="this.parentNode.innerHTML='<span style=&quot;font-weight:900;font-size:1.6rem&quot;>${card.sym}</span>'" />
+    </div>`;
+
+    div.innerHTML = `
+      <div class="ec-num">${card.num}</div>
+      <div class="ec-stats-corner">
+        <span class="ec-atk">⚔${card.atk}</span>
+        <span class="ec-def">🛡${card.def}</span>
+      </div>
+      <div class="ec-symbol-area">${symContent}</div>
+      <div class="ec-desc-area">
+        <div class="ec-type-chip type-${card.type}">${isSpell?'Hechizo':(card.type==='radioactive'?'Radioactivo':'No-metal')}</div>
+        <div class="ec-effect-text">${card.effect}</div>
+        <div class="ec-info-text">${card.info}</div>
+      </div>
+    `;
+
+    if(!isSpell) {
+      div.onclick = () => toggleElemSelect(card);
+    } else {
+      div.onclick = () => log(`💡 Guarda "${card.name}" para la fase de hechizos.`,'spell');
+    }
+    container.appendChild(div);
+  }
+}
+
+function renderBuildSlots() {
+  const c = document.getElementById('build-slots');
+  c.innerHTML = '';
+  if(!G.buildSlots.length) {
+    c.innerHTML='<span style="color:var(--muted);font-size:.78rem">Selecciona elementos de tu mano…</span>';
+    document.getElementById('mol-preview-lbl').textContent='';
+    return;
+  }
+  for(const e of G.buildSlots) {
+    const d=document.createElement('div');
+    d.className='build-chip';
+    d.innerHTML=`<span class="bc-sym">${e.sym}</span><span class="bc-lbl">${e.name}</span>`;
+    d.onclick=()=>toggleElemSelect(e);
+    c.appendChild(d);
+  }
+  const preview = buildMolFromElems(G.buildSlots);
+  const matched = matchMolecule(G.buildSlots);
+  document.getElementById('mol-preview-lbl').textContent =
+    matched ? `✅ ${preview.formula} ⚔${preview.atk} 🛡${preview.def}` : `📦 ${preview.formula} ⚔${preview.atk} 🛡${preview.def}`;
+}
+
+function toggleElemSelect(card) {
+  if(!G.phase.startsWith('build')) return;
+  const idx = G.buildSlots.indexOf(card);
+  if(idx>-1) G.buildSlots.splice(idx,1);
+  else G.buildSlots.push(card);
+  renderBuildSlots();
+  const p = G.phase==='build_p1' ? 0 : 1;
+  renderHand(p);
+}
+
+function clearBuild() {
+  G.buildSlots=[];
+  renderBuildSlots();
+  const p = G.phase==='build_p1' ? 0 : 1;
+  renderHand(p);
+}
+
+function setPhase(label) { document.getElementById('phase-badge').textContent=label; }
+
+// ═══════════════════════════════════════════
 //  GAME FLOW
-// ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
 
 function startGame() {
-  initState();
-  dealHand();
+  const p1 = document.getElementById('input-p1').value.trim() || 'Jugador 1';
+  const p2 = document.getElementById('input-p2').value.trim() || 'Jugador 2';
+  initState(p1, p2);
+
+  // Deal hands
+  dealHand(0); dealHand(1);
+
   showScreen('game');
-  clearBuild();
-  renderHand();
   renderHP();
+  renderAnalysts();
+  renderMolSlot('slot-p2', null, 'p2');
+  document.getElementById('slot-p1-area').style.display='none';
+  document.getElementById('game-log').innerHTML='';
+  clearBuild();
+
+  // P1 builds first
+  startBuildPhase(0);
+}
+
+function startBuildPhase(playerIdx) {
+  G.phase = playerIdx===0 ? 'build_p1' : 'build_p2';
+  G.buildSlots = [];
+  const pname = G.names[playerIdx];
+  document.getElementById('build-player-lbl').textContent = 'Turno de '+pname;
+  document.getElementById('hand-player-name').textContent = pname;
   setPhase('Construir');
-  document.getElementById('round-num').textContent = G.round;
-  document.getElementById('enemy-status-text').textContent = 'El rival está eligiendo sus elementos…';
-  document.getElementById('combat-info').textContent = '';
-  document.getElementById('player-mol-preview-area').style.display = 'none';
-  renderMolSlot('enemy-mol-slot', null, true);
-  document.getElementById('game-log').innerHTML = '';
-  log('🧪 ¡Nueva partida! Construye tu molécula.', 'important');
+  renderBuildSlots();
+  renderHand(playerIdx);
+  log(`🔬 ${pname}: selecciona tus elementos y construye tu molécula.`,'imp');
+
+  // Show/hide analyst rows based on who's building
+  document.getElementById('analysts-p1-row').style.opacity = playerIdx===0 ? '1' : '.4';
+  document.getElementById('analysts-p2-row').style.opacity = playerIdx===1 ? '1' : '.4';
 }
 
 function confirmBuild() {
-  if (G.phase !== 'build') return;
-  if (G.buildSlots.length < 1) {
-    log('⚠️ Selecciona al menos 1 elemento.'); return;
-  }
-  G.playerMolecule = buildMoleculeFromElems(G.buildSlots);
+  if(!G.phase.startsWith('build')) return;
+  if(G.buildSlots.length<1) { log('⚠️ Selecciona al menos 1 elemento.'); return; }
+
+  const playerIdx = G.phase==='build_p1' ? 0 : 1;
+  G.molecules[playerIdx] = buildMolFromElems(G.buildSlots);
+
   // Remove used elements from hand
-  for (const e of G.buildSlots) {
-    const idx = G.playerHand.indexOf(e);
-    if (idx > -1) G.playerHand.splice(idx, 1);
+  for(const e of G.buildSlots) {
+    const idx = G.hands[playerIdx].indexOf(e);
+    if(idx>-1) G.hands[playerIdx].splice(idx,1);
   }
-  G.buildSlots = [];
+  G.buildSlots=[];
 
-  // Show player molecule
-  document.getElementById('player-mol-preview-area').style.display = '';
-  renderMolSlot('player-mol-slot-main', G.playerMolecule, false);
-  renderHand();
-  renderBuildSlots();
+  const mol = G.molecules[playerIdx];
+  log(`✅ ${G.names[playerIdx]} construye: ${mol.formula} (⚔${mol.atk} 🛡${mol.def})`,'good');
 
-  // AI builds
-  setTimeout(() => {
-    G.enemyMolecule = aiPickMolecule();
-    document.getElementById('enemy-status-text').textContent = 'El rival ha terminado de construir.';
-    setPhase('¡Revelar!');
-    log(`✅ Has construido: ${G.playerMolecule.formula}`, 'good');
-    log(`🔮 Rival ha construido su molécula.`);
+  if(playerIdx===0) {
+    // Show molecule face-up for P1 (bottom)
+    document.getElementById('slot-p1-area').style.display='';
+    renderMolSlot('slot-p1', mol, 'p1');
+    // Pass device to P2
+    G.phase = 'pass_p2';
+    showPassScreen(1);
+  } else {
+    // P2 done — show P2 molecule face-down until reveal
+    document.getElementById('field-p2-status').textContent = G.names[1]+' ha terminado de construir.';
     G.phase = 'reveal';
+    setPhase('¡Revelar!');
     setTimeout(showReveal, 600);
-  }, 800);
+  }
+}
+
+function showPassScreen(toPlayerIdx) {
+  const name = G.names[toPlayerIdx];
+  document.getElementById('pass-title').textContent = `Pasa el dispositivo a ${name}`;
+  document.getElementById('pass-desc').textContent = `Es el turno de ${name}. Asegúrate de que el jugador anterior no vea la pantalla.`;
+  document.getElementById('pass-player-name').textContent = name;
+  showScreen('pass');
+}
+
+function resumeAfterPass() {
+  showScreen('game');
+  if(G.phase==='pass_p2') {
+    startBuildPhase(1);
+  }
 }
 
 function showReveal() {
-  // Determine attacker: player attacks if their atk > enemy atk, else enemy attacks
-  // (random tiebreak)
-  const pa = G.playerMolecule.atk;
-  const ea = G.enemyMolecule.atk;
-  G.attacker = pa >= ea ? 'player' : 'enemy';
+  const m0 = G.molecules[0], m1 = G.molecules[1];
+  renderMolSlot('slot-p2', m1, 'p2');
 
-  // Apply spell log modifiers from previous round (none first round)
-  let playerAtk = G.playerMolecule.atk;
-  let playerDef = G.playerMolecule.def;
-  let enemyAtk  = G.enemyMolecule.atk;
-  let enemyDef  = G.enemyMolecule.def;
+  // Attacker = higher ATK (P0 wins ties)
+  G.attacker = m0.atk >= m1.atk ? 0 : 1;
+  const def = 1-G.attacker;
 
-  // Combat: attacker's atk vs defender's def → damage = max(0, atk - def)
-  let dmgToEnemy = 0, dmgToPlayer = 0;
-  if (G.attacker === 'player') {
-    dmgToEnemy  = Math.max(0, playerAtk - enemyDef);
-    dmgToPlayer = Math.max(0, enemyAtk - playerDef);
-  } else {
-    dmgToPlayer = Math.max(0, enemyAtk  - playerDef);
-    dmgToEnemy  = Math.max(0, playerAtk - enemyDef);
-  }
-  G.pendingDmgPlayer = dmgToPlayer;
-  G.pendingDmgEnemy  = dmgToEnemy;
+  let atkVal = G.molecules[G.attacker].atk;
+  let defVal = G.molecules[def].def;
 
-  // Reveal enemy molecule
-  renderMolSlot('enemy-mol-slot', G.enemyMolecule, true);
+  // Uranium halves def
+  if(G.molecules[G.attacker].hasU) defVal = Math.floor(defVal/2);
 
-  // Build modal content
-  const atkLabel = G.attacker === 'player' ? '🫵 Tú atacas' : '💀 Rival ataca';
+  const dmgTodef = Math.max(0, atkVal - defVal);
+  const dmgToAtk = Math.max(0, G.molecules[def].atk - G.molecules[G.attacker].def);
+
+  G.pendingDmg[def]       = dmgTodef;
+  G.pendingDmg[G.attacker]= dmgToAtk;
+
+  const atkName = G.names[G.attacker];
+  const defName = G.names[def];
+
   document.getElementById('reveal-text').textContent =
-    `${G.playerMolecule.formula} (⚔${G.playerMolecule.atk} 🛡${G.playerMolecule.def}) VS ${G.enemyMolecule.formula} (⚔${G.enemyMolecule.atk} 🛡${G.enemyMolecule.def})`;
+    `${G.names[0]}: ${m0.formula} (⚔${m0.atk} 🛡${m0.def})  ·  ${G.names[1]}: ${m1.formula} (⚔${m1.atk} 🛡${m1.def})`;
 
   document.getElementById('combat-summary').innerHTML = `
-    <div class="combat-row"><span>${atkLabel}</span></div>
-    <div class="combat-row"><span>Tu Ataque</span><span class="val">${playerAtk}</span></div>
-    <div class="combat-row"><span>Defensa Rival</span><span class="val">${enemyDef}</span></div>
-    <div class="combat-row"><span>Daño al Rival</span><span class="val ${dmgToEnemy===0?'bad':''}">${dmgToEnemy}</span></div>
-    <div class="combat-row"><span>Ataque Rival</span><span class="val bad">${enemyAtk}</span></div>
-    <div class="combat-row"><span>Tu Defensa</span><span class="val">${playerDef}</span></div>
-    <div class="combat-row"><span>Daño a Ti</span><span class="val ${dmgToPlayer===0?'':'bad'}">${dmgToPlayer}</span></div>
+    <div class="c-row"><span>⚔ ${atkName} ataca</span></div>
+    <div class="c-row"><span>ATK de ${atkName}</span><span class="cv">${atkVal}</span></div>
+    <div class="c-row"><span>DEF de ${defName}${G.molecules[G.attacker].hasU?' (½ por Uranio)':''}</span><span class="cv">${defVal}</span></div>
+    <div class="c-row"><span>Daño a ${defName}</span><span class="cv ${dmgTodef===0?'bad':''}">${dmgTodef}</span></div>
+    <div class="c-row"><span>Contraataque de ${defName}</span><span class="cv bad">${dmgToAtk}</span></div>
   `;
 
   document.getElementById('overlay-reveal').classList.add('active');
   setPhase('Combate');
-  log(`⚔️ ${G.playerMolecule.formula} vs ${G.enemyMolecule.formula}`, 'important');
+  log(`⚔️ ${m0.formula} vs ${m1.formula} — ${atkName} ataca`, 'imp');
 }
 
 function startSpellPhase() {
   document.getElementById('overlay-reveal').classList.remove('active');
   G.phase = 'spells';
-  G.spellLog = [];
-  G.lastEnemySpell = null;
-
-  // Defender goes first
-  G.spellTurn = G.attacker === 'player' ? 'enemy' : 'player';
+  G.helioCast = [false,false];
+  G.spellPassed = [false,false];
+  G.spellTurn = 1-G.attacker; // defender first
   setPhase('Hechizos');
-
-  if (G.spellTurn === 'player') {
-    openSpellModal('player');
-  } else {
-    // Enemy goes first
-    aiCastSpell();
-  }
+  openSpellModal(G.spellTurn);
 }
 
-function openSpellModal(who) {
-  const spells = who === 'player' ? G.playerSpells : G.enemySpells;
-  const isDefender = (who !== G.attacker);
-  document.getElementById('spell-modal-title').textContent =
-    who === 'player' ? '🔮 Tu turno de hechizos' : '☠ El rival usa un hechizo';
-  document.getElementById('spell-modal-desc').textContent =
-    isDefender
-      ? 'Eres el defensor. Puedes usar un hechizo para reducir el daño o actuar primero.'
-      : 'Puedes contraatacar con un hechizo o pasar y aplicar el daño.';
+function openSpellModal(playerIdx) {
+  const spells = G.spells[playerIdx];
+  const isDefender = (playerIdx !== G.attacker);
+  const opponent = 1-playerIdx;
+
+  document.getElementById('spell-title').textContent = `🔮 ${G.names[playerIdx]} — Hechizos`;
+  document.getElementById('spell-desc').textContent = isDefender
+    ? `Eres el defensor. Puedes usar un hechizo para reducir el daño o responder.`
+    : `El defensor ha jugado. Puedes contraatacar con un hechizo o pasar.`;
 
   G.selectedSpellId = null;
-  document.getElementById('btn-cast-spell').style.display = 'none';
-  document.getElementById('spell-hover-desc').textContent = 'Pasa el cursor sobre una carta para ver qué hace.';
+  document.getElementById('btn-cast').style.display='none';
+  document.getElementById('spell-hover-box').textContent='Pasa el cursor sobre una carta para ver qué hace.';
 
-  const container = document.getElementById('spell-hand-cards');
-  container.innerHTML = '';
-  if (spells.length === 0) {
-    container.innerHTML = '<div style="color:var(--muted);font-size:.85rem">No tienes hechizos disponibles.</div>';
+  const grid = document.getElementById('spell-grid');
+  grid.innerHTML='';
+
+  if(!spells.length) {
+    grid.innerHTML='<div style="color:var(--muted);font-size:.85rem">No tienes hechizos disponibles.</div>';
   } else {
-    for (const spell of spells) {
-      const div = document.createElement('div');
-      div.className = 'elem-card spell-card';
-      div.innerHTML = `
-        <div class="ec-num">✦</div>
-        <div class="ec-sym" style="font-size:1.8rem">${spell.sym}</div>
-        <div class="ec-name">${spell.name}</div>
-        <div class="ec-type type-spell">Hechizo</div>
+    for(const sp of spells) {
+      // Block helio response if rival cast helio
+      if(G.helioCast[opponent] && sp.id==='He') continue;
+
+      const d = document.createElement('div');
+      d.className='elem-card spell-card';
+
+      const symContent = `<div class="ec-sym-img">
+        <img src="${sp.img}" alt="${sp.sym}"
+             onerror="this.parentNode.innerHTML='<span style=&quot;font-weight:900;font-size:1.6rem&quot;>${sp.sym}</span>'" />
+      </div>`;
+
+      d.innerHTML=`
+        <div class="ec-num">${sp.num}</div>
+        <div class="ec-stats-corner">
+          <span class="ec-atk">⚔${sp.atk}</span>
+          <span class="ec-def">🛡${sp.def}</span>
+        </div>
+        <div class="ec-symbol-area">${symContent}</div>
+        <div class="ec-desc-area">
+          <div class="ec-type-chip type-${sp.type}">Hechizo</div>
+          <div class="ec-effect-text">${sp.effect}</div>
+          <div class="ec-info-text">${sp.info}</div>
+        </div>
       `;
-      div.onmouseenter = () => {
-        document.getElementById('spell-hover-desc').textContent = `${spell.sym} ${spell.name}: ${spell.desc}`;
+      d.onmouseenter=()=>{ document.getElementById('spell-hover-box').textContent=sp.name+': '+sp.effect; };
+      d.onclick=()=>{
+        G.selectedSpellId=sp.id;
+        grid.querySelectorAll('.elem-card').forEach(c=>c.classList.remove('selected'));
+        d.classList.add('selected');
+        document.getElementById('btn-cast').style.display='';
       };
-      div.onclick = () => {
-        G.selectedSpellId = spell.id;
-        document.querySelectorAll('#spell-hand-cards .elem-card').forEach(c => c.classList.remove('selected'));
-        div.classList.add('selected');
-        document.getElementById('btn-cast-spell').style.display = '';
-        document.getElementById('spell-hover-desc').textContent = `✅ Seleccionado: ${spell.name}`;
-      };
-      container.appendChild(div);
+      grid.appendChild(d);
     }
   }
   document.getElementById('overlay-spells').classList.add('active');
 }
 
-function castSelectedSpell() {
-  const spellId = G.selectedSpellId;
-  if (!spellId) return;
-  const spell = G.playerSpells.find(s => s.id === spellId);
-  if (!spell) return;
+function castSpell() {
+  const id = G.selectedSpellId; if(!id) return;
+  const playerIdx = G.spellTurn;
+  const spell = G.spells[playerIdx].find(s=>s.id===id); if(!spell) return;
 
-  // Remove from hand
-  G.playerSpells = G.playerSpells.filter(s => s.id !== spellId);
-  applySpellEffect(spell, 'player');
-  G.spellLog.push({ who: 'player', spell });
+  G.spells[playerIdx] = G.spells[playerIdx].filter(s=>s.id!==id);
   G.stats.spellsCast++;
-  log(`🔮 Lanzas "${spell.name}": ${spell.desc}`, 'spell');
 
-  document.getElementById('overlay-spells').classList.remove('active');
-  G.spellTurn = G.attacker === 'player' ? 'player' : 'enemy'; // switch turn
-
-  // Enemy can respond
-  setTimeout(() => {
-    if (G.enemySpells.length > 0 && Math.random() > 0.35) {
-      aiCastSpell();
-    } else {
-      log('☠ El rival pasa en la fase de hechizos.', 'muted');
-      resolveCombat();
-    }
-  }, 700);
-}
-
-function passSpellTurn() {
-  document.getElementById('overlay-spells').classList.remove('active');
-  log('⏭ Pasas en la fase de hechizos.', 'muted');
-  resolveCombat();
-}
-
-function aiCastSpell() {
-  if (G.enemySpells.length === 0) {
-    resolveCombat(); return;
+  // Apply effect
+  const rival = 1-playerIdx;
+  if(spell.id==='Pb') {
+    // Shield: reduce incoming damage by 4
+    G.pendingDmg[playerIdx] = Math.max(0, G.pendingDmg[playerIdx]-4);
+    log(`🛡 ${G.names[playerIdx]} usa Plomo — daño reducido en 4.`,'spell');
+  } else if(spell.id==='He') {
+    // Boost ATK +3, block rival spells
+    G.pendingDmg[rival] += 3;
+    G.helioCast[playerIdx]=true;
+    log(`🎈 ${G.names[playerIdx]} usa Helio — +3 ATK y el rival no puede usar hechizos.`,'spell');
   }
-  // AI picks a spell
-  const spell = rand(G.enemySpells);
-  G.enemySpells = G.enemySpells.filter(s => s.id !== spell.id);
-  G.lastEnemySpell = spell;
-  applySpellEffect(spell, 'enemy');
-  G.spellLog.push({ who: 'enemy', spell });
-  log(`☠ El rival lanza "${spell.name}": ${spell.desc}`, 'bad');
 
-  // Player can respond
-  if (G.playerSpells.length > 0) {
-    G.spellTurn = 'player';
-    setTimeout(() => openSpellModal('player'), 600);
+  G.spellPassed[playerIdx]=false;
+  document.getElementById('overlay-spells').classList.remove('active');
+
+  // Switch turn to rival
+  G.spellTurn = rival;
+
+  // If rival already passed OR rival has no spells OR helio blocks
+  if(G.spellPassed[rival] || !G.spells[rival].length || G.helioCast[playerIdx]) {
+    setTimeout(resolveCombat, 500);
   } else {
-    setTimeout(resolveCombat, 600);
+    setTimeout(()=>openSpellModal(rival), 500);
   }
 }
 
-function applySpellEffect(spell, who) {
-  const self  = who === 'player' ? 'player' : 'enemy';
-  const rival = who === 'player' ? 'enemy'  : 'player';
+function passSpell() {
+  const playerIdx = G.spellTurn;
+  G.spellPassed[playerIdx]=true;
+  document.getElementById('overlay-spells').classList.remove('active');
+  log(`⏭ ${G.names[playerIdx]} pasa en hechizos.`);
 
-  switch(spell.effect) {
-    case 'shield':
-      if (self === 'player') G.pendingDmgPlayer = Math.max(0, G.pendingDmgPlayer - spell.power);
-      else G.pendingDmgEnemy = Math.max(0, G.pendingDmgEnemy - spell.power);
-      break;
-    case 'boost_atk':
-      if (self === 'player') G.pendingDmgEnemy  += spell.power;
-      else G.pendingDmgPlayer += spell.power;
-      break;
-    case 'reduce_def':
-      if (rival === 'player') G.pendingDmgEnemy  = Math.max(0, G.pendingDmgEnemy  - spell.power);
-      else G.pendingDmgPlayer += spell.power;
-      break;
-    case 'direct_dmg':
-      if (rival === 'enemy') G.pendingDmgEnemy  += spell.power;
-      else G.pendingDmgPlayer += spell.power;
-      break;
-    case 'reduce_atk':
-      if (rival === 'player') G.pendingDmgPlayer = Math.max(0, G.pendingDmgPlayer - spell.power);
-      else G.pendingDmgEnemy  = Math.max(0, G.pendingDmgEnemy  - spell.power);
-      break;
-    case 'cancel':
-      // Undo last enemy spell effect (simplified: restore 2 dmg)
-      if (G.lastEnemySpell) {
-        G.pendingDmgPlayer = Math.max(0, G.pendingDmgPlayer - 2);
-        log('⚗️ ¡Hechizo rival neutralizado!', 'good');
-      }
-      break;
+  // Switch to rival
+  const rival=1-playerIdx;
+  G.spellTurn=rival;
+
+  // If rival also passed, resolve; otherwise let rival play
+  if(G.spellPassed[rival]) {
+    resolveCombat();
+  } else if(!G.spells[rival].length) {
+    resolveCombat();
+  } else {
+    setTimeout(()=>openSpellModal(rival),400);
   }
 }
 
 function resolveCombat() {
   document.getElementById('overlay-spells').classList.remove('active');
-  const dp = G.pendingDmgPlayer;
-  const de = G.pendingDmgEnemy;
+  const d0=G.pendingDmg[0], d1=G.pendingDmg[1];
+  G.hp[0] = Math.max(0, G.hp[0]-d0);
+  G.hp[1] = Math.max(0, G.hp[1]-d1);
 
-  G.playerHP -= dp;
-  G.enemyHP  -= de;
-  G.stats.dmgDone += de;
+  // Update analysts (1 per 4 HP lost)
+  for(let p=0;p<2;p++) {
+    G.analysts[p] = Math.ceil(G.hp[p]/4);
+  }
+
   G.stats.rounds++;
+  G.stats.dmgDone[G.attacker] += G.pendingDmg[1-G.attacker];
 
   renderHP();
-  log(`💥 Daño aplicado: ${de} al rival, ${dp} a ti.`, dp > 0 ? 'bad' : 'good');
+  renderAnalysts();
+  log(`💥 Daño — ${G.names[0]}: −${d0} HP | ${G.names[1]}: −${d1} HP`, d0>0||d1>0?'bad':'good');
 
-  if (G.playerHP <= 0 || G.enemyHP <= 0) {
-    endGame(); return;
-  }
+  if(G.hp[0]<=0 || G.hp[1]<=0) { endGame(); return; }
 
   // Next round
   G.round++;
-  document.getElementById('round-num').textContent = G.round;
-  G.playerMolecule = null;
-  G.enemyMolecule  = null;
-  G.phase = 'build';
-  // Deal fresh elements but keep remaining spells
-  const newElems = shuffle(ELEMENTS).slice(0, 5);
-  G.playerHand = [...G.playerHand, ...newElems].slice(0, 8);
-  if (G.playerSpells.length < 2) {
-    const pool = SPELLS.filter(s => !G.playerSpells.find(p => p.id===s.id));
-    if (pool.length) G.playerSpells.push(rand(pool));
-  }
-  if (G.enemySpells.length < 2) {
-    const pool = SPELLS.filter(s => !G.enemySpells.find(p => p.id===s.id));
-    if (pool.length) G.enemySpells.push(rand(pool));
+  document.getElementById('round-num').textContent=G.round;
+  G.molecules=[null,null];
+  G.pendingDmg=[0,0];
+  G.phase='build_p1';
+
+  // Replenish hands (add 3 new elements, max 7 in hand)
+  for(let p=0;p<2;p++) {
+    const fresh = shuffle(ELEMENTS).slice(0,3).map(e=>({...e}));
+    G.hands[p] = [...G.hands[p], ...fresh].slice(0,7);
+    if(G.spells[p].length<1) {
+      const pool=SPELLS.filter(s=>!G.spells[p].find(x=>x.id===s.id));
+      if(pool.length) G.spells[p].push({...rand(pool)});
+    }
   }
 
-  renderMolSlot('enemy-mol-slot', null, true);
-  document.getElementById('player-mol-preview-area').style.display = 'none';
-  document.getElementById('combat-info').textContent = '';
-  document.getElementById('enemy-status-text').textContent = 'El rival está eligiendo sus elementos…';
-  clearBuild();
-  renderHand();
+  renderMolSlot('slot-p2',null,'p2');
+  document.getElementById('slot-p1-area').style.display='none';
+  document.getElementById('field-p2-status').textContent='';
   setPhase('Construir');
-  log(`🔄 Ronda ${G.round} — ¡Construye tu nueva molécula!`, 'important');
+  log(`🔄 Ronda ${G.round} — ${G.names[0]}: construye tu molécula.`,'imp');
+  startBuildPhase(0);
 }
 
 function endGame() {
-  const playerWon = G.playerHP > G.enemyHP;
-  document.getElementById('result-title').textContent = playerWon ? '🏆 ¡Victoria!' : '💀 Derrota';
-  document.getElementById('result-sub').textContent =
-    playerWon ? '¡Has derrotado al rival en el laboratorio!' : 'El rival ha ganado este duelo molecular.';
+  const winner = G.hp[0]>0 ? 0 : 1;
+  document.getElementById('result-title').textContent = `🏆 ¡${G.names[winner]} gana!`;
+  document.getElementById('result-sub').textContent = `${G.names[1-winner]} ha sido eliminado del laboratorio.`;
   document.getElementById('result-stats').innerHTML = `
-    <div class="combat-row"><span>Rondas jugadas</span><span class="val">${G.stats.rounds}</span></div>
-    <div class="combat-row"><span>Daño total infligido</span><span class="val">${G.stats.dmgDone}</span></div>
-    <div class="combat-row"><span>Hechizos lanzados</span><span class="val">${G.stats.spellsCast}</span></div>
-    <div class="combat-row"><span>HP final tuyo</span><span class="val ${G.playerHP<=0?'bad':'good'}">${Math.max(0,G.playerHP)}</span></div>
-    <div class="combat-row"><span>HP final rival</span><span class="val ${G.enemyHP<=0?'bad':'good'}">${Math.max(0,G.enemyHP)}</span></div>
+    <div class="c-row"><span>Rondas jugadas</span><span class="cv">${G.stats.rounds}</span></div>
+    <div class="c-row"><span>Daño de ${G.names[0]}</span><span class="cv">${G.stats.dmgDone[0]}</span></div>
+    <div class="c-row"><span>Daño de ${G.names[1]}</span><span class="cv">${G.stats.dmgDone[1]}</span></div>
+    <div class="c-row"><span>Hechizos lanzados</span><span class="cv">${G.stats.spellsCast}</span></div>
+    <div class="c-row"><span>HP final ${G.names[0]}</span><span class="cv ${G.hp[0]<=0?'bad':'good'}">${Math.max(0,G.hp[0])}</span></div>
+    <div class="c-row"><span>HP final ${G.names[1]}</span><span class="cv ${G.hp[1]<=0?'bad':'good'}">${Math.max(0,G.hp[1])}</span></div>
   `;
   showScreen('result');
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  SCREEN MANAGEMENT
-// ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════
 
 function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-'+id).classList.add('active');
 }
-
-function showRules() {
-  document.getElementById('overlay-rules').classList.add('active');
-}
-function closeRules() {
-  document.getElementById('overlay-rules').classList.remove('active');
-}
+function openRules() { document.getElementById('overlay-rules').classList.add('active'); }
 </script>
 </body>
 </html>
