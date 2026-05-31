@@ -476,7 +476,6 @@
     <button class="btn gold" id="btn-cast-panel" disabled style="opacity:.45;margin-left:auto" onclick="castSpell()">✨ Lanzar</button>
     <button class="btn sec" onclick="passSpell()">Pasar →</button>
   </div>
-  <div class="sdesc" id="sp-hover-panel">Toca un hechizo para seleccionarlo.</div>
   <div class="hand-row" id="sp-hand"></div>
 </div>
 
@@ -746,9 +745,11 @@ function flipZone(p){
 }
 
 function renderHand(p){
+  const isDefender = G.phase==='build_p2';
   const selectedIds = G.build.map(e=>e.id);
   const useful = usableIds(selectedIds);
   const canForm = canFormAnyMol(G.hands[p]);
+  const hasElemSelected = G.build.length > 0;
 
   document.getElementById('no-mol-msg').style.display = canForm ? 'none' : '';
 
@@ -759,10 +760,13 @@ function renderHand(p){
     const dimmed = !inBuild && !useful.has(card.id);
     hc.appendChild(makeElemCard(card,p,inBuild,dimmed));
   });
-  // Spells — same row, just different card color (cf-purp/cf-gold already applied)
-  G.spells[p].forEach(card=>{
-    hc.appendChild(makeElemCard(card,p,false,false));
-  });
+  // Spells: only shown for attacker (P1); dimmed when any element is selected
+  if(!isDefender){
+    G.spells[p].forEach(card=>{
+      const el=makeElemCard(card,p,false,hasElemSelected);
+      hc.appendChild(el);
+    });
+  }
 
   // Update Reaccionar button
   const confirmBtn=document.getElementById('btn-confirm');
