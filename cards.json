@@ -1,0 +1,34 @@
+{
+  "_comment": "Pesos de aparición de cartas. Aumenta el peso para que aparezca más. Mínimo 1.",
+  "elements": [
+    {"id":"O","sym":"O","name":"Oxígeno","num":8,"atk":3,"def":1,"type":"nonmetal","img":"img/O.png","eff":"Potencia moléculas oxidantes.","info":"Gas esencial. 21% de la atmósfera.","weight":4},
+    {"id":"H","sym":"H","name":"Hidrógeno","num":1,"atk":1,"def":2,"type":"nonmetal","img":"img/H.png","eff":"Base de toda molécula.","info":"El elemento más abundante del universo.","weight":6},
+    {"id":"N","sym":"N","name":"Nitrógeno","num":7,"atk":2,"def":3,"type":"nonmetal","img":"img/N.png","eff":"Estabilizador. +1 DEF al activarse.","info":"Compone el 78% del aire.","weight":3},
+    {"id":"C","sym":"C","name":"Carbono","num":6,"atk":2,"def":2,"type":"nonmetal","img":"img/C.png","eff":"Base orgánica. +1 ATK y +1 DEF.","info":"El elemento de la vida.","weight":3},
+    {"id":"S","sym":"S","name":"Azufre","num":16,"atk":4,"def":1,"type":"nonmetal","img":"img/S.png","eff":"Corrosivo. Con H inflige daño extra.","info":"Elemento volcánico.","weight":2},
+    {"id":"P","sym":"P","name":"Fósforo","num":15,"atk":3,"def":2,"type":"nonmetal","img":"img/P.png","eff":"Potenciador. +2 ATK con O.","info":"Esencial en el ADN. Fósforo blanco es inflamable.","weight":2},
+    {"id":"U","sym":"U","name":"Uranio","num":92,"atk":6,"def":3,"type":"radioactive","img":"img/U.png","eff":"☢ CRÍTICO: Ignora la mitad de la DEF rival.","info":"Metal radiactivo. Fisión nuclear.","weight":1}
+  ],
+  "spells": [
+    {"id":"Pb","sym":"Pb","name":"Plomo","num":82,"atk":0,"def":5,"type":"spell","img":"img/Pb.png","eff":"🛡 ESCUDO: Reduce el daño entrante en 4 puntos.","info":"Blindaje contra radiación.","weight":2},
+    {"id":"He","sym":"He","name":"Helio","num":2,"atk":3,"def":0,"type":"noble","img":"img/He.png","eff":"🎈 EVASIÓN: +3 ATK y el rival no puede usar hechizos.","info":"Gas noble inerte.","weight":2}
+  ],
+  "molecules": [
+    {"ids":["H","H","O"],"name":"Agua","formula":"H₂O","atk":4,"def":4},
+    {"ids":["H","H","O","O"],"name":"Peróxido","formula":"H₂O₂","atk":5,"def":3},
+    {"ids":["O","O"],"name":"O₂","formula":"O₂","atk":4,"def":2},
+    {"ids":["H","H"],"name":"H₂","formula":"H₂","atk":2,"def":3},
+    {"ids":["H","H","H"],"name":"H₃","formula":"H₃","atk":3,"def":4},
+    {"ids":["C","O"],"name":"CO","formula":"CO","atk":4,"def":2},
+    {"ids":["C","O","O"],"name":"CO₂","formula":"CO₂","atk":5,"def":2},
+    {"ids":["N","N"],"name":"N₂","formula":"N₂","atk":3,"def":5},
+    {"ids":["N","O","P"],"name":"NOP","formula":"NOP","atk":6,"def":3},
+    {"ids":["N","O","O"],"name":"NO₂","formula":"NO₂","atk":5,"def":3},
+    {"ids":["H","H","H","N"],"name":"Amoníaco","formula":"NH₃","atk":5,"def":3},
+    {"ids":["H","H","S"],"name":"H₂S","formula":"H₂S","atk":6,"def":2},
+    {"ids":["O","O","S"],"name":"SO₂","formula":"SO₂","atk":6,"def":2},
+    {"ids":["S","S"],"name":"S₂","formula":"S₂","atk":5,"def":2},
+    {"ids":["H","H","H","P"],"name":"PH₃","formula":"PH₃","atk":5,"def":3},
+    {"ids":["O","P"],"name":"PO","formula":"PO","atk":4,"def":3}
+  ]
+}
