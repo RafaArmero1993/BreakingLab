@@ -395,10 +395,10 @@
 
       <!-- Center: shared draw deck + shared discard -->
       <div class="center-row">
-        <div class="cpile draw" title="Mazo compartido de robo">
+        <div class="cpile draw" title="Robar 2 cartas" style="cursor:pointer" onclick="onSharedDeckClick()">
           <div class="cpile-icon">🃏</div>
           <div class="cpile-cnt" id="shared-cnt">32</div>
-          <div class="cpile-lbl">Mazo</div>
+          <div class="cpile-lbl">Robar</div>
         </div>
         <div class="cpile disc" title="Pila de descarte compartida">
           <div class="cpile-icon">♻️</div>
@@ -430,14 +430,14 @@
   <button class="btn" style="margin-top:1rem" onclick="showScreen('names')">🔄 Jugar de nuevo</button>
 </div>
 
-<!-- ACTION CHOICE -->
-<div class="ov" id="ov-action">
-  <div class="modal ai" style="max-width:320px">
-    <h2>🧪 Tu turno</h2>
-    <p id="act-name-lbl" style="font-weight:700;color:var(--txt)"></p>
-    <div class="mbtns" style="flex-direction:column;gap:.65rem;margin-top:1rem">
-      <button class="btn" style="width:100%" onclick="chooseAttack()">⚔️ Atacar — construir molécula</button>
-      <button class="btn sec" style="width:100%" onclick="chooseDraw()">🃏 Robar 2 cartas del mazo</button>
+<!-- DRAW CONFIRM -->
+<div class="ov" id="ov-draw">
+  <div class="modal ai" style="max-width:310px">
+    <h2>🃏 Robar cartas</h2>
+    <p>¿Seguro que quieres robar 2 cartas del mazo central y pasar el turno?</p>
+    <div class="mbtns">
+      <button class="btn" onclick="confirmDraw()">Sí, robar</button>
+      <button class="btn sec" onclick="document.getElementById('ov-draw').classList.remove('open')">Cancelar</button>
     </div>
   </div>
 </div>
@@ -448,6 +448,7 @@
   <div class="bp-react-row">
     <button class="btn" id="btn-confirm" onclick="confirmBuild()" disabled style="opacity:.45">⚡ Reaccionar</button>
     <div class="mprev" id="mprev"></div>
+    <button class="btn sec" style="margin-left:auto;padding:.4rem .7rem" onclick="cancelBuild()" title="Cancelar">✕</button>
   </div>
   <div id="no-mol-msg" class="no-mol-msg" style="display:none">⚠️ No puedes formar ninguna molécula con estas cartas.</div>
   <div class="hand-row" id="hand-cards"></div>
@@ -728,7 +729,9 @@ function renderStack(p,count,molObj=null){
         </div>
       </div>`;
     }
-    w.innerHTML=`<div class="card-flip" id="${molObj&&isLast?'mf'+n:''}"><div class="card-inner">
+    /* All arena cards start face-down (flipped = back visible).
+       flipZone() removes 'flipped' to reveal the front face. */
+    w.innerHTML=`<div class="card-flip flipped" id="${molObj&&isLast?'mf'+n:''}"><div class="card-inner">
       ${frontHtml}
       <div class="card-face card-back"></div>
     </div></div>`;
@@ -739,7 +742,7 @@ function renderStack(p,count,molObj=null){
 
 function flipZone(p){
   const el=document.getElementById('mf'+(p+1));
-  if(el)el.classList.add('flipped');
+  if(el)el.classList.remove('flipped'); // remove to reveal front face
 }
 
 function renderHand(p){
@@ -798,53 +801,58 @@ function openBuildPanel(p){
 }
 function closeBuildPanel(){document.getElementById('build-panel').classList.remove('open');}
 
+/* Own deck → attack directly */
 function onDeckClick(p){
   if(G.phase==='build_p1'&&p!==0)return;
   if(G.phase==='build_p2'&&p!==1)return;
   if(!G.phase.startsWith('build'))return;
-  G._actionP=p;
-  document.getElementById('act-name-lbl').textContent=`¿Qué haces, ${G.names[p]}?`;
-  document.getElementById('ov-action').classList.add('open');
-}
-
-function chooseAttack(){
-  document.getElementById('ov-action').classList.remove('open');
-  const p=G._actionP;
   G.deckSize[p]=Math.max(0,G.deckSize[p]-1);
   G.sharedDeck=Math.max(0,G.sharedDeck-1);
   renderDecks();
   openBuildPanel(p);
 }
 
-function chooseDraw(){
-  document.getElementById('ov-action').classList.remove('open');
-  const p=G._actionP;
+/* Shared center deck → ask to draw */
+function onSharedDeckClick(){
+  const p=G.phase==='build_p1'?0:(G.phase==='build_p2'?1:-1);
+  if(p===-1)return;
+  G._drawP=p;
+  document.getElementById('ov-draw').classList.add('open');
+}
+
+function confirmDraw(){
+  document.getElementById('ov-draw').classList.remove('open');
+  const p=G._drawP;
   const drawn=shuffle(ELEMENTS).slice(0,2).map(e=>({...e}));
   G.hands[p]=[...G.hands[p],...drawn].slice(0,8);
   G.sharedDeck=Math.max(0,G.sharedDeck-2);
-  G.mols[p]=null; // no attack this round
+  G.mols[p]=null;
   renderDecks();
   if(p===0){
-    // P1 drew → pass to P2
     G.phase='pass_p2';
     document.getElementById('pass-h').textContent=`Pasa el dispositivo a ${G.names[1]}`;
-    document.getElementById('pass-p').textContent=`${G.names[0]} robó cartas. Es el turno de ${G.names[1]}.`;
+    document.getElementById('pass-p').textContent=`${G.names[0]} robó cartas. Turno de ${G.names[1]}.`;
     document.getElementById('pass-name').textContent=G.names[1];
     setTimeout(()=>{rotateTable(true);showScreen('pass');},200);
   } else {
-    // P2 drew
     rotateTable(false);
     if(G.mols[0]){
-      // P1 built a molecule → P1 attacks with no defender
       G.attacker=0;
-      G.dmg[1]=Math.max(0,G.mols[0].atk); // full ATK, no DEF
+      G.dmg[1]=Math.max(0,G.mols[0].atk);
       G.dmg[0]=0;
       setTimeout(showReveal,400);
     } else {
-      // Both drew → skip combat, next round
       nextRound();
     }
   }
+}
+
+/* Cancel attack — close panel and clear selection */
+function cancelBuild(){
+  const p=G.phase==='build_p1'?0:1;
+  G.build=[];
+  renderStack(p,0);
+  closeBuildPanel();
 }
 
 /* ════════════════════════════════
