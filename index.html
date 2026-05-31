@@ -3,65 +3,75 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>BreakingLab — El Duelo Molecular</title>
+  <title>BreakingLab</title>
   <style>
-    :root {
-      --bg:    #08091400;
-      --felt:  #0a0d1c;
-      --panel: #0f1328;
-      --cb:    #2a3260;
-      --accent:#00e5ff;
-      --a2:    #7c4dff;
-      --red:   #ff4757;
-      --ok:    #2ed573;
-      --gold:  #ffd32a;
-      --text:  #dde4f5;
-      --muted: #454e6a;
-      --brd:   #181e38;
-      /* 7:12 card */
-      --cw: 80px;
-      --ch: 137px;
-      --cr: 8px;
+    /* ─── Variables & reset ─── */
+    :root{
+      --bg:    #f0f4ff;
+      --panel: #ffffff;
+      --brd:   #d0d8f0;
+      --cb:    #c5cde8;
+      --acc:   #5b6af0;
+      --a2:    #a855f7;
+      --red:   #ef4444;
+      --ok:    #22c55e;
+      --gold:  #f59e0b;
+      --warn:  #fb923c;
+      --txt:   #1e2040;
+      --mut:   #7880a8;
+      --felt:  #e8edf8;
+      --arena: #dde3f5;
+      --card1: #eef1ff;
+      --card2: #fff0f0;
+      --shadow: 0 4px 16px rgba(91,106,240,.15);
+
+      --cw: clamp(52px, 13vw, 76px);
+      --ch: calc(var(--cw) * 12 / 7);
+      --cr: clamp(6px, 1.4vw, 10px);
     }
     *{box-sizing:border-box;margin:0;padding:0;}
-    html,body{height:100%;}
-    body{background:var(--felt);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;overflow-x:hidden;}
+    html,body{height:100%;overflow-x:hidden;}
+    body{background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans-serif;}
 
     .screen{display:none;}
     .screen.active{display:flex;flex-direction:column;align-items:center;min-height:100vh;}
 
-    .btn{background:linear-gradient(135deg,var(--accent),var(--a2));border:none;color:#fff;font-size:1rem;font-weight:700;padding:.75rem 2rem;border-radius:50px;cursor:pointer;transition:opacity .2s,transform .15s;}
-    .btn:hover{opacity:.85;transform:translateY(-2px);}
-    .btn.sec{background:transparent;border:2px solid var(--brd);color:var(--muted);}
-    .btn.gold{background:linear-gradient(135deg,var(--gold),#ff9f43);color:#111;}
-    .btn.sm{font-size:.78rem;padding:.4rem 1rem;}
+    /* ─── Buttons ─── */
+    .btn{background:linear-gradient(135deg,var(--acc),var(--a2));border:none;color:#fff;font-size:clamp(.82rem,3vw,1rem);font-weight:700;padding:.72rem 1.9rem;border-radius:50px;cursor:pointer;transition:opacity .2s,transform .15s;box-shadow:0 4px 14px rgba(91,106,240,.35);}
+    .btn:hover{opacity:.88;transform:translateY(-2px);}
+    .btn.sec{background:#fff;border:2px solid var(--brd);color:var(--mut);box-shadow:none;}
+    .btn.sec:hover{border-color:var(--acc);color:var(--acc);}
+    .btn.gold{background:linear-gradient(135deg,var(--gold),var(--warn));color:#fff;box-shadow:0 4px 14px rgba(245,158,11,.35);}
+    .btn.danger{background:linear-gradient(135deg,var(--red),#c0392b);box-shadow:0 4px 14px rgba(239,68,68,.35);}
+    .btn.sm{font-size:.75rem;padding:.4rem .95rem;}
 
-    /* ══ INTRO ══ */
-    #screen-intro{justify-content:center;gap:1.2rem;background:radial-gradient(ellipse at 50% 35%,#1a2040,#08091a 70%);}
-    .logo{font-size:3.4rem;font-weight:900;letter-spacing:-2px;background:linear-gradient(135deg,var(--accent),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-    .logo-sub{color:var(--muted);letter-spacing:4px;text-transform:uppercase;font-size:.8rem;}
+    /* ─── INTRO ─── */
+    #screen-intro{justify-content:center;gap:1.2rem;background:linear-gradient(160deg,#f0f4ff 0%,#e8eaf6 50%,#fce4ff 100%);}
+    .logo{font-size:clamp(2.2rem,8vw,3.6rem);font-weight:900;letter-spacing:-2px;background:linear-gradient(135deg,var(--acc),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+    .logo-sub{color:var(--mut);letter-spacing:4px;text-transform:uppercase;font-size:.75rem;}
+    .intro-icon{font-size:4rem;filter:drop-shadow(0 4px 12px rgba(91,106,240,.3));}
 
-    /* ══ NAMES ══ */
-    #screen-names{justify-content:center;background:radial-gradient(ellipse at 50% 35%,#1a2040,#08091a 70%);}
-    .names-box{background:var(--panel);border:1px solid var(--brd);border-radius:20px;padding:2.5rem;width:400px;max-width:92vw;margin:auto;}
-    .names-box h2{font-size:1.3rem;margin-bottom:.4rem;text-align:center;}
-    .names-box p{color:var(--muted);font-size:.82rem;text-align:center;margin-bottom:1.8rem;}
-    .nf{display:flex;flex-direction:column;gap:.3rem;margin-bottom:1rem;}
-    .nf label{font-size:.68rem;text-transform:uppercase;letter-spacing:2px;color:var(--muted);}
-    .nf label.c1{color:var(--accent);}
+    /* ─── NAMES ─── */
+    #screen-names{justify-content:center;background:linear-gradient(160deg,#f0f4ff,#fce4ff 100%);}
+    .names-box{background:var(--panel);border:1px solid var(--brd);border-radius:22px;padding:2rem;width:min(390px,93vw);margin:auto;box-shadow:var(--shadow);}
+    .names-box h2{font-size:1.2rem;margin-bottom:.3rem;text-align:center;}
+    .names-box p{color:var(--mut);font-size:.8rem;text-align:center;margin-bottom:1.5rem;}
+    .nf{display:flex;flex-direction:column;gap:.3rem;margin-bottom:.9rem;}
+    .nf label{font-size:.65rem;text-transform:uppercase;letter-spacing:2px;color:var(--mut);font-weight:700;}
+    .nf label.c1{color:var(--acc);}
     .nf label.c2{color:var(--red);}
-    .nf input{background:#0a0d20;border:1.5px solid var(--cb);color:var(--text);font-size:1rem;padding:.58rem .9rem;border-radius:10px;outline:none;transition:border-color .2s;}
-    .nf input:focus{border-color:var(--accent);}
+    .nf input{background:var(--felt);border:2px solid var(--brd);color:var(--txt);font-size:.95rem;padding:.55rem .85rem;border-radius:10px;outline:none;transition:border-color .2s;width:100%;}
+    .nf input:focus{border-color:var(--acc);}
 
-    /* ══ PASS ══ */
-    #screen-pass{justify-content:center;background:#08091a;}
-    .pass-box{background:var(--panel);border:1px solid var(--brd);border-radius:20px;padding:3rem 2rem;text-align:center;max-width:360px;}
-    .pass-box .pi{font-size:4rem;margin-bottom:1rem;}
-    .pass-box h2{font-size:1.5rem;margin-bottom:.5rem;}
-    .pass-box p{color:var(--muted);margin-bottom:2rem;font-size:.86rem;}
+    /* ─── PASS ─── */
+    #screen-pass{justify-content:center;background:linear-gradient(160deg,#1e2040,#3b1f5e);}
+    .pass-box{background:rgba(255,255,255,.08);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.15);border-radius:22px;padding:2.5rem 2rem;text-align:center;max-width:360px;width:92vw;}
+    .pass-box .pi{font-size:4rem;margin-bottom:.8rem;filter:drop-shadow(0 0 20px #a855f788);}
+    .pass-box h2{font-size:1.4rem;margin-bottom:.4rem;color:#fff;}
+    .pass-box p{color:rgba(255,255,255,.6);margin-bottom:1.8rem;font-size:.84rem;}
 
     /* ════════════════════════════════════
-       CARD — 7:12, real card appearance
+       CARD BASE
     ════════════════════════════════════ */
     .card{
       width:var(--cw);
@@ -70,11 +80,7 @@
       position:relative;
       flex-shrink:0;
     }
-    /* Flip wrapper */
-    .card-flip{
-      width:100%;height:100%;
-      perspective:800px;
-    }
+    .card-flip{width:100%;height:100%;perspective:800px;}
     .card-inner{
       width:100%;height:100%;
       position:relative;
@@ -90,394 +96,346 @@
       -webkit-backface-visibility:hidden;
     }
 
-    /* CARD FRONT — face up (molecule / analyst) */
+    /* ── Front face ── */
     .card-front{
       display:flex;flex-direction:column;overflow:hidden;
-      background:linear-gradient(165deg,#1e2648 0%,#14193a 55%,#0e122c 100%);
-      border:1.5px solid #2e3a72;
-      box-shadow:1px 3px 8px #00000070, inset 0 1px 0 #ffffff08;
+      background:linear-gradient(165deg,#fff 0%,#f5f7ff 60%,#eef0ff 100%);
+      border:2px solid #d0d8f0;
+      box-shadow:0 3px 10px rgba(91,106,240,.12),inset 0 1px 0 #fff;
     }
-    .card-front::after{
-      content:'';position:absolute;inset:4px;
-      border:1px solid rgba(255,255,255,.05);border-radius:5px;pointer-events:none;
-    }
-    /* type-specific tints */
-    .card-front.tred  {background:linear-gradient(165deg,#2a1222 0%,#1a0a18 100%);border-color:#5a1838;}
-    .card-front.tgreen{background:linear-gradient(165deg,#0e2216 0%,#091510 100%);border-color:#1a5028;}
-    .card-front.tpurp {background:linear-gradient(165deg,#1c1040 0%,#100a28 100%);border-color:#4a2488;}
-    .card-front.tgold {background:linear-gradient(165deg,#1e1808 0%,#121005 100%);border-color:#5a4010;}
+    .cf-red{background:linear-gradient(165deg,#fff5f5 0%,#fff0f0 60%,#ffe8e8 100%);border-color:#fcc;}
+    .cf-grn{background:linear-gradient(165deg,#f0fff8 0%,#e8fff2 60%,#dcfce7 100%);border-color:#86efac;}
+    .cf-purp{background:linear-gradient(165deg,#faf5ff 0%,#f3e8ff 60%,#ede9fe 100%);border-color:#d8b4fe;}
+    .cf-gold{background:linear-gradient(165deg,#fffbeb 0%,#fef3c7 60%,#fde68a 100%);border-color:#fcd34d;}
 
-    /* CARD BACK — face down */
+    /* ── Back face ── */
     .card-back{
       transform:rotateY(180deg);
-      background:
-        repeating-linear-gradient(135deg,#1a2252 0,#1a2252 3px,#0e1438 3px,#0e1438 9px);
-      border:1.5px solid #2a3468;
-      box-shadow:1px 3px 8px #00000070;
+      background:linear-gradient(135deg,#5b6af0 0%,#a855f7 100%);
+      border:2px solid #7c6df0;
+      box-shadow:0 3px 10px rgba(91,106,240,.25);
       display:flex;align-items:center;justify-content:center;
+      font-size:1.2rem;
     }
-    .card-back::after{
-      content:'⚗';font-size:1.8rem;opacity:.12;
-      position:absolute;
-    }
-    .card-back::before{
-      content:'';position:absolute;inset:5px;
-      border:1px solid rgba(255,255,255,.06);border-radius:5px;
-    }
+    .card-back::before{content:'⚗️';font-size:clamp(.9rem,2.5vw,1.2rem);}
 
-    /* Card content layout */
-    .ec-tl{position:absolute;top:5px;left:6px;font-size:.5rem;color:var(--muted);line-height:1.2;}
-    .ec-tr{position:absolute;top:4px;right:5px;display:flex;flex-direction:column;align-items:flex-end;gap:1px;}
-    .ec-a{font-size:.54rem;color:var(--red);font-weight:900;background:#1a0808cc;padding:1px 4px;border-radius:3px;}
-    .ec-d{font-size:.54rem;color:var(--ok);font-weight:900;background:#081a08cc;padding:1px 4px;border-radius:3px;}
-    .ec-sym{display:flex;align-items:center;justify-content:center;flex:1;padding-top:1.25rem;}
-    .ec-img{width:42px;height:42px;border-radius:7px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);display:flex;align-items:center;justify-content:center;overflow:hidden;}
+    /* ── Card content ── */
+    .ec-tl{position:absolute;top:4px;left:5px;font-size:clamp(.36rem,.85vw,.5rem);color:var(--mut);line-height:1.2;font-weight:700;}
+    .ec-tr{position:absolute;top:3px;right:4px;display:flex;flex-direction:column;align-items:flex-end;gap:1px;}
+    .ec-a{font-size:clamp(.34rem,.8vw,.52rem);color:var(--red);font-weight:900;background:#fee2e2;padding:1px 3px;border-radius:3px;}
+    .ec-d{font-size:clamp(.34rem,.8vw,.52rem);color:var(--ok);font-weight:900;background:#dcfce7;padding:1px 3px;border-radius:3px;}
+    .ec-sym{display:flex;align-items:center;justify-content:center;flex:1;padding-top:clamp(.9rem,2.4vw,1.2rem);}
+    .ec-img{width:clamp(28px,8vw,42px);height:clamp(28px,8vw,42px);border-radius:6px;background:rgba(91,106,240,.07);border:1px solid rgba(91,106,240,.15);display:flex;align-items:center;justify-content:center;overflow:hidden;}
     .ec-img img{width:100%;height:100%;object-fit:contain;}
-    .ec-body{border-top:1px solid rgba(255,255,255,.06);padding:.28rem .38rem .3rem;display:flex;flex-direction:column;gap:.13rem;}
-    .ec-chip{font-size:.4rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:1px 4px;border-radius:3px;align-self:flex-start;}
-    .tnm{background:#0a2a18;color:#2ed573;}
-    .tsp{background:#1a0a30;color:#e040fb;}
-    .trd{background:#1a2a00;color:#aaff00;}
-    .tno{background:#0a0a2a;color:var(--accent);}
-    .tan{background:#1a1030;color:var(--accent);}
-    .ec-eff{font-size:.48rem;color:var(--text);line-height:1.28;font-weight:600;}
-    .ec-info{font-size:.43rem;color:var(--muted);line-height:1.22;border-top:1px solid rgba(255,255,255,.05);padding-top:.15rem;margin-top:.08rem;}
+    .ec-body{border-top:1px solid rgba(91,106,240,.1);padding:clamp(.16rem,.45vw,.28rem) clamp(.22rem,.55vw,.36rem);display:flex;flex-direction:column;gap:.1rem;}
+    .ec-chip{font-size:clamp(.3rem,.7vw,.4rem);font-weight:800;text-transform:uppercase;letter-spacing:.4px;padding:1px 4px;border-radius:3px;align-self:flex-start;}
+    .tnm{background:#dbeafe;color:#1d4ed8;}
+    .tsp{background:#f3e8ff;color:#7e22ce;}
+    .trd{background:#dcfce7;color:#15803d;}
+    .tno{background:#ede9fe;color:#6d28d9;}
+    .trao{background:#fef3c7;color:#b45309;}
+    .ec-eff{font-size:clamp(.28rem,.68vw,.44rem);color:var(--txt);line-height:1.25;font-weight:600;}
+    .ec-info{font-size:clamp(.25rem,.6vw,.4rem);color:var(--mut);line-height:1.2;border-top:1px solid rgba(91,106,240,.08);padding-top:.1rem;margin-top:.07rem;}
 
-    /* Analyst card extras */
-    .an-role{font-size:1.6rem;line-height:1;}
-    .an-title{font-size:.44rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-top:2px;}
-    .an-num{font-size:.5rem;color:var(--muted);}
+    /* ── Analyst card ── */
+    .an-front{
+      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(3px,1vw,6px);
+    }
+    .an-icon{font-size:clamp(1.1rem,3.5vw,1.9rem);line-height:1;}
+    .an-label{font-size:clamp(.28rem,.72vw,.42rem);text-transform:uppercase;letter-spacing:1px;color:var(--mut);font-weight:700;}
 
-    /* Hover on clickable cards */
+    /* dim card = can't participate in any valid molecule */
+    .card.dimmed{opacity:.32;pointer-events:none;}
     .card.clickable{cursor:pointer;}
-    .card.clickable:hover .card-inner{transform:translateY(-8px);}
-    .card.clickable.sel .card-front{border-color:var(--a2);box-shadow:0 0 0 2px var(--a2),0 8px 20px #7c4dff40;}
+    .card.clickable:hover .card-inner{transform:translateY(-6px);}
+    .card.clickable.sel .card-front{border-color:var(--acc);box-shadow:0 0 0 3px rgba(91,106,240,.4),0 8px 20px rgba(91,106,240,.25);}
 
     /* ════════════════════════════════════
-       GAME TABLE LAYOUT
+       GAME TABLE
     ════════════════════════════════════ */
-    #screen-game{background:var(--felt);justify-content:stretch;padding:0;}
+    #screen-game{background:var(--bg);justify-content:stretch;padding:0;}
 
+    /* ── 180° rotate wrapper for pass transition ── */
     .table{
       width:100%;
-      max-width:900px;
+      max-width:860px;
       margin:0 auto;
       min-height:100vh;
       display:flex;
       flex-direction:column;
-      padding:.6rem .5rem;
-      gap:.5rem;
+      padding:clamp(.35rem,1.5vw,.7rem) clamp(.3rem,1.5vw,.6rem);
+      gap:clamp(.28rem,.9vw,.5rem);
+      transition:transform .6s cubic-bezier(.4,0,.2,1),opacity .4s;
     }
+    .table.rotated{transform:rotate(180deg);}
 
-    /* ── Analyst row ── */
-    .analyst-row{
+    /* ── Analyst strip ── */
+    .astrip{
       display:flex;
       align-items:center;
-      gap:.4rem;
+      gap:clamp(.18rem,.7vw,.36rem);
     }
-    /* name label rotated on side */
-    .row-name{
+    .pname-lbl{
       writing-mode:vertical-rl;
-      text-orientation:mixed;
-      font-size:.65rem;font-weight:700;letter-spacing:1px;
-      padding:.3rem .15rem;
-      border-radius:4px;
+      font-size:clamp(.48rem,1.3vw,.68rem);
+      font-weight:800;
+      letter-spacing:.5px;
+      padding:.2rem .1rem;
+      white-space:nowrap;
+      flex-shrink:0;
     }
-    .row-name.c1{color:var(--accent);}
-    .row-name.c2{color:var(--red);transform:rotate(180deg);}
+    .pname-lbl.c1{color:var(--acc);}
+    .pname-lbl.c2{color:var(--red);transform:rotate(180deg);}
 
-    /* ── Central arena ── */
+    .analysts{display:flex;gap:clamp(.14rem,.55vw,.3rem);align-items:center;}
+
+    /* personal draw deck */
+    .pdeck{
+      width:var(--cw);
+      height:var(--ch);
+      border-radius:var(--cr);
+      background:linear-gradient(135deg,var(--acc),var(--a2));
+      border:none;
+      box-shadow:0 4px 14px rgba(91,106,240,.35),0 2px 0 #3b42c0;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+      cursor:pointer;
+      transition:transform .15s,box-shadow .15s;
+      position:relative;
+      flex-shrink:0;
+    }
+    .pdeck:hover{transform:translateY(-6px) rotate(-2deg);box-shadow:0 8px 20px rgba(91,106,240,.45),0 2px 0 #3b42c0;}
+    .pdeck-icon{font-size:clamp(.9rem,2.5vw,1.3rem);position:relative;z-index:1;}
+    .pdeck-cnt{font-size:clamp(.38rem,1vw,.58rem);color:rgba(255,255,255,.9);font-weight:700;letter-spacing:1px;z-index:1;}
+    .pdeck-lbl{font-size:clamp(.28rem,.75vw,.42rem);text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,.7);z-index:1;}
+
+    /* ── ARENA ── */
     .arena{
       flex:1;
       display:flex;
-      gap:.8rem;
-    }
-
-    /* left/right gutter columns (could add side info later) */
-    .arena-side{
-      display:flex;
       flex-direction:column;
-      justify-content:center;
-      gap:.5rem;
-      min-width:30px;
+      gap:clamp(.28rem,.9vw,.48rem);
+      min-height:0;
     }
 
-    /* main arena column */
-    .arena-main{
-      flex:1;
-      display:flex;
-      flex-direction:column;
-      gap:.5rem;
-    }
-
-    /* player zone inside arena — where cards stack face-down */
     .pzone{
       flex:1;
-      background:linear-gradient(170deg,#0c1028 0%,#090e20 100%);
-      border:1px solid var(--brd);
+      background:linear-gradient(170deg,#f5f7ff 0%,#eef0ff 100%);
+      border:2px solid var(--brd);
       border-radius:14px;
       display:flex;
       align-items:center;
       justify-content:center;
       position:relative;
-      min-height:160px;
       overflow:hidden;
+      min-height:clamp(100px,22vh,180px);
+      box-shadow:inset 0 2px 8px rgba(91,106,240,.07);
     }
-    .pzone-label{
-      position:absolute;top:7px;left:50%;transform:translateX(-50%);
-      font-size:.5rem;letter-spacing:3px;color:var(--muted);text-transform:uppercase;
+    .pzone-lbl{
+      position:absolute;top:6px;left:50%;transform:translateX(-50%);
+      font-size:clamp(.36rem,.85vw,.48rem);letter-spacing:3px;color:var(--mut);text-transform:uppercase;white-space:nowrap;font-weight:700;
     }
+    .zone-empty{font-size:clamp(.54rem,1.4vw,.66rem);color:var(--mut);text-align:center;line-height:1.7;}
+    .zone-empty .zi{font-size:clamp(.9rem,2.4vw,1.2rem);display:block;margin-bottom:3px;}
 
-    /* stacked face-down cards inside pzone */
-    .card-stack{
-      position:relative;
-      width:var(--cw);
-      height:var(--ch);
-    }
-    .card-stack .stacked{
-      position:absolute;
-      left:0;
-      transition:top .25s;
-    }
-    /* empty zone placeholder */
-    .zone-empty{
-      font-size:.65rem;color:var(--muted);text-align:center;line-height:1.5;
-    }
-    .zone-empty .ze-icon{font-size:1.4rem;margin-bottom:3px;}
+    .card-stack{position:relative;width:var(--cw);}
 
-    /* ── Center deck row ── */
-    .deck-row{
+    /* ── Center row ── */
+    .center-row{
       display:flex;
       align-items:center;
       justify-content:center;
-      gap:1.2rem;
-      padding:.35rem 0;
+      gap:clamp(.5rem,2vw,1.2rem);
+      padding:clamp(.1rem,.45vw,.22rem) 0;
+      flex-shrink:0;
     }
-    .pile{
-      width:var(--cw);height:var(--ch);
+    .cpile{
+      width:var(--cw);
+      height:var(--ch);
       border-radius:var(--cr);
-      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
-      cursor:pointer;flex-shrink:0;
-      transition:transform .15s,box-shadow .15s;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+      flex-shrink:0;
       position:relative;
     }
-    .pile:hover{transform:translateY(-5px) rotate(-2deg);}
-    .pile.draw{
-      background:repeating-linear-gradient(135deg,#1e2a58 0,#1e2a58 3px,#131c40 3px,#131c40 9px);
-      border:2px solid var(--a2);
-      box-shadow:3px 4px 0 #06091a,0 0 16px #7c4dff28;
+    .cpile.disc{
+      background:linear-gradient(165deg,#f9fafb,#f3f4f6);
+      border:2px dashed var(--brd);
     }
-    .pile.draw::after{content:'';position:absolute;inset:5px;border:1px solid #7c4dff33;border-radius:5px;pointer-events:none;}
-    .pile.discard{
-      background:repeating-linear-gradient(45deg,#101408 0,#101408 3px,#080c04 3px,#080c04 9px);
-      border:2px dashed #253020;
-      opacity:.72;
-    }
-    .pile-icon{font-size:1.4rem;position:relative;z-index:1;}
-    .pile-cnt{font-size:.58rem;font-weight:700;letter-spacing:1px;position:relative;z-index:1;}
-    .pile.draw .pile-cnt{color:var(--a2);}
-    .pile.discard .pile-cnt{color:#3a4a28;}
-    .pile-lbl{font-size:.45rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);position:relative;z-index:1;}
-
-    /* VS badge */
-    .vs{font-size:1rem;font-weight:900;color:var(--gold);text-shadow:0 0 14px #ffd32a55;flex-shrink:0;}
+    .cpile-icon{font-size:clamp(.9rem,2.4vw,1.2rem);position:relative;z-index:1;}
+    .cpile-cnt{font-size:clamp(.36rem,.95vw,.56rem);font-weight:700;letter-spacing:1px;z-index:1;color:var(--mut);}
+    .cpile-lbl{font-size:clamp(.27rem,.72vw,.4rem);text-transform:uppercase;letter-spacing:1.5px;color:var(--mut);z-index:1;}
+    .vs-lbl{font-size:clamp(.75rem,2.5vw,1.2rem);font-weight:900;color:var(--gold);text-shadow:0 2px 8px rgba(245,158,11,.35);}
 
     /* ════════════════════════════════════
        BUILD PANEL
     ════════════════════════════════════ */
     .build-panel{
       position:fixed;bottom:0;left:0;right:0;
-      background:var(--panel);border-top:1px solid var(--brd);
-      border-radius:20px 20px 0 0;
-      padding:.85rem 1rem 1.4rem;
+      background:var(--panel);border-top:2px solid var(--brd);
+      border-radius:22px 22px 0 0;
+      padding:.85rem .95rem 1.4rem;
       z-index:90;transform:translateY(100%);
       transition:transform .35s cubic-bezier(.4,0,.2,1);
-      max-height:78vh;overflow-y:auto;
+      max-height:80vh;overflow-y:auto;
+      box-shadow:0 -6px 30px rgba(91,106,240,.15);
     }
     .build-panel.open{transform:translateY(0);}
-    .bp-handle{width:36px;height:4px;background:var(--brd);border-radius:2px;margin:0 auto .65rem;}
-    .bp-top{font-size:.7rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:.55rem;display:flex;justify-content:space-between;align-items:center;}
-    .build-row{display:flex;gap:.4rem;flex-wrap:wrap;min-height:40px;align-items:center;margin-bottom:.45rem;}
-    .bchip{background:#0a0d20;border:1px solid var(--brd);border-radius:7px;padding:.24rem .48rem;font-size:.8rem;font-weight:700;cursor:pointer;transition:background .15s;display:flex;flex-direction:column;align-items:center;}
-    .bchip:hover{background:var(--red);border-color:var(--red);}
+    .bp-handle{width:36px;height:5px;background:var(--brd);border-radius:3px;margin:0 auto .65rem;}
+    .bp-top{font-size:.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--mut);margin-bottom:.5rem;display:flex;justify-content:space-between;align-items:center;font-weight:700;}
+    .build-row{display:flex;gap:.35rem;flex-wrap:wrap;min-height:40px;align-items:center;margin-bottom:.45rem;background:var(--felt);border-radius:10px;padding:.5rem .6rem;}
+    .bchip{background:#fff;border:2px solid var(--brd);border-radius:8px;padding:.24rem .48rem;font-size:.8rem;font-weight:700;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;align-items:center;box-shadow:0 2px 6px rgba(91,106,240,.1);}
+    .bchip:hover{background:var(--red);border-color:var(--red);color:#fff;}
     .bchip .bs{font-size:.86rem;}
-    .bchip .bl{font-size:.43rem;color:var(--muted);}
-    .build-acts{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;}
-    .mprev{margin-left:auto;font-size:.72rem;color:var(--accent);font-weight:700;}
-    .hand-row{display:flex;gap:.45rem;flex-wrap:wrap;margin-top:.55rem;padding-bottom:.4rem;}
+    .bchip .bl{font-size:.38rem;color:var(--mut);}
+    .bchip:hover .bl{color:rgba(255,255,255,.7);}
+    .build-acts{display:flex;gap:.45rem;align-items:center;flex-wrap:wrap;margin-top:.35rem;}
+    .mprev{margin-left:auto;font-size:.72rem;color:var(--acc);font-weight:800;}
+    .mprev.valid{color:var(--ok);}
+    .mprev.invalid{color:var(--red);}
+    .hand-row{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.55rem;padding-bottom:.3rem;}
+    .hand-section-lbl{font-size:.58rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--mut);margin:.5rem 0 .22rem;font-weight:700;}
 
     /* ════════════════════════════════════
        MODALS
     ════════════════════════════════════ */
-    .ov{position:fixed;inset:0;background:#000000c0;display:none;align-items:center;justify-content:center;z-index:100;}
+    .ov{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:100;}
     .ov.open{display:flex;}
-    .modal{background:var(--panel);border:1px solid var(--brd);border-radius:20px;padding:1.75rem;max-width:520px;width:92%;text-align:center;}
-    .modal h2{font-size:1.25rem;margin-bottom:.4rem;}
-    .modal p{color:var(--muted);font-size:.83rem;margin-bottom:.9rem;line-height:1.5;}
-    .cbox{background:#0a0d20;border-radius:12px;padding:.8rem;margin:.7rem 0;text-align:left;}
-    .crow{display:flex;justify-content:space-between;font-size:.8rem;padding:.22rem 0;border-bottom:1px solid var(--brd);}
+    .modal{background:var(--panel);border:1px solid var(--brd);border-radius:22px;padding:1.8rem;max-width:500px;width:94%;text-align:center;box-shadow:0 20px 60px rgba(91,106,240,.2);}
+    .modal h2{font-size:1.3rem;margin-bottom:.4rem;}
+    .modal p{color:var(--mut);font-size:.83rem;margin-bottom:.9rem;line-height:1.55;}
+    .cbox{background:var(--felt);border-radius:12px;padding:.8rem;margin:.65rem 0;text-align:left;}
+    .crow{display:flex;justify-content:space-between;font-size:.8rem;padding:.24rem 0;border-bottom:1px solid var(--brd);}
     .crow:last-child{border:none;font-weight:700;}
-    .crow .cv{color:var(--accent);}
+    .crow .cv{color:var(--acc);font-weight:700;}
     .crow .cv.bad{color:var(--red);}
-    .mbtns{display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap;margin-top:.7rem;}
-    .spell-grid{display:flex;gap:.55rem;flex-wrap:wrap;justify-content:center;margin:.7rem 0;}
-    .sdesc{background:#0a0d20;border-radius:9px;padding:.58rem;font-size:.74rem;color:var(--muted);min-height:40px;text-align:left;line-height:1.4;margin-bottom:.55rem;}
+    .mbtns{display:flex;gap:.55rem;justify-content:center;flex-wrap:wrap;margin-top:.7rem;}
+    .spell-grid{display:flex;gap:.55rem;flex-wrap:wrap;justify-content:center;margin:.65rem 0;}
+    .sdesc{background:var(--felt);border-radius:10px;padding:.6rem;font-size:.73rem;color:var(--mut);min-height:40px;text-align:left;line-height:1.45;margin-bottom:.55rem;}
 
-    /* ════════════════════════════════════
-       RESULT
-    ════════════════════════════════════ */
-    #screen-result{justify-content:center;gap:1rem;background:radial-gradient(ellipse at 50% 40%,#1a1f3a,#08091a 70%);}
-    .rtitle{font-size:2.5rem;font-weight:900;}
-    .rsub{color:var(--muted);font-size:.88rem;}
-    .rstats{background:var(--panel);border:1px solid var(--brd);border-radius:16px;padding:1.25rem;width:320px;text-align:left;}
+    /* valid molecule hint badge */
+    .mol-hint{background:linear-gradient(135deg,var(--ok),#16a34a);color:#fff;border-radius:50px;padding:.2rem .7rem;font-size:.66rem;font-weight:700;display:inline-block;margin:.2rem 0;}
 
-    @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+    /* ─── RESULT ─── */
+    #screen-result{justify-content:center;gap:.9rem;background:linear-gradient(160deg,#f0f4ff,#fce4ff 100%);}
+    .rtitle{font-size:clamp(1.9rem,6vw,2.8rem);font-weight:900;}
+    .rsub{color:var(--mut);font-size:.87rem;text-align:center;padding:0 1rem;}
+    .rstats{background:var(--panel);border:1px solid var(--brd);border-radius:16px;padding:1.2rem;width:min(320px,90vw);text-align:left;box-shadow:var(--shadow);}
+
+    @keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+    @keyframes popIn{from{opacity:0;transform:scale(.85);}to{opacity:1;transform:scale(1);}}
     .ai{animation:fadeIn .3s ease;}
+    .pi-anim{animation:popIn .4s cubic-bezier(.34,1.56,.64,1);}
 
-    @media(max-width:500px){
-      :root{--cw:66px;--ch:113px;--cr:7px;}
-      .analyst-row{gap:.28rem;}
-    }
+    /* ── mol-valid highlight in hand ── */
+    .card.mol-valid .card-front{box-shadow:0 0 0 2.5px var(--ok),0 4px 14px rgba(34,197,94,.25);}
   </style>
 </head>
 <body>
 
-<!-- INTRO -->
+<!-- ═══ INTRO ═══ -->
 <div id="screen-intro" class="screen active">
-  <div style="font-size:3rem">⚗️</div>
+  <div class="intro-icon pi-anim">⚗️</div>
   <div class="logo">BreakingLab</div>
   <div class="logo-sub">El Duelo Molecular</div>
-  <div style="display:flex;flex-direction:column;gap:.5rem;margin-top:1rem;align-items:center">
-    <button class="btn" onclick="showScreen('names')">Iniciar Partida</button>
-    <button class="btn sec" onclick="openRules()">Ver Reglas</button>
+  <div style="display:flex;flex-direction:column;gap:.55rem;margin-top:1.2rem;align-items:center">
+    <button class="btn" onclick="showScreen('names')">🚀 Iniciar Partida</button>
+    <button class="btn sec" onclick="openRules()">📖 Ver Reglas</button>
   </div>
 </div>
 
-<!-- NAMES -->
+<!-- ═══ NAMES ═══ -->
 <div id="screen-names" class="screen">
   <div class="names-box ai">
-    <h2>⚗️ Registro de Jugadores</h2>
-    <p>Introduce los nombres de los dos científicos que se enfrentarán en el laboratorio.</p>
+    <h2>⚗️ Registro de Científicos</h2>
+    <p>Introduce los nombres de los dos jugadores.</p>
     <div class="nf"><label class="c1">⚗ Jugador 1</label><input id="inp-p1" type="text" placeholder="Nombre Jugador 1" maxlength="20"/></div>
     <div class="nf"><label class="c2">☠ Jugador 2</label><input id="inp-p2" type="text" placeholder="Nombre Jugador 2" maxlength="20"/></div>
-    <div style="display:flex;gap:.6rem;margin-top:.4rem">
+    <div style="display:flex;gap:.55rem;margin-top:.5rem">
       <button class="btn" style="flex:1" onclick="startGame()">¡Comenzar!</button>
       <button class="btn sec" onclick="showScreen('intro')">Volver</button>
     </div>
   </div>
 </div>
 
-<!-- PASS -->
+<!-- ═══ PASS ═══ -->
 <div id="screen-pass" class="screen">
   <div class="pass-box ai">
     <div class="pi">🔄</div>
     <h2 id="pass-h">Pasa el dispositivo</h2>
     <p id="pass-p">Es el turno del siguiente jugador.</p>
-    <button class="btn" onclick="resumePass()">Listo — soy <span id="pass-name">Jugador</span></button>
+    <button class="btn" onclick="resumePass()">✅ Listo — soy <span id="pass-name">Jugador</span></button>
   </div>
 </div>
 
-<!-- ═══════════════════════════════
-     GAME TABLE
-═══════════════════════════════ -->
+<!-- ═══ GAME ═══ -->
 <div id="screen-game" class="screen">
-  <div class="table">
+  <div class="table" id="game-table">
 
-    <!-- P2 ANALYST CARDS (top) -->
-    <div class="analyst-row" id="arow2">
-      <!-- filled by JS -->
-    </div>
+    <!-- P2 analyst strip -->
+    <div class="astrip" id="astrip2"></div>
 
     <!-- ARENA -->
     <div class="arena">
-      <div class="arena-main">
 
-        <!-- P2 zone -->
-        <div class="pzone" id="pzone2">
-          <div class="pzone-label" id="pzlbl2">Zona rival</div>
-          <div class="zone-empty" id="zempty2">
-            <div class="ze-icon">🔬</div>
-            esperando…
-          </div>
-          <div class="card-stack" id="stack2" style="display:none"></div>
-        </div>
-
-        <!-- CENTER: decks -->
-        <div class="deck-row">
-          <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
-            <div class="pile discard" id="discard2" title="Descarte rival">
-              <div class="pile-icon">♻</div>
-              <div class="pile-cnt" id="discnt2">0</div>
-              <div class="pile-lbl">Descarte</div>
-            </div>
-          </div>
-
-          <div class="vs">VS</div>
-
-          <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
-            <div class="pile draw" id="deck-shared" onclick="onDeckClick()" title="Robar carta">
-              <div class="pile-icon">🃏</div>
-              <div class="pile-cnt" id="dcnt">32</div>
-              <div class="pile-lbl">Mazo</div>
-            </div>
-          </div>
-
-          <div class="vs" style="visibility:hidden">VS</div>
-
-          <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
-            <div class="pile discard" id="discard1" title="Tu descarte">
-              <div class="pile-icon">♻</div>
-              <div class="pile-cnt" id="discnt1">0</div>
-              <div class="pile-lbl">Descarte</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- P1 zone -->
-        <div class="pzone" id="pzone1">
-          <div class="pzone-label" id="pzlbl1">Tu zona</div>
-          <div class="zone-empty" id="zempty1">
-            <div class="ze-icon">⚗️</div>
-            roba del mazo para construir
-          </div>
-          <div class="card-stack" id="stack1" style="display:none"></div>
-        </div>
-
+      <!-- P2 zone (top) -->
+      <div class="pzone" id="pzone2">
+        <div class="pzone-lbl" id="pzlbl2">Zona rival</div>
+        <div class="zone-empty" id="zempty2"><span class="zi">🔬</span>esperando…</div>
+        <div class="card-stack" id="stack2" style="display:none"></div>
       </div>
-    </div>
 
-    <!-- P1 ANALYST CARDS (bottom) -->
-    <div class="analyst-row" id="arow1">
-      <!-- filled by JS -->
-    </div>
+      <!-- Center: shared discard + VS -->
+      <div class="center-row">
+        <span class="vs-lbl" id="vs-lbl-l" style="visibility:hidden">←</span>
+        <div class="cpile disc" title="Pila de descarte compartida">
+          <div class="cpile-icon">♻️</div>
+          <div class="cpile-cnt" id="disc-cnt">0</div>
+          <div class="cpile-lbl">Descarte</div>
+        </div>
+        <span class="vs-lbl">⚔️ VS</span>
+        <span class="vs-lbl" id="vs-lbl-r" style="visibility:hidden">→</span>
+      </div>
 
-  </div><!-- .table -->
+      <!-- P1 zone (bottom) -->
+      <div class="pzone" id="pzone1">
+        <div class="pzone-lbl" id="pzlbl1">Tu zona</div>
+        <div class="zone-empty" id="zempty1"><span class="zi">⚗️</span>pulsa tu mazo para construir</div>
+        <div class="card-stack" id="stack1" style="display:none"></div>
+      </div>
+
+    </div><!-- .arena -->
+
+    <!-- P1 analyst strip -->
+    <div class="astrip" id="astrip1"></div>
+
+  </div>
 </div>
 
-<!-- RESULT -->
+<!-- ═══ RESULT ═══ -->
 <div id="screen-result" class="screen">
   <div class="rtitle" id="rtitle">🏆 Victoria</div>
   <div class="rsub"   id="rsub"></div>
   <div class="rstats" id="rstats"></div>
-  <button class="btn" style="margin-top:1rem" onclick="showScreen('names')">Jugar de nuevo</button>
+  <button class="btn" style="margin-top:1rem" onclick="showScreen('names')">🔄 Jugar de nuevo</button>
 </div>
 
 <!-- BUILD PANEL -->
 <div class="build-panel" id="build-panel">
   <div class="bp-handle"></div>
   <div class="bp-top">
-    <span>🧬 Construye tu molécula — <span id="bp-pname"></span></span>
+    <span>🧬 Construyendo — <span id="bp-pname"></span></span>
     <button class="btn sm sec" onclick="closeBuildPanel()">✕</button>
   </div>
-  <div style="font-size:.58rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:.25rem">Seleccionados (clic para quitar):</div>
+  <div class="hand-section-lbl">Seleccionados (toca para quitar):</div>
   <div class="build-row" id="build-row"></div>
   <div class="build-acts">
-    <button class="btn sm" onclick="confirmBuild()">Construir Molécula</button>
-    <button class="btn sm sec" onclick="clearBuild()">Limpiar</button>
+    <button class="btn sm" onclick="confirmBuild()" id="btn-confirm">✅ Construir</button>
+    <button class="btn sm sec" onclick="clearBuild()">🗑 Limpiar</button>
     <div class="mprev" id="mprev"></div>
   </div>
-  <div style="font-size:.58rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin:.55rem 0 .28rem">Tu mano:</div>
+  <div class="hand-section-lbl">Elementos disponibles:</div>
   <div class="hand-row" id="hand-cards"></div>
+  <div class="hand-section-lbl" id="spell-section-lbl" style="display:none">Hechizos:</div>
+  <div class="hand-row" id="spell-cards"></div>
 </div>
 
 <!-- REVEAL MODAL -->
@@ -487,20 +445,20 @@
     <p id="rev-text"></p>
     <div class="cbox" id="rev-summary"></div>
     <div class="mbtns">
-      <button class="btn" onclick="startSpellPhase()">Fase de Hechizos →</button>
+      <button class="btn" onclick="startSpellPhase()">🔮 Fase de Hechizos →</button>
     </div>
   </div>
 </div>
 
 <!-- SPELL MODAL -->
 <div class="ov" id="ov-spells">
-  <div class="modal ai" style="max-width:580px">
+  <div class="modal ai" style="max-width:560px">
     <h2 id="sp-title">🔮 Hechizos</h2>
     <p  id="sp-desc"></p>
-    <div class="sdesc" id="sp-hover">Pasa el cursor sobre una carta para ver su efecto.</div>
+    <div class="sdesc" id="sp-hover">Toca una carta para ver su efecto.</div>
     <div class="spell-grid" id="sp-grid"></div>
     <div class="mbtns">
-      <button class="btn gold" id="btn-cast" onclick="castSpell()" style="display:none">Lanzar Hechizo</button>
+      <button class="btn gold" id="btn-cast" onclick="castSpell()" style="display:none">✨ Lanzar Hechizo</button>
       <button class="btn sec" onclick="passSpell()">Pasar turno</button>
     </div>
   </div>
@@ -508,361 +466,314 @@
 
 <!-- RULES -->
 <div class="ov" id="ov-rules">
-  <div class="modal ai" style="max-width:540px;text-align:left">
-    <h2 style="text-align:center;margin-bottom:1rem">📖 Reglas</h2>
-    <div style="font-size:.8rem;line-height:1.75;color:var(--muted)">
-      <p><strong style="color:var(--text)">Analistas</strong><br>Cada jugador tiene 5 cartas de analista. Son su vida — cuando los pierde todos, pierde la partida.</p><br>
-      <p><strong style="color:var(--text)">Construcción</strong><br>Pulsa el mazo central para robar y abrir tu mano. Selecciona elementos — aparecen boca abajo en tu zona. Pulsa «Construir» para fijar tu molécula.</p><br>
-      <p><strong style="color:var(--text)">Revelación</strong><br>Cuando ambos han construido, las cartas giran y se revelan las moléculas.</p><br>
-      <p><strong style="color:var(--text)">Combate</strong><br>ATK atacante − DEF defensor = daño. Cada 2 pts daño = 1 analista eliminado (mín 1 si hay daño). Uranio ignora la mitad de la DEF rival.</p><br>
-      <p><strong style="color:var(--text)">Hechizos</strong><br>Plomo = escudo −4 daño. Helio = +3 ATK y bloquea hechizos del rival.</p>
+  <div class="modal ai" style="max-width:520px;text-align:left">
+    <h2 style="text-align:center;margin-bottom:.9rem">📖 Reglas</h2>
+    <div style="font-size:.8rem;line-height:1.8;color:var(--mut)">
+      <p><strong style="color:var(--txt)">Analistas</strong><br>Cada jugador tiene 5 cartas de analista. Son su única vida.</p><br>
+      <p><strong style="color:var(--txt)">Moléculas válidas</strong><br>H₂O · H₂O₂ · O₂ · H₂ · H₃ · CO · CO₂ · N₂ · NOP · NO₂ · NH₃ · H₂S · SO₂ · S₂ · PH₃ · PO. Las cartas que no pueden combinarse se oscurecen automáticamente.</p><br>
+      <p><strong style="color:var(--txt)">Construcción</strong><br>Pulsa tu mazo para robar. Selecciona elementos — aparecen boca abajo en tu zona. Pulsa «Construir» para fijar.</p><br>
+      <p><strong style="color:var(--txt)">Combate</strong><br>ATK atacante − DEF defensor = daño. Cada 2 pts = 1 analista eliminado (mín 1). Uranio ignora la mitad de la DEF rival.</p><br>
+      <p><strong style="color:var(--txt)">Hechizos</strong><br>Empieza el defensor. Plomo = escudo −4 daño. Helio = +3 ATK, bloquea hechizos del rival.</p>
     </div>
-    <div style="text-align:center;margin-top:1.4rem">
-      <button class="btn" onclick="document.getElementById('ov-rules').classList.remove('open')">Entendido</button>
+    <div style="text-align:center;margin-top:1.2rem">
+      <button class="btn" onclick="document.getElementById('ov-rules').classList.remove('open')">¡Entendido!</button>
     </div>
   </div>
 </div>
 
 <script>
-// ════════════════════════════════
-//  DATA
-// ════════════════════════════════
-const ANALYST_ROLES = [
-  { role:'🧪', title:'Químico Sr.',  bonus:'Síntesis +1' },
-  { role:'🔬', title:'Microbiólogo', bonus:'DEF +1 ronda 1' },
-  { role:'📊', title:'Analista',     bonus:'Revela 1 carta' },
-  { role:'🧬', title:'Genetista',    bonus:'Reacción +1'  },
-  { role:'💊', title:'Farmacólogo',  bonus:'Hechizo extra' },
+/* ════════════════════════════════
+   VALID MOLECULES
+════════════════════════════════ */
+// Each entry: sorted element id array → molecule data
+const VALID_MOLECULES = [
+  {ids:['H','H','O'],       name:'Agua',     formula:'H₂O',   atk:4, def:4},
+  {ids:['H','H','O','O'],   name:'Peróxido', formula:'H₂O₂',  atk:5, def:3},
+  {ids:['O','O'],           name:'O₂',       formula:'O₂',    atk:4, def:2},
+  {ids:['H','H'],           name:'H₂',       formula:'H₂',    atk:2, def:3},
+  {ids:['H','H','H'],       name:'H₃',       formula:'H₃',    atk:3, def:4},
+  {ids:['C','O'],           name:'CO',       formula:'CO',    atk:4, def:2},
+  {ids:['C','O','O'],       name:'CO₂',      formula:'CO₂',   atk:5, def:2},
+  {ids:['N','N'],           name:'N₂',       formula:'N₂',    atk:3, def:5},
+  {ids:['N','O','P'],       name:'NOP',      formula:'NOP',   atk:6, def:3},
+  {ids:['N','O','O'],       name:'NO₂',      formula:'NO₂',   atk:5, def:3},
+  {ids:['H','H','H','N'],   name:'Amoníaco', formula:'NH₃',   atk:5, def:3},
+  {ids:['H','H','S'],       name:'H₂S',      formula:'H₂S',   atk:6, def:2},
+  {ids:['O','O','S'],       name:'SO₂',      formula:'SO₂',   atk:6, def:2},
+  {ids:['S','S'],           name:'S₂',       formula:'S₂',    atk:5, def:2},
+  {ids:['H','H','H','P'],   name:'PH₃',      formula:'PH₃',   atk:5, def:3},
+  {ids:['O','P'],           name:'PO',       formula:'PO',    atk:4, def:3},
 ];
 
-const ELEMENTS = [
-  { id:'O',  sym:'O',  name:'Oxígeno',   num:8,  atk:3, def:1, type:'nonmetal',
-    img:'img/O.png',  eff:'Potencia moléculas oxidantes. +1 ATK por O adicional.',
-    info:'Gas esencial. Representa el 21% de la atmósfera terrestre.' },
-  { id:'H',  sym:'H',  name:'Hidrógeno', num:1,  atk:1, def:2, type:'nonmetal',
-    img:'img/H.png',  eff:'Base de toda molécula. +1 DEF al combinarse con O.',
-    info:'El elemento más abundante del universo. Combustible limpio.' },
-  { id:'N',  sym:'N',  name:'Nitrógeno', num:7,  atk:2, def:3, type:'nonmetal',
-    img:'img/N.png',  eff:'Estabilizador. +1 DEF al activarse.',
-    info:'Compone el 78% del aire. Esencial para proteínas y ADN.' },
-  { id:'C',  sym:'C',  name:'Carbono',   num:6,  atk:2, def:2, type:'nonmetal',
-    img:'img/C.png',  eff:'Base orgánica. Cada C da +1 ATK y +1 DEF.',
-    info:'El elemento de la vida: grafito, diamante, nanotubos.' },
-  { id:'S',  sym:'S',  name:'Azufre',    num:16, atk:4, def:1, type:'nonmetal',
-    img:'img/S.png',  eff:'Corrosivo. Con H inflige 1 daño directo adicional.',
-    info:'Elemento volcánico. Clave en fertilizantes y ácido sulfúrico.' },
-  { id:'P',  sym:'P',  name:'Fósforo',   num:15, atk:3, def:2, type:'nonmetal',
-    img:'img/P.png',  eff:'Potenciador. +2 ATK al combinarse con O.',
-    info:'Esencial en el ADN. El fósforo blanco es extremadamente inflamable.' },
-  { id:'U',  sym:'U',  name:'Uranio',    num:92, atk:6, def:3, type:'radioactive',
-    img:'img/U.png',  eff:'☢ CRÍTICO: Ignora la mitad de la DEF rival.',
-    info:'Metal radiactivo. Su fisión libera millones de veces más energía que el carbón.' },
+function sortIds(arr){ return [...arr].sort(); }
+function matchMol(elems){
+  const ids = sortIds(elems.map(e=>e.id));
+  const key = ids.join(',');
+  return VALID_MOLECULES.find(m => sortIds(m.ids).join(',') === key) || null;
+}
+
+/* Given a set of already-selected element ids, which extra ids can still
+   lead to a valid molecule? Returns Set of element ids that are useful. */
+function usableIds(selectedIds){
+  const useful = new Set();
+  for(const mol of VALID_MOLECULES){
+    const molSorted = sortIds(mol.ids);
+    const selSorted = sortIds(selectedIds);
+    // selSorted must be a sub-multiset of molSorted
+    const remaining = [...molSorted];
+    let ok = true;
+    for(const id of selSorted){
+      const idx = remaining.indexOf(id);
+      if(idx === -1){ ok = false; break; }
+      remaining.splice(idx, 1);
+    }
+    if(ok) remaining.forEach(id => useful.add(id));
+  }
+  return useful;
+}
+
+/* ════════════════════════════════
+   DATA
+════════════════════════════════ */
+const ELEMENTS=[
+  {id:'O',sym:'O',name:'Oxígeno',  num:8, atk:3,def:1,type:'nonmetal',img:'img/O.png',
+   eff:'Potencia moléculas oxidantes.',info:'Gas esencial. 21% de la atmósfera.'},
+  {id:'H',sym:'H',name:'Hidrógeno',num:1, atk:1,def:2,type:'nonmetal',img:'img/H.png',
+   eff:'Base de toda molécula.',info:'El elemento más abundante del universo.'},
+  {id:'N',sym:'N',name:'Nitrógeno',num:7, atk:2,def:3,type:'nonmetal',img:'img/N.png',
+   eff:'Estabilizador. +1 DEF al activarse.',info:'Compone el 78% del aire.'},
+  {id:'C',sym:'C',name:'Carbono',  num:6, atk:2,def:2,type:'nonmetal',img:'img/C.png',
+   eff:'Base orgánica. +1 ATK y +1 DEF.',info:'El elemento de la vida.'},
+  {id:'S',sym:'S',name:'Azufre',   num:16,atk:4,def:1,type:'nonmetal',img:'img/S.png',
+   eff:'Corrosivo. Con H inflige daño extra.',info:'Elemento volcánico.'},
+  {id:'P',sym:'P',name:'Fósforo',  num:15,atk:3,def:2,type:'nonmetal',img:'img/P.png',
+   eff:'Potenciador. +2 ATK con O.',info:'Esencial en el ADN. Fósforo blanco es inflamable.'},
+  {id:'U',sym:'U',name:'Uranio',   num:92,atk:6,def:3,type:'radioactive',img:'img/U.png',
+   eff:'☢ CRÍTICO: Ignora la mitad de la DEF rival.',info:'Metal radiactivo. Fisión nuclear.'},
 ];
-const SPELLS = [
-  { id:'Pb', sym:'Pb', name:'Plomo',  num:82, atk:0, def:5, type:'spell',
-    img:'img/Pb.png', eff:'🛡 ESCUDO: Reduce el daño entrante en 4 puntos.',
-    info:'Metal pesado. Usado como blindaje contra radiación. Muy tóxico.' },
-  { id:'He', sym:'He', name:'Helio',  num:2,  atk:3, def:0, type:'noble',
-    img:'img/He.png', eff:'🎈 EVASIÓN: +3 ATK y el rival no puede usar hechizos.',
-    info:'Gas noble inerte, más ligero que el aire. Usado en criogenia.' },
-];
-const MOLECULES = [
-  { name:'Agua',     formula:'H₂O',   combo:['H','H','O'],         bonus:{atk:2,def:4} },
-  { name:'CO₂',      formula:'CO₂',   combo:['C','O','O'],         bonus:{atk:4,def:2} },
-  { name:'Amoníaco', formula:'NH₃',   combo:['N','H','H','H'],     bonus:{atk:5,def:3} },
-  { name:'Metano',   formula:'CH₄',   combo:['C','H','H','H','H'], bonus:{atk:3,def:5} },
-  { name:'H₂SO₄',    formula:'H₂SO₄', combo:['H','H','S','O','O','O','O'], bonus:{atk:8,def:2} },
-  { name:'H₃PO₄',    formula:'H₃PO₄', combo:['H','H','H','P','O','O','O','O'], bonus:{atk:5,def:5} },
-  { name:'NO₂',      formula:'NO₂',   combo:['N','O','O'],         bonus:{atk:4,def:3} },
-  { name:'UO₂',      formula:'UO₂',   combo:['U','O','O'],         bonus:{atk:10,def:4} },
-  { name:'CO',       formula:'CO',    combo:['C','O'],             bonus:{atk:4,def:2} },
-  { name:'H₂S',      formula:'H₂S',   combo:['H','H','S'],         bonus:{atk:5,def:2} },
+const SPELLS=[
+  {id:'Pb',sym:'Pb',name:'Plomo',num:82,atk:0,def:5,type:'spell',img:'img/Pb.png',
+   eff:'🛡 ESCUDO: Reduce el daño entrante en 4 puntos.',info:'Blindaje contra radiación.'},
+  {id:'He',sym:'He',name:'Helio',num:2, atk:3,def:0,type:'noble',img:'img/He.png',
+   eff:'🎈 EVASIÓN: +3 ATK y el rival no puede usar hechizos.',info:'Gas noble inerte.'},
 ];
 
-// ════════════════════════════════
-//  STATE
-// ════════════════════════════════
-const MAX_AN = 5;
-let G = {};
+/* ════════════════════════════════
+   STATE
+════════════════════════════════ */
+const MAX_AN=5;
+let G={};
 
 function initState(n1,n2){
-  G={
-    round:1,
-    names:[n1||'Jugador 1',n2||'Jugador 2'],
-    an:[MAX_AN,MAX_AN],
-    hands:[[], []],
-    spells:[[], []],
-    deckSize:32,
-    discardSize:[0,0],
-    build:[],
-    mols:[null,null],
-    buildCount:[0,0],  // elements added to zone (for stack visual)
-    phase:'build_p1',
-    attacker:0,
-    spellTurn:0,
-    spellPassed:[false,false],
-    helioCast:[false,false],
-    dmg:[0,0],
-    selSpell:null,
-    stats:{rounds:0,anLost:[0,0],spells:0},
-  };
-  dealHand(0); dealHand(1);
+  G={round:1,names:[n1||'J1',n2||'J2'],an:[MAX_AN,MAX_AN],
+     hands:[[],[]],spells:[[],[]],deckSize:[16,16],discardSize:0,
+     build:[],mols:[null,null],phase:'build_p1',
+     attacker:0,spellTurn:0,spellPassed:[false,false],helioCast:[false,false],
+     dmg:[0,0],selSpell:null,stats:{rounds:0,anLost:[0,0],spells:0}};
+  dealHand(0);dealHand(1);
 }
-
 function rand(a){return a[Math.floor(Math.random()*a.length)];}
 function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
-function dealHand(p){
-  G.hands[p] =shuffle(ELEMENTS).slice(0,6).map(e=>({...e}));
-  G.spells[p]=shuffle(SPELLS).slice(0,1).map(s=>({...s}));
-}
-function matchMol(elems){
-  const ids=[...elems].map(e=>e.id).sort();
-  for(const m of MOLECULES){if(JSON.stringify([...m.combo].sort())===JSON.stringify(ids))return m;}
-  return null;
-}
+function dealHand(p){G.hands[p]=shuffle(ELEMENTS).slice(0,6).map(e=>({...e}));G.spells[p]=shuffle(SPELLS).slice(0,1).map(s=>({...s}));}
+
 function buildMol(elems){
-  const m=matchMol(elems);
-  const bA=elems.reduce((s,e)=>s+e.atk,0),bD=elems.reduce((s,e)=>s+e.def,0);
-  const hasU=elems.some(e=>e.id==='U');
-  if(m)return{name:m.name,formula:m.formula,atk:bA+m.bonus.atk,def:bD+m.bonus.def,combo:true,hasU};
-  return{name:'Compuesto',formula:elems.map(e=>e.sym).join(''),atk:bA,def:bD,combo:false,hasU};
+  const m = matchMol(elems);
+  const bA = elems.reduce((s,x)=>s+x.atk,0);
+  const bD = elems.reduce((s,x)=>s+x.def,0);
+  const hasU = elems.some(x=>x.id==='U');
+  if(m) return {name:m.name,formula:m.formula,atk:m.atk,def:m.def,combo:true,hasU,valid:true};
+  return {name:'Compuesto',formula:elems.map(x=>x.sym).join(''),atk:bA,def:bD,combo:false,hasU,valid:false};
 }
 
-// ════════════════════════════════
-//  CARD BUILDERS
-// ════════════════════════════════
+/* ════════════════════════════════
+   CARD BUILDERS
+════════════════════════════════ */
+function imgH(src,alt){
+  return `<div class="ec-img"><img src="${src}" alt="${alt}" onerror="this.parentNode.innerHTML='<b style=&quot;font-size:1.3rem;color:var(--txt)&quot;>${alt}</b>'"/></div>`;
+}
 
-/* Creates a full 7:12 card element */
-function makeCard({tl, atk, def, symHtml, chipCls, chipLabel, eff, info, frontCls='', clickable=false}){
-  const wrap = document.createElement('div');
-  wrap.className = 'card'+(clickable?' clickable':'');
-  wrap.innerHTML = `
-    <div class="card-flip">
-      <div class="card-inner">
-        <div class="card-face card-front ${frontCls}">
-          <div class="ec-tl">${tl}</div>
-          <div class="ec-tr">
-            <span class="ec-a">⚔${atk}</span>
-            <span class="ec-d">🛡${def}</span>
-          </div>
-          <div class="ec-sym">${symHtml}</div>
-          <div class="ec-body">
-            <div class="ec-chip ${chipCls}">${chipLabel}</div>
-            <div class="ec-eff">${eff}</div>
-            <div class="ec-info">${info}</div>
-          </div>
-        </div>
-        <div class="card-face card-back"></div>
+function makeElemCard(card,p,inBuild,dimmed){
+  const isSpell=card.type==='spell'||card.type==='noble';
+  const fc=card.type==='radioactive'?'cf-grn':isSpell?(card.type==='noble'?'cf-gold':'cf-purp'):'';
+  const cc=card.type==='spell'?'tsp':card.type==='noble'?'trao':card.type==='radioactive'?'trd':'tnm';
+  const cl=isSpell?'Hechizo':card.type==='radioactive'?'Radioactivo':'Elemento';
+  const w=document.createElement('div');
+  w.className='card clickable'+(inBuild?' sel':'')+(dimmed?' dimmed':'');
+  w.innerHTML=`<div class="card-flip"><div class="card-inner">
+    <div class="card-face card-front ${fc}">
+      <div class="ec-tl">${card.num}</div>
+      <div class="ec-tr"><span class="ec-a">⚔${card.atk}</span><span class="ec-d">🛡${card.def}</span></div>
+      <div class="ec-sym">${imgH(card.img,card.sym)}</div>
+      <div class="ec-body">
+        <div class="ec-chip ${cc}">${cl}</div>
+        <div class="ec-eff">${card.eff}</div>
+        <div class="ec-info">${card.info}</div>
       </div>
-    </div>`;
-  return wrap;
+    </div>
+    <div class="card-face card-back"></div>
+  </div></div>`;
+  if(!isSpell) w.onclick=()=>toggleSelect(card,p);
+  return w;
 }
 
-function imgHtml(src, alt){
-  return `<div class="ec-img"><img src="${src}" alt="${alt}" onerror="this.parentNode.innerHTML='<b style=&quot;font-size:1.4rem;color:#dde4f5&quot;>${alt}</b>'"/></div>`;
+function makeAnalystCard(p,idx,alive){
+  const w=document.createElement('div');
+  w.className='card';
+  const fc=p===0?'':'cf-red';
+  w.innerHTML=`<div class="card-flip${alive?'':' flipped'}"><div class="card-inner">
+    <div class="card-face card-front ${fc} an-front">
+      <div class="an-icon">🧪</div>
+      <div class="an-label">Analista</div>
+    </div>
+    <div class="card-face card-back"></div>
+  </div></div>`;
+  return w;
 }
 
-/* Analyst card */
-function makeAnalystCard(p, idx){
-  const role = ANALYST_ROLES[idx];
-  const card = makeCard({
-    tl: `#${idx+1}`,
-    atk: 0, def: 0,
-    symHtml: `<div style="display:flex;flex-direction:column;align-items:center;gap:1px"><div class="an-role">${role.role}</div><div class="an-title">${role.title}</div></div>`,
-    chipCls: 'tan', chipLabel: 'Analista',
-    eff: role.bonus,
-    info: `Analista ${idx+1} del equipo de ${['',''][p]}`,
-    frontCls: p===0?'':'tred',
-    clickable: false,
-  });
-  card.dataset.analyst = idx;
-  card.dataset.player  = p;
-  return card;
+function makePDeck(p){
+  const d=document.createElement('div');
+  d.className='pdeck';
+  d.title='Robar carta';
+  d.onclick=()=>onDeckClick(p);
+  d.innerHTML=`<div class="pdeck-icon">🃏</div>
+    <div class="pdeck-cnt" id="pcnt${p}">${G.deckSize[p]}</div>
+    <div class="pdeck-lbl">Mazo</div>`;
+  return d;
 }
 
-/* Element card (in hand) */
-function makeElemCard(card, p, isInBuild){
-  const isSpell = card.type==='spell'||card.type==='noble';
-  const fc = card.type==='radioactive'?'tgreen':isSpell?'tpurp':'';
-  const chipCls = card.type==='spell'?'tsp':card.type==='noble'?'tno':card.type==='radioactive'?'trd':'tnm';
-  const chipLbl = isSpell?'Hechizo':card.type==='radioactive'?'Radioactivo':'No-metal';
-  const el = makeCard({
-    tl: card.num, atk: card.atk, def: card.def,
-    symHtml: imgHtml(card.img, card.sym),
-    chipCls, chipLabel: chipLbl,
-    eff: card.eff, info: card.info,
-    frontCls: fc, clickable: true,
-  });
-  if(isInBuild) el.classList.add('sel');
-  if(!isSpell) el.onclick = ()=>toggleSelect(card,p);
-  return el;
-}
-
-// ════════════════════════════════
-//  RENDER
-// ════════════════════════════════
-function renderAnalysts(){
-  for(let p=0;p<2;p++){
-    const n = p+1;
-    const row = document.getElementById('arow'+n);
-    row.innerHTML = '';
-
-    // name label
-    const lbl = document.createElement('div');
-    lbl.className = 'row-name c'+n;
-    lbl.textContent = G.names[p];
-    row.appendChild(lbl);
-
-    for(let i=0;i<MAX_AN;i++){
-      const card = makeAnalystCard(p, i);
-      const alive = i < G.an[p];
-      if(!alive){
-        // flip to back = dead
-        card.querySelector('.card-flip').classList.add('flipped');
-      }
-      row.appendChild(card);
-    }
-  }
+/* ════════════════════════════════
+   RENDER
+════════════════════════════════ */
+function renderStrip(p){
+  const n=p+1;
+  const row=document.getElementById('astrip'+n);
+  row.innerHTML='';
+  const lbl=document.createElement('div');
+  lbl.className='pname-lbl c'+n;
+  lbl.textContent=G.names[p];
+  row.appendChild(lbl);
+  const anWrap=document.createElement('div');anWrap.className='analysts';
+  for(let i=0;i<MAX_AN;i++) anWrap.appendChild(makeAnalystCard(p,i,i<G.an[p]));
+  row.appendChild(anWrap);
+  row.appendChild(makePDeck(p));
 }
 
 function renderDecks(){
-  document.getElementById('dcnt').textContent = G.deckSize;
-  document.getElementById('discnt1').textContent = G.discardSize[0];
-  document.getElementById('discnt2').textContent = G.discardSize[1];
+  for(let p=0;p<2;p++){const el=document.getElementById('pcnt'+p);if(el)el.textContent=G.deckSize[p];}
+  document.getElementById('disc-cnt').textContent=G.discardSize;
 }
 
-/* Renders the stacked face-down cards in a player's arena zone */
-function renderStack(p, count, molObj=null){
-  const n = p+1;
-  const empty = document.getElementById('zempty'+n);
-  const stack = document.getElementById('stack'+n);
-  const zone  = document.getElementById('pzone'+n);
-
-  if(count===0 && !molObj){
-    empty.style.display = '';
-    stack.style.display = 'none';
-    stack.innerHTML = '';
-    zone.className = 'pzone';
-    return;
-  }
-
-  empty.style.display = 'none';
-  stack.style.display = '';
-  stack.innerHTML = '';
-
-  const OFFSET = 14; // px per card downward
-  const total  = molObj ? 1 : count;
-
-  for(let i=0; i<total; i++){
-    const wrap = document.createElement('div');
-    wrap.className = 'card stacked';
-    wrap.style.top  = (i * OFFSET) + 'px';
-    wrap.style.left = '0';
-    wrap.style.zIndex = i;
-
-    const flip = document.createElement('div');
-    flip.className = 'card-flip';
-
-    const inner = document.createElement('div');
-    inner.className = 'card-inner';
-
-    // back face always present
-    const back = document.createElement('div');
-    back.className = 'card-face card-back';
-
-    // front face — molecule info (only meaningful when revealed)
-    const front = document.createElement('div');
-    front.className = 'card-face card-front';
-
-    if(molObj && i===0){
-      // Build the molecule front face
-      front.innerHTML = `
+function renderStack(p,count,molObj=null){
+  const n=p+1;
+  const empty=document.getElementById('zempty'+n);
+  const stack=document.getElementById('stack'+n);
+  if(count===0&&!molObj){empty.style.display='';stack.style.display='none';stack.innerHTML='';return;}
+  empty.style.display='none';stack.style.display='';stack.innerHTML='';
+  const OFFSET=13;
+  const total=molObj?1:count;
+  const cw=parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cw'))||70;
+  const ch=Math.round(cw*12/7);
+  for(let i=0;i<total;i++){
+    const w=document.createElement('div');
+    w.className='card';
+    w.style.cssText=`position:absolute;top:${i*OFFSET}px;left:0;z-index:${i};`;
+    const isLast=(i===total-1);
+    let frontHtml='<div class="card-face card-front"></div>';
+    if(molObj&&isLast){
+      const badge=molObj.valid?`<span class="mol-hint">★ ${molObj.name}</span>`:`<span style="font-size:clamp(.28rem,.68vw,.42rem);color:var(--mut)">Compuesto</span>`;
+      frontHtml=`<div class="card-face card-front">
         <div class="ec-tl">MOL</div>
-        <div class="ec-tr">
-          <span class="ec-a">⚔${molObj.atk}</span>
-          <span class="ec-d">🛡${molObj.def}</span>
-        </div>
-        <div class="ec-sym" style="padding-top:1.1rem;flex-direction:column;gap:2px">
-          <div style="font-size:1.15rem;font-weight:900;line-height:1">${molObj.formula}</div>
-          <div style="font-size:.45rem;color:var(--muted)">${molObj.name}</div>
+        <div class="ec-tr"><span class="ec-a">⚔${molObj.atk}</span><span class="ec-d">🛡${molObj.def}</span></div>
+        <div class="ec-sym" style="flex-direction:column;gap:3px;padding-top:1rem">
+          <span style="font-size:clamp(.95rem,3vw,1.15rem);font-weight:900;color:var(--txt)">${molObj.formula}</span>
+          ${badge}
         </div>
         <div class="ec-body">
-          <div class="ec-chip ${molObj.combo?'tnm':'tsp'}">${molObj.combo?'★ Conocida':'Compuesto'}</div>
           <div class="ec-eff">${molObj.hasU?'☢ Uranio activo':molObj.name}</div>
-          <div class="ec-info">${molObj.hasU?'Ignora ½ DEF rival':''}</div>
-        </div>`;
-      // starts face-down; flip after short delay if revealed flag set
-      flip.id = 'mol-flip-'+n;
+        </div>
+      </div>`;
     }
-
-    inner.appendChild(front);
-    inner.appendChild(back);
-    flip.appendChild(inner);
-    wrap.appendChild(flip);
-    stack.appendChild(wrap);
-
-    // adjust stack height
-    stack.style.height = (total * OFFSET + parseInt(getComputedStyle(document.documentElement).getPropertyValue('--ch'))||137) + 'px';
+    w.innerHTML=`<div class="card-flip" id="${molObj&&isLast?'mf'+n:''}"><div class="card-inner">
+      ${frontHtml}
+      <div class="card-face card-back"></div>
+    </div></div>`;
+    stack.appendChild(w);
   }
-
-  // highlight zone border
-  zone.className = 'pzone'+(count>0||molObj?' active-zone':'');
+  stack.style.height=(total*OFFSET+ch)+'px';
 }
 
-function flipRevealZone(p){
-  const n = p+1;
-  const flipEl = document.getElementById('mol-flip-'+n);
-  if(flipEl) flipEl.classList.add('flipped');
+function flipZone(p){
+  const el=document.getElementById('mf'+(p+1));
+  if(el)el.classList.add('flipped');
 }
 
 function renderHand(p){
-  const c = document.getElementById('hand-cards');
-  c.innerHTML = '';
-  const all = [...G.hands[p], ...G.spells[p]];
-  for(const card of all){
-    const el = makeElemCard(card, p, G.build.includes(card));
-    c.appendChild(el);
+  const selectedIds = G.build.map(e=>e.id);
+  const useful = usableIds(selectedIds);
+
+  const hc=document.getElementById('hand-cards');hc.innerHTML='';
+  G.hands[p].forEach(card=>{
+    const inBuild = G.build.includes(card);
+    // dim if not in build AND not useful AND not already selected
+    const dimmed = !inBuild && !useful.has(card.id);
+    hc.appendChild(makeElemCard(card,p,inBuild,dimmed));
+  });
+
+  const sc=document.getElementById('spell-cards');sc.innerHTML='';
+  const slbl=document.getElementById('spell-section-lbl');
+  if(G.spells[p].length){
+    slbl.style.display='';
+    G.spells[p].forEach(card=>{
+      const el=makeElemCard(card,p,false,false);
+      el.classList.remove('dimmed');
+      sc.appendChild(el);
+    });
+  } else {
+    slbl.style.display='none';
   }
 }
 
 function renderBuildRow(){
-  const r = document.getElementById('build-row');
-  r.innerHTML = '';
+  const r=document.getElementById('build-row');r.innerHTML='';
+  const confirmBtn=document.getElementById('btn-confirm');
   if(!G.build.length){
-    const s=document.createElement('span');s.style.cssText='color:var(--muted);font-size:.72rem';s.textContent='Toca un elemento…';
-    r.appendChild(s);
+    const s=document.createElement('span');s.style.cssText='color:var(--mut);font-size:.72rem';
+    s.textContent='Toca un elemento para añadirlo…';r.appendChild(s);
     document.getElementById('mprev').textContent='';
+    confirmBtn.disabled=true;confirmBtn.style.opacity='.5';
     return;
   }
-  for(const e of G.build){
+  G.build.forEach(e=>{
     const d=document.createElement('div');d.className='bchip';
     d.innerHTML=`<span class="bs">${e.sym}</span><span class="bl">${e.name}</span>`;
-    d.onclick=()=>toggleSelect(e,G.phase==='build_p1'?0:1);
-    r.appendChild(d);
+    d.onclick=()=>toggleSelect(e,G.phase==='build_p1'?0:1);r.appendChild(d);
+  });
+  const pv=buildMol(G.build);
+  const prev=document.getElementById('mprev');
+  if(pv.valid){
+    prev.className='mprev valid';
+    prev.textContent=`✅ ${pv.formula} ⚔${pv.atk} 🛡${pv.def}`;
+    confirmBtn.disabled=false;confirmBtn.style.opacity='1';
+  } else {
+    prev.className='mprev invalid';
+    prev.textContent=`⚠ No válida`;
+    confirmBtn.disabled=true;confirmBtn.style.opacity='.5';
   }
-  const pv=buildMol(G.build),mt=matchMol(G.build);
-  document.getElementById('mprev').textContent=mt?`✅ ${pv.formula} ⚔${pv.atk} 🛡${pv.def}`:`📦 ${pv.formula} ⚔${pv.atk} 🛡${pv.def}`;
 }
 
-function toggleSelect(card, p){
+function toggleSelect(card,p){
   const idx=G.build.indexOf(card);
-  if(idx>-1) G.build.splice(idx,1); else G.build.push(card);
-  // update stack visual immediately
-  G.buildCount[p] = G.build.length;
-  renderStack(p, G.build.length);
+  if(idx>-1) G.build.splice(idx,1);
+  else G.build.push(card);
+  renderStack(p,G.build.length);
   renderBuildRow();
   renderHand(p);
 }
-function clearBuild(){
-  const p=G.phase==='build_p1'?0:1;
-  G.build=[];G.buildCount[p]=0;
-  renderStack(p,0);
-  renderBuildRow();renderHand(p);
-}
+function clearBuild(){const p=G.phase==='build_p1'?0:1;G.build=[];renderStack(p,0);renderBuildRow();renderHand(p);}
 
-// ════════════════════════════════
-//  BUILD PANEL
-// ════════════════════════════════
+/* ════════════════════════════════
+   BUILD PANEL
+════════════════════════════════ */
 function openBuildPanel(p){
   document.getElementById('bp-pname').textContent=G.names[p];
   renderBuildRow();renderHand(p);
@@ -870,84 +781,86 @@ function openBuildPanel(p){
 }
 function closeBuildPanel(){document.getElementById('build-panel').classList.remove('open');}
 
-function onDeckClick(){
+function onDeckClick(p){
+  if(G.phase==='build_p1'&&p!==0)return;
+  if(G.phase==='build_p2'&&p!==1)return;
   if(!G.phase.startsWith('build'))return;
-  const p=G.phase==='build_p1'?0:1;
-  G.deckSize=Math.max(0,G.deckSize-1);
+  G.deckSize[p]=Math.max(0,G.deckSize[p]-1);
   renderDecks();
   openBuildPanel(p);
 }
 
-// ════════════════════════════════
-//  GAME FLOW
-// ════════════════════════════════
+/* ════════════════════════════════
+   TABLE ROTATION (pass device)
+════════════════════════════════ */
+let tableRotated = false;
+function rotateTable(toRotated){
+  const tbl = document.getElementById('game-table');
+  tableRotated = toRotated;
+  if(toRotated) tbl.classList.add('rotated');
+  else tbl.classList.remove('rotated');
+}
+
+/* ════════════════════════════════
+   GAME FLOW
+════════════════════════════════ */
 function startGame(){
   const n1=document.getElementById('inp-p1').value.trim()||'Jugador 1';
   const n2=document.getElementById('inp-p2').value.trim()||'Jugador 2';
   initState(n1,n2);
   showScreen('game');
-  renderAnalysts();renderDecks();
+  rotateTable(false);
+  renderStrip(0);renderStrip(1);renderDecks();
   renderStack(0,0);renderStack(1,0);
   document.getElementById('pzlbl1').textContent=n1;
   document.getElementById('pzlbl2').textContent=n2;
-  beginBuildPhase(0);
-}
-
-function beginBuildPhase(p){
-  G.phase=p===0?'build_p1':'build_p2';
-  G.build=[];G.buildCount[p]=0;
-  renderStack(p,0);
+  G.phase='build_p1';
 }
 
 function confirmBuild(){
-  if(!G.phase.startsWith('build'))return;
-  if(!G.build.length)return;
+  if(!G.phase.startsWith('build')||!G.build.length)return;
+  const mol=buildMol(G.build);
+  if(!mol.valid) return; // must be a valid molecule
   const p=G.phase==='build_p1'?0:1;
-  G.mols[p]=buildMol(G.build);
-  for(const e of G.build){const i=G.hands[p].indexOf(e);if(i>-1)G.hands[p].splice(i,1);}
-  G.discardSize[p]+=G.build.length;
-  // collapse stack to single face-down card showing molecule (hidden)
-  G.buildCount[p]=G.build.length;
-  G.build=[];
+  G.mols[p]=mol;
+  G.build.forEach(e=>{const i=G.hands[p].indexOf(e);if(i>-1)G.hands[p].splice(i,1);});
+  G.discardSize+=G.build.length;G.build=[];
   closeBuildPanel();
-  // Show single face-down card in zone (mol stored, not revealed yet)
-  renderStack(p, 0, G.mols[p]); // pass mol so front is ready, starts face-down
+  renderStack(p,0,G.mols[p]);
   renderDecks();
   if(p===0){
     G.phase='pass_p2';
+    // Rotate table 180° so P2 sees it right-side-up when they pick up the device
     document.getElementById('pass-h').textContent=`Pasa el dispositivo a ${G.names[1]}`;
     document.getElementById('pass-p').textContent=`Es el turno de ${G.names[1]}. Que ${G.names[0]} no vea la pantalla.`;
     document.getElementById('pass-name').textContent=G.names[1];
-    setTimeout(()=>showScreen('pass'),500);
+    setTimeout(()=>{
+      rotateTable(true);
+      showScreen('pass');
+    }, 450);
   } else {
     G.phase='reveal';
+    rotateTable(false);
     setTimeout(showReveal,600);
   }
 }
 
 function resumePass(){
   showScreen('game');
-  if(G.phase==='pass_p2') beginBuildPhase(1);
+  if(G.phase==='pass_p2'){G.phase='build_p2';}
 }
 
 function showReveal(){
-  // flip both cards
-  flipRevealZone(0);
-  setTimeout(()=>flipRevealZone(1), 250);
-
+  flipZone(0);setTimeout(()=>flipZone(1),250);
   const m0=G.mols[0],m1=G.mols[1];
-  G.attacker=m0.atk>=m1.atk?0:1;
-  const def=1-G.attacker;
-  let atkV=G.mols[G.attacker].atk;
-  let defV=G.mols[def].def;
-  if(G.mols[G.attacker].hasU) defV=Math.floor(defV/2);
-  G.dmg[def]=Math.max(0,atkV-defV);
-  G.dmg[G.attacker]=Math.max(0,G.mols[def].atk-G.mols[G.attacker].def);
+  G.attacker=m0.atk>=m1.atk?0:1;const def=1-G.attacker;
+  let atkV=G.mols[G.attacker].atk,defV=G.mols[def].def;
+  if(G.mols[G.attacker].hasU)defV=Math.floor(defV/2);
+  G.dmg[def]=Math.max(0,atkV-defV);G.dmg[G.attacker]=Math.max(0,G.mols[def].atk-G.mols[G.attacker].def);
   const an=G.names[G.attacker],dn=G.names[def];
   const aLd=G.dmg[def]>0?Math.max(1,Math.floor(G.dmg[def]/2)):0;
   const aLa=G.dmg[G.attacker]>0?Math.max(1,Math.floor(G.dmg[G.attacker]/2)):0;
-  document.getElementById('rev-text').textContent=
-    `${G.names[0]}: ${m0.formula} (⚔${m0.atk} 🛡${m0.def})  ·  ${G.names[1]}: ${m1.formula} (⚔${m1.atk} 🛡${m1.def})`;
+  document.getElementById('rev-text').textContent=`${G.names[0]}: ${m0.formula} (⚔${m0.atk} 🛡${m0.def})  ·  ${G.names[1]}: ${m1.formula} (⚔${m1.atk} 🛡${m1.def})`;
   document.getElementById('rev-summary').innerHTML=`
     <div class="crow"><span>⚔ ${an} ataca</span></div>
     <div class="crow"><span>ATK ${an}</span><span class="cv">${atkV}</span></div>
@@ -955,53 +868,44 @@ function showReveal(){
     <div class="crow"><span>Daño a ${dn}</span><span class="cv ${G.dmg[def]===0?'bad':''}">${G.dmg[def]}</span></div>
     <div class="crow"><span>💀 Analistas pierde ${dn}</span><span class="cv bad">${aLd}</span></div>
     <div class="crow"><span>Contraataque → pierde ${an}</span><span class="cv bad">${aLa}</span></div>`;
-  setTimeout(()=>document.getElementById('ov-reveal').classList.add('open'), 700);
+  setTimeout(()=>document.getElementById('ov-reveal').classList.add('open'),700);
 }
 
 function startSpellPhase(){
   document.getElementById('ov-reveal').classList.remove('open');
   G.phase='spells';G.helioCast=[false,false];G.spellPassed=[false,false];
-  G.spellTurn=1-G.attacker;
-  openSpellModal(G.spellTurn);
+  G.spellTurn=1-G.attacker;openSpellModal(G.spellTurn);
 }
 
 function openSpellModal(p){
   const rival=1-p;
   document.getElementById('sp-title').textContent=`🔮 ${G.names[p]} — Hechizos`;
   document.getElementById('sp-desc').textContent=p!==G.attacker?'Eres el defensor. Usa un hechizo o pasa.':'El defensor jugó. Contraataca o pasa.';
-  G.selSpell=null;
-  document.getElementById('btn-cast').style.display='none';
-  document.getElementById('sp-hover').textContent='Pasa el cursor sobre una carta para ver su efecto.';
-  const grid=document.getElementById('sp-grid');
-  grid.innerHTML='';
-  if(!G.spells[p].length){
-    grid.innerHTML='<div style="color:var(--muted);font-size:.83rem">Sin hechizos disponibles.</div>';
-  } else {
-    for(const sp of G.spells[p]){
-      if(G.helioCast[rival]&&sp.id==='He')continue;
-      const el=makeElemCard(sp,p,false);
-      el.onmouseenter=()=>{document.getElementById('sp-hover').textContent=sp.name+': '+sp.eff;};
-      el.onclick=()=>{G.selSpell=sp.id;grid.querySelectorAll('.card').forEach(c=>c.classList.remove('sel'));el.classList.add('sel');document.getElementById('btn-cast').style.display='';};
-      grid.appendChild(el);
-    }
-  }
+  G.selSpell=null;document.getElementById('btn-cast').style.display='none';
+  document.getElementById('sp-hover').textContent='Toca una carta para ver su efecto.';
+  const grid=document.getElementById('sp-grid');grid.innerHTML='';
+  if(!G.spells[p].length){grid.innerHTML='<div style="color:var(--mut);font-size:.83rem">Sin hechizos disponibles.</div>';}
+  else{G.spells[p].forEach(sp=>{
+    if(G.helioCast[rival]&&sp.id==='He')return;
+    const el=makeElemCard(sp,p,false,false);
+    el.onmouseenter=()=>{document.getElementById('sp-hover').textContent=sp.name+': '+sp.eff;};
+    el.onclick=()=>{G.selSpell=sp.id;grid.querySelectorAll('.card').forEach(c=>c.classList.remove('sel'));el.classList.add('sel');document.getElementById('btn-cast').style.display='';document.getElementById('sp-hover').textContent=sp.name+': '+sp.eff;};
+    grid.appendChild(el);
+  });}
   document.getElementById('ov-spells').classList.add('open');
 }
 
 function castSpell(){
   const id=G.selSpell;if(!id)return;
-  const p=G.spellTurn;
-  const sp=G.spells[p].find(s=>s.id===id);if(!sp)return;
-  G.spells[p]=G.spells[p].filter(s=>s.id!==id);
-  G.discardSize[p]++;G.stats.spells++;
+  const p=G.spellTurn,sp=G.spells[p].find(s=>s.id===id);if(!sp)return;
+  G.spells[p]=G.spells[p].filter(s=>s.id!==id);G.discardSize++;G.stats.spells++;
   const rival=1-p;
-  if(sp.id==='Pb') G.dmg[p]=Math.max(0,G.dmg[p]-4);
+  if(sp.id==='Pb')G.dmg[p]=Math.max(0,G.dmg[p]-4);
   else if(sp.id==='He'){G.dmg[rival]+=3;G.helioCast[p]=true;}
-  G.spellPassed[p]=false;
-  renderDecks();
+  G.spellPassed[p]=false;renderDecks();
   document.getElementById('ov-spells').classList.remove('open');
   G.spellTurn=rival;
-  if(G.spellPassed[rival]||!G.spells[rival].length||G.helioCast[p]) setTimeout(resolveCombat,500);
+  if(G.spellPassed[rival]||!G.spells[rival].length||G.helioCast[p])setTimeout(resolveCombat,500);
   else setTimeout(()=>openSpellModal(rival),500);
 }
 
@@ -1009,43 +913,36 @@ function passSpell(){
   const p=G.spellTurn;G.spellPassed[p]=true;
   document.getElementById('ov-spells').classList.remove('open');
   const rival=1-p;G.spellTurn=rival;
-  if(G.spellPassed[rival]||!G.spells[rival].length) resolveCombat();
+  if(G.spellPassed[rival]||!G.spells[rival].length)resolveCombat();
   else setTimeout(()=>openSpellModal(rival),400);
 }
 
 function resolveCombat(){
   document.getElementById('ov-spells').classList.remove('open');
-  for(let p=0;p<2;p++){
-    if(G.dmg[p]>0){
-      const lost=Math.max(1,Math.floor(G.dmg[p]/2));
-      G.an[p]=Math.max(0,G.an[p]-lost);
-      G.stats.anLost[p]+=lost;
-    }
-  }
+  for(let p=0;p<2;p++){if(G.dmg[p]>0){const l=Math.max(1,Math.floor(G.dmg[p]/2));G.an[p]=Math.max(0,G.an[p]-l);G.stats.anLost[p]+=l;}}
   G.stats.rounds++;
-  renderAnalysts();
+  renderStrip(0);renderStrip(1);
   if(G.an[0]<=0||G.an[1]<=0){endGame();return;}
   G.round++;G.mols=[null,null];G.dmg=[0,0];
   for(let p=0;p<2;p++){
-    const fresh=shuffle(ELEMENTS).slice(0,3).map(e=>({...e}));
-    G.hands[p]=[...G.hands[p],...fresh].slice(0,7);
-    if(G.spells[p].length<1){const pool=SPELLS.filter(s=>!G.spells[p].find(x=>x.id===s.id));if(pool.length)G.spells[p].push({...rand(pool)});}
-    G.deckSize=Math.max(0,G.deckSize-2);
+    const fr=shuffle(ELEMENTS).slice(0,3).map(e=>({...e}));
+    G.hands[p]=[...G.hands[p],...fr].slice(0,7);
+    if(!G.spells[p].length){const pool=SPELLS.filter(s=>!G.spells[p].find(x=>x.id===s.id));if(pool.length)G.spells[p].push({...rand(pool)});}
+    G.deckSize[p]=Math.max(0,G.deckSize[p]-2);
   }
-  renderDecks();
-  renderStack(0,0);renderStack(1,0);
-  beginBuildPhase(0);
+  renderDecks();renderStack(0,0);renderStack(1,0);
+  G.phase='build_p1';
 }
 
 function endGame(){
   const w=G.an[0]>0?0:(G.an[1]>0?1:-1);
   if(w===-1){document.getElementById('rtitle').textContent='🤝 ¡Empate!';document.getElementById('rsub').textContent='Ambos equipos de analistas han caído.';}
-  else{document.getElementById('rtitle').textContent=`🏆 ¡${G.names[w]} gana!`;document.getElementById('rsub').textContent=`Los analistas de ${G.names[1-w]} han sido eliminados.`;}
+  else{document.getElementById('rtitle').textContent=`🏆 ¡${G.names[w]} gana!`;document.getElementById('rsub').textContent=`Los analistas de ${G.names[1-w]} han sido eliminados del laboratorio.`;}
   document.getElementById('rstats').innerHTML=`
-    <div class="crow"><span>Rondas jugadas</span><span class="cv">${G.stats.rounds}</span></div>
+    <div class="crow"><span>Rondas</span><span class="cv">${G.stats.rounds}</span></div>
     <div class="crow"><span>Analistas perdidos ${G.names[0]}</span><span class="cv bad">${G.stats.anLost[0]}</span></div>
     <div class="crow"><span>Analistas perdidos ${G.names[1]}</span><span class="cv bad">${G.stats.anLost[1]}</span></div>
-    <div class="crow"><span>Hechizos lanzados</span><span class="cv">${G.stats.spells}</span></div>
+    <div class="crow"><span>Hechizos</span><span class="cv">${G.stats.spells}</span></div>
     <div class="crow"><span>Analistas restantes ${G.names[0]}</span><span class="cv ${G.an[0]>0?'':'bad'}">${G.an[0]}</span></div>
     <div class="crow"><span>Analistas restantes ${G.names[1]}</span><span class="cv ${G.an[1]>0?'':'bad'}">${G.an[1]}</span></div>`;
   showScreen('result');
