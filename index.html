@@ -6,331 +6,337 @@
   <title>BreakingLab — El Duelo Molecular</title>
   <style>
     :root {
-      --bg:     #0a0c16;
-      --felt:   #0c1020;
-      --panel:  #111528;
-      --cb:     #2a3260;
-      --accent: #00e5ff;
-      --a2:     #7c4dff;
-      --danger: #ff4757;
-      --ok:     #2ed573;
-      --gold:   #ffd32a;
-      --text:   #dde4f5;
-      --muted:  #4a5470;
-      --border: #1c2240;
-
-      /* Card dimensions — 7:12 ratio */
-      --cw: 84px;
-      --ch: 144px;
-      --cr: 9px;
+      --bg:    #08091400;
+      --felt:  #0a0d1c;
+      --panel: #0f1328;
+      --cb:    #2a3260;
+      --accent:#00e5ff;
+      --a2:    #7c4dff;
+      --red:   #ff4757;
+      --ok:    #2ed573;
+      --gold:  #ffd32a;
+      --text:  #dde4f5;
+      --muted: #454e6a;
+      --brd:   #181e38;
+      /* 7:12 card */
+      --cw: 80px;
+      --ch: 137px;
+      --cr: 8px;
     }
     *{box-sizing:border-box;margin:0;padding:0;}
-    body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;overflow-x:hidden;}
+    html,body{height:100%;}
+    body{background:var(--felt);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;overflow-x:hidden;}
 
     .screen{display:none;}
     .screen.active{display:flex;flex-direction:column;align-items:center;min-height:100vh;}
 
-    /* ── BUTTONS ── */
     .btn{background:linear-gradient(135deg,var(--accent),var(--a2));border:none;color:#fff;font-size:1rem;font-weight:700;padding:.75rem 2rem;border-radius:50px;cursor:pointer;transition:opacity .2s,transform .15s;}
     .btn:hover{opacity:.85;transform:translateY(-2px);}
-    .btn.sec{background:transparent;border:2px solid var(--border);color:var(--muted);}
+    .btn.sec{background:transparent;border:2px solid var(--brd);color:var(--muted);}
     .btn.gold{background:linear-gradient(135deg,var(--gold),#ff9f43);color:#111;}
-    .btn.sm{font-size:.8rem;padding:.45rem 1.1rem;}
+    .btn.sm{font-size:.78rem;padding:.4rem 1rem;}
 
-    /* ══════════════════════════════
-       INTRO
-    ══════════════════════════════ */
-    #screen-intro{justify-content:center;gap:1.2rem;background:radial-gradient(ellipse at 50% 35%,#1a2040,var(--bg) 70%);}
+    /* ══ INTRO ══ */
+    #screen-intro{justify-content:center;gap:1.2rem;background:radial-gradient(ellipse at 50% 35%,#1a2040,#08091a 70%);}
     .logo{font-size:3.4rem;font-weight:900;letter-spacing:-2px;background:linear-gradient(135deg,var(--accent),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
     .logo-sub{color:var(--muted);letter-spacing:4px;text-transform:uppercase;font-size:.8rem;}
 
-    /* ══════════════════════════════
-       NAMES
-    ══════════════════════════════ */
-    #screen-names{justify-content:center;background:radial-gradient(ellipse at 50% 35%,#1a2040,var(--bg) 70%);}
-    .names-box{background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:2.5rem;width:400px;max-width:92vw;margin:auto;}
-    .names-box h2{font-size:1.35rem;margin-bottom:.4rem;text-align:center;}
-    .names-box p{color:var(--muted);font-size:.83rem;text-align:center;margin-bottom:1.8rem;}
-    .nf{display:flex;flex-direction:column;gap:.35rem;margin-bottom:1.1rem;}
-    .nf label{font-size:.7rem;text-transform:uppercase;letter-spacing:2px;color:var(--muted);}
+    /* ══ NAMES ══ */
+    #screen-names{justify-content:center;background:radial-gradient(ellipse at 50% 35%,#1a2040,#08091a 70%);}
+    .names-box{background:var(--panel);border:1px solid var(--brd);border-radius:20px;padding:2.5rem;width:400px;max-width:92vw;margin:auto;}
+    .names-box h2{font-size:1.3rem;margin-bottom:.4rem;text-align:center;}
+    .names-box p{color:var(--muted);font-size:.82rem;text-align:center;margin-bottom:1.8rem;}
+    .nf{display:flex;flex-direction:column;gap:.3rem;margin-bottom:1rem;}
+    .nf label{font-size:.68rem;text-transform:uppercase;letter-spacing:2px;color:var(--muted);}
     .nf label.c1{color:var(--accent);}
-    .nf label.c2{color:var(--danger);}
-    .nf input{background:#0e1225;border:1.5px solid var(--cb);color:var(--text);font-size:1rem;padding:.6rem .9rem;border-radius:10px;outline:none;transition:border-color .2s;}
+    .nf label.c2{color:var(--red);}
+    .nf input{background:#0a0d20;border:1.5px solid var(--cb);color:var(--text);font-size:1rem;padding:.58rem .9rem;border-radius:10px;outline:none;transition:border-color .2s;}
     .nf input:focus{border-color:var(--accent);}
 
-    /* ══════════════════════════════
-       PASS DEVICE
-    ══════════════════════════════ */
-    #screen-pass{justify-content:center;background:var(--bg);}
-    .pass-box{background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:3rem 2rem;text-align:center;max-width:360px;}
+    /* ══ PASS ══ */
+    #screen-pass{justify-content:center;background:#08091a;}
+    .pass-box{background:var(--panel);border:1px solid var(--brd);border-radius:20px;padding:3rem 2rem;text-align:center;max-width:360px;}
     .pass-box .pi{font-size:4rem;margin-bottom:1rem;}
     .pass-box h2{font-size:1.5rem;margin-bottom:.5rem;}
-    .pass-box p{color:var(--muted);margin-bottom:2rem;font-size:.88rem;}
+    .pass-box p{color:var(--muted);margin-bottom:2rem;font-size:.86rem;}
 
-    /* ══════════════════════════════
-       GAME TABLE
-    ══════════════════════════════ */
-    #screen-game{background:var(--felt);justify-content:stretch;}
-    .table{
-      width:100%;max-width:860px;margin:0 auto;
-      display:flex;flex-direction:column;
-      min-height:100vh;
-      padding:.8rem .6rem;
-      gap:.65rem;
-      justify-content:space-between;
-    }
-
-    /* ── PLAYER STRIP (analysts + deck + discard) ── */
-    .pstrip{
-      display:flex;align-items:center;gap:.5rem;
-    }
-    .pstrip.p2{ flex-direction:row; }
-    .pstrip.p1{ flex-direction:row; }
-
-    /* analyst tokens */
-    .analysts{display:flex;gap:.35rem;align-items:center;flex:1;}
-    .analyst{
-      width:40px;height:40px;border-radius:50%;
-      display:flex;align-items:center;justify-content:center;font-size:1rem;
-      border:2px solid transparent;transition:all .35s;flex-shrink:0;
-    }
-    .analyst.alive.c1{background:#081e2c;border-color:var(--accent);}
-    .analyst.alive.c2{background:#280b0b;border-color:var(--danger);}
-    .analyst.dead{background:var(--border);filter:grayscale(1) opacity(.3);}
-    .pname{font-size:.72rem;font-weight:700;letter-spacing:.5px;white-space:nowrap;}
-    .pname.c1{color:var(--accent);}
-    .pname.c2{color:var(--danger);}
-
-    /* pile group */
-    .pile-group{display:flex;gap:.35rem;align-items:flex-end;flex-shrink:0;}
-
-    /* ══════════════════════════════
-       PILE / DECK CARDS
-       All piles use the same 7:12 card shape
-    ══════════════════════════════ */
-    .pile{
-      width:var(--cw);height:var(--ch);
-      border-radius:var(--cr);
-      position:relative;
-      cursor:pointer;
-      flex-shrink:0;
-      transition:transform .15s,box-shadow .15s;
-    }
-    .pile:hover{transform:translateY(-4px);}
-
-    /* Draw pile — patterned back */
-    .pile.draw{
-      background:
-        repeating-linear-gradient(135deg,#1c2650 0,#1c2650 3px,#131a3c 3px,#131a3c 8px);
-      border:2px solid var(--a2);
-      box-shadow:2px 3px 0 #06091a, 0 0 14px #7c4dff30;
-      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
-    }
-    .pile.draw::after{
-      content:'';position:absolute;inset:5px;
-      border:1px solid #7c4dff44;border-radius:6px;pointer-events:none;
-    }
-    .pile.draw .pile-icon{font-size:1.5rem;}
-    .pile.draw .pile-cnt{font-size:.6rem;color:var(--a2);font-weight:700;letter-spacing:1px;}
-    .pile.draw .pile-lbl{font-size:.48rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
-
-    /* Discard pile — face-down, different pattern */
-    .pile.discard{
-      background:
-        repeating-linear-gradient(45deg,#12160a 0,#12160a 3px,#0a0e06 3px,#0a0e06 8px);
-      border:2px dashed #2a3820;
-      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
-      opacity:.75;
-    }
-    .pile.discard .pile-lbl{font-size:.48rem;color:#3a4a28;text-transform:uppercase;letter-spacing:1px;}
-    .pile.discard .pile-cnt{font-size:.6rem;color:#3a4a28;font-weight:700;}
-    .pile.discard .pile-icon{font-size:1.1rem;opacity:.5;}
-
-    /* ── ARENA ── */
-    .arena-wrap{
-      display:flex;align-items:center;justify-content:center;gap:1rem;
-      flex:1;
-    }
-    .arena{
-      background:linear-gradient(160deg,#0c1228 0%,#0e1530 100%);
-      border:1px solid var(--border);border-radius:18px;
-      display:flex;align-items:center;justify-content:center;gap:1.8rem;
-      padding:1.4rem 1.8rem;
-      position:relative;
-      box-shadow:inset 0 0 40px #00000050;
-    }
-    .arena::before{
-      content:'— ARENA —';position:absolute;top:7px;left:50%;transform:translateX(-50%);
-      font-size:.5rem;letter-spacing:5px;color:var(--muted);
-    }
-
-    /* arena card slots */
-    .aslot{
-      width:var(--cw);height:var(--ch);
-      border:2px dashed var(--border);border-radius:var(--cr);
-      display:flex;flex-direction:column;align-items:center;justify-content:center;
-      position:relative;transition:border-color .3s;
-      font-size:.62rem;color:var(--muted);text-align:center;
-    }
-    .aslot.filled.c1{border:2px solid var(--accent);background:#050e16;}
-    .aslot.filled.c2{border:2px solid var(--danger);background:#160505;}
-    .aslot .slot-lbl{font-size:.52rem;color:var(--muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:1px;}
-
-    /* face-down card inside arena slot */
-    .fd-card{
-      width:calc(var(--cw) - 10px);height:calc(var(--ch) - 20px);
-      border-radius:7px;
-      background:repeating-linear-gradient(135deg,#1a2040,#1a2040 3px,#111428 3px,#111428 8px);
-      border:1px solid var(--border);
-      display:flex;align-items:center;justify-content:center;
-      font-size:1.4rem;
-    }
-
-    /* revealed molecule in arena */
-    .mol-card{
-      width:calc(var(--cw) - 6px);
-      display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;
-      padding:.3rem;
-    }
-    .mol-formula{font-size:1rem;font-weight:900;line-height:1;}
-    .mol-name{font-size:.55rem;color:var(--muted);}
-    .mol-stats{display:flex;gap:6px;font-size:.65rem;margin-top:1px;}
-    .mol-atk{color:var(--danger);font-weight:700;}
-    .mol-def{color:var(--ok);font-weight:700;}
-    .mol-badge{font-size:.5rem;color:var(--ok);}
-    .mol-u{font-size:.5rem;color:#aaff00;}
-
-    /* ══════════════════════════════
-       ELEMENT CARD — 7:12, real look
-    ══════════════════════════════ */
-    .ecard{
+    /* ════════════════════════════════════
+       CARD — 7:12, real card appearance
+    ════════════════════════════════════ */
+    .card{
       width:var(--cw);
       height:var(--ch);
       border-radius:var(--cr);
-      cursor:pointer;
-      transition:transform .15s,box-shadow .15s;
-      display:flex;flex-direction:column;
       position:relative;
-      user-select:none;
-      overflow:hidden;
       flex-shrink:0;
-
-      /* Real card look */
-      background:linear-gradient(160deg,#1e2445 0%,#161c38 60%,#111528 100%);
-      border:1.5px solid #2e376a;
-      box-shadow:1px 2px 6px #00000060, inset 0 1px 0 #ffffff08;
     }
-    /* inner border line — classic card feel */
-    .ecard::after{
+    /* Flip wrapper */
+    .card-flip{
+      width:100%;height:100%;
+      perspective:800px;
+    }
+    .card-inner{
+      width:100%;height:100%;
+      position:relative;
+      transform-style:preserve-3d;
+      transition:transform .55s cubic-bezier(.4,0,.2,1);
+    }
+    .card-flip.flipped .card-inner{transform:rotateY(180deg);}
+
+    .card-face{
+      position:absolute;inset:0;
+      border-radius:var(--cr);
+      backface-visibility:hidden;
+      -webkit-backface-visibility:hidden;
+    }
+
+    /* CARD FRONT — face up (molecule / analyst) */
+    .card-front{
+      display:flex;flex-direction:column;overflow:hidden;
+      background:linear-gradient(165deg,#1e2648 0%,#14193a 55%,#0e122c 100%);
+      border:1.5px solid #2e3a72;
+      box-shadow:1px 3px 8px #00000070, inset 0 1px 0 #ffffff08;
+    }
+    .card-front::after{
       content:'';position:absolute;inset:4px;
-      border:1px solid #ffffff0c;border-radius:6px;pointer-events:none;
+      border:1px solid rgba(255,255,255,.05);border-radius:5px;pointer-events:none;
     }
-    .ecard:hover{transform:translateY(-8px) rotate(-1deg);box-shadow:0 14px 28px #00000080,0 0 0 1.5px var(--accent);}
-    .ecard.sel{box-shadow:0 0 0 2px var(--a2),0 8px 20px #7c4dff40;background:linear-gradient(160deg,#1e1845 0%,#161235 100%);}
-    .ecard.spell{
-      background:linear-gradient(160deg,#1c103a 0%,#120a28 100%);
-      border-color:#4a2488;
-      box-shadow:1px 2px 6px #00000060, 0 0 10px #7c4dff18;
-    }
-    .ecard.spell:hover{box-shadow:0 14px 28px #00000080,0 0 0 1.5px var(--gold);}
-    .ecard.ucard{
-      background:linear-gradient(160deg,#132205 0%,#0c180a 100%);
-      border-color:#3a6010;
-      box-shadow:1px 2px 6px #00000060,0 0 10px #aaff0018;
-    }
-    .ecard.ucard:hover{box-shadow:0 14px 28px #00000080,0 0 0 1.5px #aaff00;}
+    /* type-specific tints */
+    .card-front.tred  {background:linear-gradient(165deg,#2a1222 0%,#1a0a18 100%);border-color:#5a1838;}
+    .card-front.tgreen{background:linear-gradient(165deg,#0e2216 0%,#091510 100%);border-color:#1a5028;}
+    .card-front.tpurp {background:linear-gradient(165deg,#1c1040 0%,#100a28 100%);border-color:#4a2488;}
+    .card-front.tgold {background:linear-gradient(165deg,#1e1808 0%,#121005 100%);border-color:#5a4010;}
 
-    /* atomic number + stats corner */
-    .ec-tl{position:absolute;top:5px;left:6px;font-size:.52rem;color:var(--muted);line-height:1.2;}
-    .ec-tr{position:absolute;top:4px;right:5px;display:flex;flex-direction:column;align-items:flex-end;gap:1px;}
-    .ec-atk{font-size:.55rem;color:var(--danger);font-weight:900;background:#1a0808cc;padding:1px 4px;border-radius:3px;}
-    .ec-def{font-size:.55rem;color:var(--ok);font-weight:900;background:#081a08cc;padding:1px 4px;border-radius:3px;}
-
-    /* symbol image area */
-    .ec-sym{
+    /* CARD BACK — face down */
+    .card-back{
+      transform:rotateY(180deg);
+      background:
+        repeating-linear-gradient(135deg,#1a2252 0,#1a2252 3px,#0e1438 3px,#0e1438 9px);
+      border:1.5px solid #2a3468;
+      box-shadow:1px 3px 8px #00000070;
       display:flex;align-items:center;justify-content:center;
-      flex:1;padding-top:1.3rem;
     }
-    .ec-img{
-      width:46px;height:46px;border-radius:8px;
-      background:rgba(255,255,255,.04);
-      border:1px solid rgba(255,255,255,.07);
-      display:flex;align-items:center;justify-content:center;overflow:hidden;
+    .card-back::after{
+      content:'⚗';font-size:1.8rem;opacity:.12;
+      position:absolute;
     }
-    .ec-img img{width:100%;height:100%;object-fit:contain;}
+    .card-back::before{
+      content:'';position:absolute;inset:5px;
+      border:1px solid rgba(255,255,255,.06);border-radius:5px;
+    }
 
-    /* text area */
-    .ec-body{
-      border-top:1px solid rgba(255,255,255,.06);
-      padding:.3rem .4rem .35rem;
-      display:flex;flex-direction:column;gap:.15rem;
-    }
-    .ec-chip{
-      font-size:.42rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;
-      padding:1px 4px;border-radius:3px;align-self:flex-start;
-    }
+    /* Card content layout */
+    .ec-tl{position:absolute;top:5px;left:6px;font-size:.5rem;color:var(--muted);line-height:1.2;}
+    .ec-tr{position:absolute;top:4px;right:5px;display:flex;flex-direction:column;align-items:flex-end;gap:1px;}
+    .ec-a{font-size:.54rem;color:var(--red);font-weight:900;background:#1a0808cc;padding:1px 4px;border-radius:3px;}
+    .ec-d{font-size:.54rem;color:var(--ok);font-weight:900;background:#081a08cc;padding:1px 4px;border-radius:3px;}
+    .ec-sym{display:flex;align-items:center;justify-content:center;flex:1;padding-top:1.25rem;}
+    .ec-img{width:42px;height:42px;border-radius:7px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);display:flex;align-items:center;justify-content:center;overflow:hidden;}
+    .ec-img img{width:100%;height:100%;object-fit:contain;}
+    .ec-body{border-top:1px solid rgba(255,255,255,.06);padding:.28rem .38rem .3rem;display:flex;flex-direction:column;gap:.13rem;}
+    .ec-chip{font-size:.4rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:1px 4px;border-radius:3px;align-self:flex-start;}
     .tnm{background:#0a2a18;color:#2ed573;}
     .tsp{background:#1a0a30;color:#e040fb;}
     .trd{background:#1a2a00;color:#aaff00;}
     .tno{background:#0a0a2a;color:var(--accent);}
-    .ec-eff{font-size:.5rem;color:var(--text);line-height:1.3;font-weight:600;}
-    .ec-info{font-size:.45rem;color:var(--muted);line-height:1.25;border-top:1px solid rgba(255,255,255,.05);padding-top:.18rem;margin-top:.1rem;}
+    .tan{background:#1a1030;color:var(--accent);}
+    .ec-eff{font-size:.48rem;color:var(--text);line-height:1.28;font-weight:600;}
+    .ec-info{font-size:.43rem;color:var(--muted);line-height:1.22;border-top:1px solid rgba(255,255,255,.05);padding-top:.15rem;margin-top:.08rem;}
 
-    /* ══════════════════════════════
-       BUILD PANEL (slide-up)
-    ══════════════════════════════ */
+    /* Analyst card extras */
+    .an-role{font-size:1.6rem;line-height:1;}
+    .an-title{font-size:.44rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-top:2px;}
+    .an-num{font-size:.5rem;color:var(--muted);}
+
+    /* Hover on clickable cards */
+    .card.clickable{cursor:pointer;}
+    .card.clickable:hover .card-inner{transform:translateY(-8px);}
+    .card.clickable.sel .card-front{border-color:var(--a2);box-shadow:0 0 0 2px var(--a2),0 8px 20px #7c4dff40;}
+
+    /* ════════════════════════════════════
+       GAME TABLE LAYOUT
+    ════════════════════════════════════ */
+    #screen-game{background:var(--felt);justify-content:stretch;padding:0;}
+
+    .table{
+      width:100%;
+      max-width:900px;
+      margin:0 auto;
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+      padding:.6rem .5rem;
+      gap:.5rem;
+    }
+
+    /* ── Analyst row ── */
+    .analyst-row{
+      display:flex;
+      align-items:center;
+      gap:.4rem;
+    }
+    /* name label rotated on side */
+    .row-name{
+      writing-mode:vertical-rl;
+      text-orientation:mixed;
+      font-size:.65rem;font-weight:700;letter-spacing:1px;
+      padding:.3rem .15rem;
+      border-radius:4px;
+    }
+    .row-name.c1{color:var(--accent);}
+    .row-name.c2{color:var(--red);transform:rotate(180deg);}
+
+    /* ── Central arena ── */
+    .arena{
+      flex:1;
+      display:flex;
+      gap:.8rem;
+    }
+
+    /* left/right gutter columns (could add side info later) */
+    .arena-side{
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      gap:.5rem;
+      min-width:30px;
+    }
+
+    /* main arena column */
+    .arena-main{
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      gap:.5rem;
+    }
+
+    /* player zone inside arena — where cards stack face-down */
+    .pzone{
+      flex:1;
+      background:linear-gradient(170deg,#0c1028 0%,#090e20 100%);
+      border:1px solid var(--brd);
+      border-radius:14px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position:relative;
+      min-height:160px;
+      overflow:hidden;
+    }
+    .pzone-label{
+      position:absolute;top:7px;left:50%;transform:translateX(-50%);
+      font-size:.5rem;letter-spacing:3px;color:var(--muted);text-transform:uppercase;
+    }
+
+    /* stacked face-down cards inside pzone */
+    .card-stack{
+      position:relative;
+      width:var(--cw);
+      height:var(--ch);
+    }
+    .card-stack .stacked{
+      position:absolute;
+      left:0;
+      transition:top .25s;
+    }
+    /* empty zone placeholder */
+    .zone-empty{
+      font-size:.65rem;color:var(--muted);text-align:center;line-height:1.5;
+    }
+    .zone-empty .ze-icon{font-size:1.4rem;margin-bottom:3px;}
+
+    /* ── Center deck row ── */
+    .deck-row{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:1.2rem;
+      padding:.35rem 0;
+    }
+    .pile{
+      width:var(--cw);height:var(--ch);
+      border-radius:var(--cr);
+      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+      cursor:pointer;flex-shrink:0;
+      transition:transform .15s,box-shadow .15s;
+      position:relative;
+    }
+    .pile:hover{transform:translateY(-5px) rotate(-2deg);}
+    .pile.draw{
+      background:repeating-linear-gradient(135deg,#1e2a58 0,#1e2a58 3px,#131c40 3px,#131c40 9px);
+      border:2px solid var(--a2);
+      box-shadow:3px 4px 0 #06091a,0 0 16px #7c4dff28;
+    }
+    .pile.draw::after{content:'';position:absolute;inset:5px;border:1px solid #7c4dff33;border-radius:5px;pointer-events:none;}
+    .pile.discard{
+      background:repeating-linear-gradient(45deg,#101408 0,#101408 3px,#080c04 3px,#080c04 9px);
+      border:2px dashed #253020;
+      opacity:.72;
+    }
+    .pile-icon{font-size:1.4rem;position:relative;z-index:1;}
+    .pile-cnt{font-size:.58rem;font-weight:700;letter-spacing:1px;position:relative;z-index:1;}
+    .pile.draw .pile-cnt{color:var(--a2);}
+    .pile.discard .pile-cnt{color:#3a4a28;}
+    .pile-lbl{font-size:.45rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);position:relative;z-index:1;}
+
+    /* VS badge */
+    .vs{font-size:1rem;font-weight:900;color:var(--gold);text-shadow:0 0 14px #ffd32a55;flex-shrink:0;}
+
+    /* ════════════════════════════════════
+       BUILD PANEL
+    ════════════════════════════════════ */
     .build-panel{
       position:fixed;bottom:0;left:0;right:0;
-      background:var(--panel);border-top:1px solid var(--border);
+      background:var(--panel);border-top:1px solid var(--brd);
       border-radius:20px 20px 0 0;
-      padding:.9rem 1.1rem 1.4rem;
+      padding:.85rem 1rem 1.4rem;
       z-index:90;transform:translateY(100%);
       transition:transform .35s cubic-bezier(.4,0,.2,1);
       max-height:78vh;overflow-y:auto;
     }
     .build-panel.open{transform:translateY(0);}
-    .bp-handle{width:38px;height:4px;background:var(--border);border-radius:2px;margin:0 auto .7rem;}
-    .bp-top{font-size:.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:.6rem;display:flex;justify-content:space-between;align-items:center;}
-    .build-row{display:flex;gap:.4rem;flex-wrap:wrap;min-height:44px;align-items:center;margin-bottom:.5rem;}
-    .bchip{background:#0e1225;border:1px solid var(--border);border-radius:7px;padding:.26rem .5rem;font-size:.8rem;font-weight:700;cursor:pointer;transition:background .15s;display:flex;flex-direction:column;align-items:center;}
-    .bchip:hover{background:var(--danger);border-color:var(--danger);}
-    .bchip .bs{font-size:.88rem;}
-    .bchip .bl{font-size:.45rem;color:var(--muted);}
+    .bp-handle{width:36px;height:4px;background:var(--brd);border-radius:2px;margin:0 auto .65rem;}
+    .bp-top{font-size:.7rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:.55rem;display:flex;justify-content:space-between;align-items:center;}
+    .build-row{display:flex;gap:.4rem;flex-wrap:wrap;min-height:40px;align-items:center;margin-bottom:.45rem;}
+    .bchip{background:#0a0d20;border:1px solid var(--brd);border-radius:7px;padding:.24rem .48rem;font-size:.8rem;font-weight:700;cursor:pointer;transition:background .15s;display:flex;flex-direction:column;align-items:center;}
+    .bchip:hover{background:var(--red);border-color:var(--red);}
+    .bchip .bs{font-size:.86rem;}
+    .bchip .bl{font-size:.43rem;color:var(--muted);}
     .build-acts{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;}
-    .mprev{margin-left:auto;font-size:.74rem;color:var(--accent);font-weight:700;}
-    .hand-row{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.6rem;padding-bottom:.5rem;}
+    .mprev{margin-left:auto;font-size:.72rem;color:var(--accent);font-weight:700;}
+    .hand-row{display:flex;gap:.45rem;flex-wrap:wrap;margin-top:.55rem;padding-bottom:.4rem;}
 
-    /* ══════════════════════════════
-       OVERLAYS / MODALS
-    ══════════════════════════════ */
-    .ov{position:fixed;inset:0;background:#000000b8;display:none;align-items:center;justify-content:center;z-index:100;}
+    /* ════════════════════════════════════
+       MODALS
+    ════════════════════════════════════ */
+    .ov{position:fixed;inset:0;background:#000000c0;display:none;align-items:center;justify-content:center;z-index:100;}
     .ov.open{display:flex;}
-    .modal{background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:1.8rem;max-width:520px;width:92%;text-align:center;}
-    .modal h2{font-size:1.3rem;margin-bottom:.45rem;}
-    .modal p{color:var(--muted);font-size:.85rem;margin-bottom:1rem;line-height:1.5;}
-    .cbox{background:#0e1225;border-radius:12px;padding:.85rem;margin:.75rem 0;text-align:left;}
-    .crow{display:flex;justify-content:space-between;font-size:.82rem;padding:.24rem 0;border-bottom:1px solid var(--border);}
+    .modal{background:var(--panel);border:1px solid var(--brd);border-radius:20px;padding:1.75rem;max-width:520px;width:92%;text-align:center;}
+    .modal h2{font-size:1.25rem;margin-bottom:.4rem;}
+    .modal p{color:var(--muted);font-size:.83rem;margin-bottom:.9rem;line-height:1.5;}
+    .cbox{background:#0a0d20;border-radius:12px;padding:.8rem;margin:.7rem 0;text-align:left;}
+    .crow{display:flex;justify-content:space-between;font-size:.8rem;padding:.22rem 0;border-bottom:1px solid var(--brd);}
     .crow:last-child{border:none;font-weight:700;}
     .crow .cv{color:var(--accent);}
-    .crow .cv.bad{color:var(--danger);}
-    .mbtns{display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap;margin-top:.75rem;}
-    .spell-grid{display:flex;gap:.6rem;flex-wrap:wrap;justify-content:center;margin:.75rem 0;}
-    .sdesc{background:#0e1225;border-radius:9px;padding:.6rem;font-size:.75rem;color:var(--muted);min-height:42px;text-align:left;line-height:1.45;margin-bottom:.6rem;}
+    .crow .cv.bad{color:var(--red);}
+    .mbtns{display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap;margin-top:.7rem;}
+    .spell-grid{display:flex;gap:.55rem;flex-wrap:wrap;justify-content:center;margin:.7rem 0;}
+    .sdesc{background:#0a0d20;border-radius:9px;padding:.58rem;font-size:.74rem;color:var(--muted);min-height:40px;text-align:left;line-height:1.4;margin-bottom:.55rem;}
 
-    /* ══════════════════════════════
+    /* ════════════════════════════════════
        RESULT
-    ══════════════════════════════ */
-    #screen-result{justify-content:center;gap:1rem;background:radial-gradient(ellipse at 50% 40%,#1a1f3a,var(--bg) 70%);}
-    .rtitle{font-size:2.6rem;font-weight:900;}
-    .rsub{color:var(--muted);font-size:.9rem;}
-    .rstats{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:1.3rem;width:320px;text-align:left;}
+    ════════════════════════════════════ */
+    #screen-result{justify-content:center;gap:1rem;background:radial-gradient(ellipse at 50% 40%,#1a1f3a,#08091a 70%);}
+    .rtitle{font-size:2.5rem;font-weight:900;}
+    .rsub{color:var(--muted);font-size:.88rem;}
+    .rstats{background:var(--panel);border:1px solid var(--brd);border-radius:16px;padding:1.25rem;width:320px;text-align:left;}
 
     @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
     .ai{animation:fadeIn .3s ease;}
 
-    @media(max-width:520px){
-      :root{--cw:70px;--ch:120px;--cr:8px;}
-      .analyst{width:34px;height:34px;font-size:.9rem;}
+    @media(max-width:500px){
+      :root{--cw:66px;--ch:113px;--cr:7px;}
+      .analyst-row{gap:.28rem;}
     }
   </style>
 </head>
@@ -352,14 +358,8 @@
   <div class="names-box ai">
     <h2>⚗️ Registro de Jugadores</h2>
     <p>Introduce los nombres de los dos científicos que se enfrentarán en el laboratorio.</p>
-    <div class="nf">
-      <label class="c1">⚗ Jugador 1</label>
-      <input id="inp-p1" type="text" placeholder="Nombre del Jugador 1" maxlength="20"/>
-    </div>
-    <div class="nf">
-      <label class="c2">☠ Jugador 2</label>
-      <input id="inp-p2" type="text" placeholder="Nombre del Jugador 2" maxlength="20"/>
-    </div>
+    <div class="nf"><label class="c1">⚗ Jugador 1</label><input id="inp-p1" type="text" placeholder="Nombre Jugador 1" maxlength="20"/></div>
+    <div class="nf"><label class="c2">☠ Jugador 2</label><input id="inp-p2" type="text" placeholder="Nombre Jugador 2" maxlength="20"/></div>
     <div style="display:flex;gap:.6rem;margin-top:.4rem">
       <button class="btn" style="flex:1" onclick="startGame()">¡Comenzar!</button>
       <button class="btn sec" onclick="showScreen('intro')">Volver</button>
@@ -367,7 +367,7 @@
   </div>
 </div>
 
-<!-- PASS DEVICE -->
+<!-- PASS -->
 <div id="screen-pass" class="screen">
   <div class="pass-box ai">
     <div class="pi">🔄</div>
@@ -377,80 +377,81 @@
   </div>
 </div>
 
-<!-- ══════════════════════════════
+<!-- ═══════════════════════════════
      GAME TABLE
-══════════════════════════════ -->
+═══════════════════════════════ -->
 <div id="screen-game" class="screen">
   <div class="table">
 
-    <!-- ── P2 STRIP (top) ── -->
-    <div class="pstrip p2">
-      <div class="analysts" id="analysts2"></div>
-      <div style="display:flex;flex-direction:column;align-items:center;gap:2px;margin-right:2px">
-        <span class="pname c2" id="pname2">Jugador 2</span>
-      </div>
-      <div class="pile-group">
-        <!-- P2 draw deck -->
-        <div class="pile draw" id="deck2" onclick="onDeckClick(1)" title="Robar carta">
-          <div class="pile-icon">🃏</div>
-          <div class="pile-cnt" id="dcnt2">16</div>
-          <div class="pile-lbl">Mazo</div>
-        </div>
-        <!-- P2 discard pile -->
-        <div class="pile discard" id="discard2" title="Pila de descarte">
-          <div class="pile-icon">♻</div>
-          <div class="pile-cnt" id="discnt2">0</div>
-          <div class="pile-lbl">Descarte</div>
-        </div>
-      </div>
+    <!-- P2 ANALYST CARDS (top) -->
+    <div class="analyst-row" id="arow2">
+      <!-- filled by JS -->
     </div>
 
-    <!-- ── ARENA ── -->
-    <div class="arena-wrap">
-      <div class="arena">
-        <!-- P2 molecule slot -->
-        <div class="aslot" id="slot2">
-          <div class="slot-lbl" id="slbl2">Rival</div>
-          <div id="slot2-content" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%">
-            <span style="font-size:.6rem;color:var(--muted)">esperando…</span>
+    <!-- ARENA -->
+    <div class="arena">
+      <div class="arena-main">
+
+        <!-- P2 zone -->
+        <div class="pzone" id="pzone2">
+          <div class="pzone-label" id="pzlbl2">Zona rival</div>
+          <div class="zone-empty" id="zempty2">
+            <div class="ze-icon">🔬</div>
+            esperando…
+          </div>
+          <div class="card-stack" id="stack2" style="display:none"></div>
+        </div>
+
+        <!-- CENTER: decks -->
+        <div class="deck-row">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+            <div class="pile discard" id="discard2" title="Descarte rival">
+              <div class="pile-icon">♻</div>
+              <div class="pile-cnt" id="discnt2">0</div>
+              <div class="pile-lbl">Descarte</div>
+            </div>
+          </div>
+
+          <div class="vs">VS</div>
+
+          <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+            <div class="pile draw" id="deck-shared" onclick="onDeckClick()" title="Robar carta">
+              <div class="pile-icon">🃏</div>
+              <div class="pile-cnt" id="dcnt">32</div>
+              <div class="pile-lbl">Mazo</div>
+            </div>
+          </div>
+
+          <div class="vs" style="visibility:hidden">VS</div>
+
+          <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+            <div class="pile discard" id="discard1" title="Tu descarte">
+              <div class="pile-icon">♻</div>
+              <div class="pile-cnt" id="discnt1">0</div>
+              <div class="pile-lbl">Descarte</div>
+            </div>
           </div>
         </div>
 
-        <div style="font-size:1.1rem;font-weight:900;color:var(--gold);text-shadow:0 0 14px #ffd32a66;flex-shrink:0">VS</div>
-
-        <!-- P1 molecule slot -->
-        <div class="aslot" id="slot1">
-          <div class="slot-lbl" id="slbl1">Tú</div>
-          <div id="slot1-content" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%">
-            <span style="font-size:.6rem;color:var(--muted)">sin carta</span>
+        <!-- P1 zone -->
+        <div class="pzone" id="pzone1">
+          <div class="pzone-label" id="pzlbl1">Tu zona</div>
+          <div class="zone-empty" id="zempty1">
+            <div class="ze-icon">⚗️</div>
+            roba del mazo para construir
           </div>
+          <div class="card-stack" id="stack1" style="display:none"></div>
         </div>
+
       </div>
     </div>
 
-    <!-- ── P1 STRIP (bottom) ── -->
-    <div class="pstrip p1">
-      <div class="analysts" id="analysts1"></div>
-      <div style="display:flex;flex-direction:column;align-items:center;gap:2px;margin-right:2px">
-        <span class="pname c1" id="pname1">Jugador 1</span>
-      </div>
-      <div class="pile-group">
-        <!-- P1 draw deck -->
-        <div class="pile draw" id="deck1" onclick="onDeckClick(0)" title="Robar carta">
-          <div class="pile-icon">🃏</div>
-          <div class="pile-cnt" id="dcnt1">16</div>
-          <div class="pile-lbl">Mazo</div>
-        </div>
-        <!-- P1 discard pile -->
-        <div class="pile discard" id="discard1" title="Pila de descarte">
-          <div class="pile-icon">♻</div>
-          <div class="pile-cnt" id="discnt1">0</div>
-          <div class="pile-lbl">Descarte</div>
-        </div>
-      </div>
+    <!-- P1 ANALYST CARDS (bottom) -->
+    <div class="analyst-row" id="arow1">
+      <!-- filled by JS -->
     </div>
 
-  </div>
+  </div><!-- .table -->
 </div>
 
 <!-- RESULT -->
@@ -468,22 +469,18 @@
     <span>🧬 Construye tu molécula — <span id="bp-pname"></span></span>
     <button class="btn sm sec" onclick="closeBuildPanel()">✕</button>
   </div>
-  <div style="font-size:.6rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:.28rem">Seleccionados (clic para quitar):</div>
-  <div class="build-row" id="build-row">
-    <span style="color:var(--muted);font-size:.74rem" id="bph">Toca un elemento…</span>
-  </div>
+  <div style="font-size:.58rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:.25rem">Seleccionados (clic para quitar):</div>
+  <div class="build-row" id="build-row"></div>
   <div class="build-acts">
     <button class="btn sm" onclick="confirmBuild()">Construir Molécula</button>
     <button class="btn sm sec" onclick="clearBuild()">Limpiar</button>
     <div class="mprev" id="mprev"></div>
   </div>
-  <div style="font-size:.6rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin:.6rem 0 .3rem">Tu mano:</div>
+  <div style="font-size:.58rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin:.55rem 0 .28rem">Tu mano:</div>
   <div class="hand-row" id="hand-cards"></div>
 </div>
 
-<!-- MODALS -->
-
-<!-- REVEAL -->
+<!-- REVEAL MODAL -->
 <div class="ov" id="ov-reveal">
   <div class="modal ai">
     <h2>⚔️ ¡Combate!</h2>
@@ -495,9 +492,9 @@
   </div>
 </div>
 
-<!-- SPELLS -->
+<!-- SPELL MODAL -->
 <div class="ov" id="ov-spells">
-  <div class="modal ai" style="max-width:600px">
+  <div class="modal ai" style="max-width:580px">
     <h2 id="sp-title">🔮 Hechizos</h2>
     <p  id="sp-desc"></p>
     <div class="sdesc" id="sp-hover">Pasa el cursor sobre una carta para ver su efecto.</div>
@@ -511,14 +508,14 @@
 
 <!-- RULES -->
 <div class="ov" id="ov-rules">
-  <div class="modal ai" style="max-width:560px;text-align:left">
+  <div class="modal ai" style="max-width:540px;text-align:left">
     <h2 style="text-align:center;margin-bottom:1rem">📖 Reglas</h2>
-    <div style="font-size:.82rem;line-height:1.75;color:var(--muted)">
-      <p><strong style="color:var(--text)">Vista de la mesa</strong><br>Cada jugador tiene 5 analistas, su mazo de robo y su pila de descarte (boca abajo). La arena central es donde se colocan las moléculas.</p><br>
-      <p><strong style="color:var(--text)">Construcción</strong><br>Pulsa tu mazo para robar y abrir tu mano. Selecciona elementos y pulsa «Construir». La carta va boca abajo en la arena. Tu rival no ve qué elegiste.</p><br>
-      <p><strong style="color:var(--text)">Combate</strong><br>Se revelan las moléculas. Daño = ATK del atacante − DEF del defensor. Cada 2 pts de daño = 1 analista eliminado (mín 1 si hay daño). El Uranio ignora la mitad de la DEF rival.</p><br>
-      <p><strong style="color:var(--text)">Victoria</strong><br>El jugador que se queda sin analistas pierde.</p><br>
-      <p><strong style="color:var(--text)">Hechizos</strong><br>Empieza el defensor. Plomo = escudo (−4 daño). Helio = +3 ATK y bloquea hechizos del rival. Se alterna hasta que alguien pasa.</p>
+    <div style="font-size:.8rem;line-height:1.75;color:var(--muted)">
+      <p><strong style="color:var(--text)">Analistas</strong><br>Cada jugador tiene 5 cartas de analista. Son su vida — cuando los pierde todos, pierde la partida.</p><br>
+      <p><strong style="color:var(--text)">Construcción</strong><br>Pulsa el mazo central para robar y abrir tu mano. Selecciona elementos — aparecen boca abajo en tu zona. Pulsa «Construir» para fijar tu molécula.</p><br>
+      <p><strong style="color:var(--text)">Revelación</strong><br>Cuando ambos han construido, las cartas giran y se revelan las moléculas.</p><br>
+      <p><strong style="color:var(--text)">Combate</strong><br>ATK atacante − DEF defensor = daño. Cada 2 pts daño = 1 analista eliminado (mín 1 si hay daño). Uranio ignora la mitad de la DEF rival.</p><br>
+      <p><strong style="color:var(--text)">Hechizos</strong><br>Plomo = escudo −4 daño. Helio = +3 ATK y bloquea hechizos del rival.</p>
     </div>
     <div style="text-align:center;margin-top:1.4rem">
       <button class="btn" onclick="document.getElementById('ov-rules').classList.remove('open')">Entendido</button>
@@ -530,36 +527,44 @@
 // ════════════════════════════════
 //  DATA
 // ════════════════════════════════
+const ANALYST_ROLES = [
+  { role:'🧪', title:'Químico Sr.',  bonus:'Síntesis +1' },
+  { role:'🔬', title:'Microbiólogo', bonus:'DEF +1 ronda 1' },
+  { role:'📊', title:'Analista',     bonus:'Revela 1 carta' },
+  { role:'🧬', title:'Genetista',    bonus:'Reacción +1'  },
+  { role:'💊', title:'Farmacólogo',  bonus:'Hechizo extra' },
+];
+
 const ELEMENTS = [
-  { id:'O', sym:'O', name:'Oxígeno',   num:8,  atk:3, def:1, type:'nonmetal',
-    img:'img/O.png', eff:'Potencia moléculas oxidantes. +1 ATK por O adicional.',
-    info:'Gas esencial para la respiración. Representa el 21% de la atmósfera terrestre.' },
-  { id:'H', sym:'H', name:'Hidrógeno', num:1,  atk:1, def:2, type:'nonmetal',
-    img:'img/H.png', eff:'Base de toda molécula. +1 DEF al combinarse con O.',
-    info:'El elemento más abundante del universo. Combustible limpio y componente del agua.' },
-  { id:'N', sym:'N', name:'Nitrógeno', num:7,  atk:2, def:3, type:'nonmetal',
-    img:'img/N.png', eff:'Estabilizador. +1 DEF de la molécula al activarse.',
-    info:'Compone el 78% del aire. Esencial para proteínas y ADN. Líquido a −196 °C.' },
-  { id:'C', sym:'C', name:'Carbono',   num:6,  atk:2, def:2, type:'nonmetal',
-    img:'img/C.png', eff:'Base orgánica. Cada C da +1 ATK y +1 DEF a la molécula.',
-    info:'El elemento de la vida. Grafito, diamante y nanotubos son formas de carbono puro.' },
-  { id:'S', sym:'S', name:'Azufre',    num:16, atk:4, def:1, type:'nonmetal',
-    img:'img/S.png', eff:'Corrosivo. Al combinarse con H inflige 1 daño directo adicional.',
-    info:'Elemento volcánico. Clave en fertilizantes y en el ácido sulfúrico.' },
-  { id:'P', sym:'P', name:'Fósforo',   num:15, atk:3, def:2, type:'nonmetal',
-    img:'img/P.png', eff:'Potenciador. +2 ATK al combinarse con O en la molécula.',
-    info:'Esencial en el ADN y los huesos. El fósforo blanco es extremadamente inflamable.' },
-  { id:'U', sym:'U', name:'Uranio',    num:92, atk:6, def:3, type:'radioactive',
-    img:'img/U.png', eff:'☢ CRÍTICO: La molécula ignora la mitad de la DEF rival.',
-    info:'Metal radiactivo. Su fisión nuclear libera millones de veces más energía que el carbón.' },
+  { id:'O',  sym:'O',  name:'Oxígeno',   num:8,  atk:3, def:1, type:'nonmetal',
+    img:'img/O.png',  eff:'Potencia moléculas oxidantes. +1 ATK por O adicional.',
+    info:'Gas esencial. Representa el 21% de la atmósfera terrestre.' },
+  { id:'H',  sym:'H',  name:'Hidrógeno', num:1,  atk:1, def:2, type:'nonmetal',
+    img:'img/H.png',  eff:'Base de toda molécula. +1 DEF al combinarse con O.',
+    info:'El elemento más abundante del universo. Combustible limpio.' },
+  { id:'N',  sym:'N',  name:'Nitrógeno', num:7,  atk:2, def:3, type:'nonmetal',
+    img:'img/N.png',  eff:'Estabilizador. +1 DEF al activarse.',
+    info:'Compone el 78% del aire. Esencial para proteínas y ADN.' },
+  { id:'C',  sym:'C',  name:'Carbono',   num:6,  atk:2, def:2, type:'nonmetal',
+    img:'img/C.png',  eff:'Base orgánica. Cada C da +1 ATK y +1 DEF.',
+    info:'El elemento de la vida: grafito, diamante, nanotubos.' },
+  { id:'S',  sym:'S',  name:'Azufre',    num:16, atk:4, def:1, type:'nonmetal',
+    img:'img/S.png',  eff:'Corrosivo. Con H inflige 1 daño directo adicional.',
+    info:'Elemento volcánico. Clave en fertilizantes y ácido sulfúrico.' },
+  { id:'P',  sym:'P',  name:'Fósforo',   num:15, atk:3, def:2, type:'nonmetal',
+    img:'img/P.png',  eff:'Potenciador. +2 ATK al combinarse con O.',
+    info:'Esencial en el ADN. El fósforo blanco es extremadamente inflamable.' },
+  { id:'U',  sym:'U',  name:'Uranio',    num:92, atk:6, def:3, type:'radioactive',
+    img:'img/U.png',  eff:'☢ CRÍTICO: Ignora la mitad de la DEF rival.',
+    info:'Metal radiactivo. Su fisión libera millones de veces más energía que el carbón.' },
 ];
 const SPELLS = [
   { id:'Pb', sym:'Pb', name:'Plomo',  num:82, atk:0, def:5, type:'spell',
-    img:'img/Pb.png', eff:'🛡 ESCUDO: Reduce el daño entrante en 4 puntos esta ronda.',
-    info:'Metal pesado. Históricamente usado como blindaje contra radiación. Muy tóxico para el sistema nervioso.' },
+    img:'img/Pb.png', eff:'🛡 ESCUDO: Reduce el daño entrante en 4 puntos.',
+    info:'Metal pesado. Usado como blindaje contra radiación. Muy tóxico.' },
   { id:'He', sym:'He', name:'Helio',  num:2,  atk:3, def:0, type:'noble',
-    img:'img/He.png', eff:'🎈 EVASIÓN: +3 ATK a tu molécula y el rival no puede usar hechizos esta ronda.',
-    info:'Gas noble inerte, más ligero que el aire. No reacciona con casi nada. Usado en globos y criogenia.' },
+    img:'img/He.png', eff:'🎈 EVASIÓN: +3 ATK y el rival no puede usar hechizos.',
+    info:'Gas noble inerte, más ligero que el aire. Usado en criogenia.' },
 ];
 const MOLECULES = [
   { name:'Agua',     formula:'H₂O',   combo:['H','H','O'],         bonus:{atk:2,def:4} },
@@ -587,10 +592,11 @@ function initState(n1,n2){
     an:[MAX_AN,MAX_AN],
     hands:[[], []],
     spells:[[], []],
-    deckSize:[16,16],
+    deckSize:32,
     discardSize:[0,0],
     build:[],
     mols:[null,null],
+    buildCount:[0,0],  // elements added to zone (for stack visual)
     phase:'build_p1',
     attacker:0,
     spellTurn:0,
@@ -605,12 +611,10 @@ function initState(n1,n2){
 
 function rand(a){return a[Math.floor(Math.random()*a.length)];}
 function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
-
 function dealHand(p){
   G.hands[p] =shuffle(ELEMENTS).slice(0,6).map(e=>({...e}));
   G.spells[p]=shuffle(SPELLS).slice(0,1).map(s=>({...s}));
 }
-
 function matchMol(elems){
   const ids=[...elems].map(e=>e.id).sort();
   for(const m of MOLECULES){if(JSON.stringify([...m.combo].sort())===JSON.stringify(ids))return m;}
@@ -625,93 +629,208 @@ function buildMol(elems){
 }
 
 // ════════════════════════════════
-//  RENDER
+//  CARD BUILDERS
 // ════════════════════════════════
-function renderNames(){
-  document.getElementById('pname1').textContent=G.names[0];
-  document.getElementById('pname2').textContent=G.names[1];
-  document.getElementById('slbl1').textContent=G.names[0];
-  document.getElementById('slbl2').textContent=G.names[1];
+
+/* Creates a full 7:12 card element */
+function makeCard({tl, atk, def, symHtml, chipCls, chipLabel, eff, info, frontCls='', clickable=false}){
+  const wrap = document.createElement('div');
+  wrap.className = 'card'+(clickable?' clickable':'');
+  wrap.innerHTML = `
+    <div class="card-flip">
+      <div class="card-inner">
+        <div class="card-face card-front ${frontCls}">
+          <div class="ec-tl">${tl}</div>
+          <div class="ec-tr">
+            <span class="ec-a">⚔${atk}</span>
+            <span class="ec-d">🛡${def}</span>
+          </div>
+          <div class="ec-sym">${symHtml}</div>
+          <div class="ec-body">
+            <div class="ec-chip ${chipCls}">${chipLabel}</div>
+            <div class="ec-eff">${eff}</div>
+            <div class="ec-info">${info}</div>
+          </div>
+        </div>
+        <div class="card-face card-back"></div>
+      </div>
+    </div>`;
+  return wrap;
 }
 
+function imgHtml(src, alt){
+  return `<div class="ec-img"><img src="${src}" alt="${alt}" onerror="this.parentNode.innerHTML='<b style=&quot;font-size:1.4rem;color:#dde4f5&quot;>${alt}</b>'"/></div>`;
+}
+
+/* Analyst card */
+function makeAnalystCard(p, idx){
+  const role = ANALYST_ROLES[idx];
+  const card = makeCard({
+    tl: `#${idx+1}`,
+    atk: 0, def: 0,
+    symHtml: `<div style="display:flex;flex-direction:column;align-items:center;gap:1px"><div class="an-role">${role.role}</div><div class="an-title">${role.title}</div></div>`,
+    chipCls: 'tan', chipLabel: 'Analista',
+    eff: role.bonus,
+    info: `Analista ${idx+1} del equipo de ${['',''][p]}`,
+    frontCls: p===0?'':'tred',
+    clickable: false,
+  });
+  card.dataset.analyst = idx;
+  card.dataset.player  = p;
+  return card;
+}
+
+/* Element card (in hand) */
+function makeElemCard(card, p, isInBuild){
+  const isSpell = card.type==='spell'||card.type==='noble';
+  const fc = card.type==='radioactive'?'tgreen':isSpell?'tpurp':'';
+  const chipCls = card.type==='spell'?'tsp':card.type==='noble'?'tno':card.type==='radioactive'?'trd':'tnm';
+  const chipLbl = isSpell?'Hechizo':card.type==='radioactive'?'Radioactivo':'No-metal';
+  const el = makeCard({
+    tl: card.num, atk: card.atk, def: card.def,
+    symHtml: imgHtml(card.img, card.sym),
+    chipCls, chipLabel: chipLbl,
+    eff: card.eff, info: card.info,
+    frontCls: fc, clickable: true,
+  });
+  if(isInBuild) el.classList.add('sel');
+  if(!isSpell) el.onclick = ()=>toggleSelect(card,p);
+  return el;
+}
+
+// ════════════════════════════════
+//  RENDER
+// ════════════════════════════════
 function renderAnalysts(){
   for(let p=0;p<2;p++){
-    const n=p+1;
-    const c=document.getElementById('analysts'+n);
-    c.innerHTML='';
+    const n = p+1;
+    const row = document.getElementById('arow'+n);
+    row.innerHTML = '';
+
+    // name label
+    const lbl = document.createElement('div');
+    lbl.className = 'row-name c'+n;
+    lbl.textContent = G.names[p];
+    row.appendChild(lbl);
+
     for(let i=0;i<MAX_AN;i++){
-      const d=document.createElement('div');
-      const alive=i<G.an[p];
-      d.className='analyst '+(alive?'alive c'+n:'dead');
-      d.textContent=alive?(p===0?'⚗':'☠'):'💀';
-      c.appendChild(d);
+      const card = makeAnalystCard(p, i);
+      const alive = i < G.an[p];
+      if(!alive){
+        // flip to back = dead
+        card.querySelector('.card-flip').classList.add('flipped');
+      }
+      row.appendChild(card);
     }
   }
 }
 
 function renderDecks(){
-  for(let p=0;p<2;p++){
-    const n=p+1;
-    document.getElementById('dcnt'+n).textContent=G.deckSize[p];
-    document.getElementById('discnt'+n).textContent=G.discardSize[p];
-  }
+  document.getElementById('dcnt').textContent = G.deckSize;
+  document.getElementById('discnt1').textContent = G.discardSize[0];
+  document.getElementById('discnt2').textContent = G.discardSize[1];
 }
 
-function setSlot(p,state){
-  const n=p+1;
-  const sc=document.getElementById('slot'+n+'-content');
-  const slot=document.getElementById('slot'+n);
-  if(state==='empty'){
-    slot.className='aslot';
-    sc.innerHTML=`<span style="font-size:.6rem;color:var(--muted)">${p===0?'sin carta':'esperando…'}</span>`;
-  } else if(state==='facedown'){
-    slot.className='aslot filled c'+n;
-    sc.innerHTML=`<div class="fd-card">${p===0?'⚗️':'🔬'}</div>`;
-  } else {
-    slot.className='aslot filled c'+n;
-    sc.innerHTML=`<div class="mol-card">
-      <div class="mol-formula">${state.formula}</div>
-      <div class="mol-name">${state.name}</div>
-      <div class="mol-stats"><span class="mol-atk">⚔ ${state.atk}</span><span class="mol-def">🛡 ${state.def}</span></div>
-      ${state.combo?'<div class="mol-badge">★ conocida</div>':''}
-      ${state.hasU?'<div class="mol-u">☢ Uranio</div>':''}
-    </div>`;
+/* Renders the stacked face-down cards in a player's arena zone */
+function renderStack(p, count, molObj=null){
+  const n = p+1;
+  const empty = document.getElementById('zempty'+n);
+  const stack = document.getElementById('stack'+n);
+  const zone  = document.getElementById('pzone'+n);
+
+  if(count===0 && !molObj){
+    empty.style.display = '';
+    stack.style.display = 'none';
+    stack.innerHTML = '';
+    zone.className = 'pzone';
+    return;
   }
+
+  empty.style.display = 'none';
+  stack.style.display = '';
+  stack.innerHTML = '';
+
+  const OFFSET = 14; // px per card downward
+  const total  = molObj ? 1 : count;
+
+  for(let i=0; i<total; i++){
+    const wrap = document.createElement('div');
+    wrap.className = 'card stacked';
+    wrap.style.top  = (i * OFFSET) + 'px';
+    wrap.style.left = '0';
+    wrap.style.zIndex = i;
+
+    const flip = document.createElement('div');
+    flip.className = 'card-flip';
+
+    const inner = document.createElement('div');
+    inner.className = 'card-inner';
+
+    // back face always present
+    const back = document.createElement('div');
+    back.className = 'card-face card-back';
+
+    // front face — molecule info (only meaningful when revealed)
+    const front = document.createElement('div');
+    front.className = 'card-face card-front';
+
+    if(molObj && i===0){
+      // Build the molecule front face
+      front.innerHTML = `
+        <div class="ec-tl">MOL</div>
+        <div class="ec-tr">
+          <span class="ec-a">⚔${molObj.atk}</span>
+          <span class="ec-d">🛡${molObj.def}</span>
+        </div>
+        <div class="ec-sym" style="padding-top:1.1rem;flex-direction:column;gap:2px">
+          <div style="font-size:1.15rem;font-weight:900;line-height:1">${molObj.formula}</div>
+          <div style="font-size:.45rem;color:var(--muted)">${molObj.name}</div>
+        </div>
+        <div class="ec-body">
+          <div class="ec-chip ${molObj.combo?'tnm':'tsp'}">${molObj.combo?'★ Conocida':'Compuesto'}</div>
+          <div class="ec-eff">${molObj.hasU?'☢ Uranio activo':molObj.name}</div>
+          <div class="ec-info">${molObj.hasU?'Ignora ½ DEF rival':''}</div>
+        </div>`;
+      // starts face-down; flip after short delay if revealed flag set
+      flip.id = 'mol-flip-'+n;
+    }
+
+    inner.appendChild(front);
+    inner.appendChild(back);
+    flip.appendChild(inner);
+    wrap.appendChild(flip);
+    stack.appendChild(wrap);
+
+    // adjust stack height
+    stack.style.height = (total * OFFSET + parseInt(getComputedStyle(document.documentElement).getPropertyValue('--ch'))||137) + 'px';
+  }
+
+  // highlight zone border
+  zone.className = 'pzone'+(count>0||molObj?' active-zone':'');
+}
+
+function flipRevealZone(p){
+  const n = p+1;
+  const flipEl = document.getElementById('mol-flip-'+n);
+  if(flipEl) flipEl.classList.add('flipped');
 }
 
 function renderHand(p){
-  const c=document.getElementById('hand-cards');
-  c.innerHTML='';
-  const all=[...G.hands[p],...G.spells[p]];
+  const c = document.getElementById('hand-cards');
+  c.innerHTML = '';
+  const all = [...G.hands[p], ...G.spells[p]];
   for(const card of all){
-    const isSpell=card.type==='spell'||card.type==='noble';
-    const d=document.createElement('div');
-    d.className='ecard ai'+(isSpell?' spell':(card.type==='radioactive'?' ucard':''));
-    if(G.build.includes(card)) d.classList.add('sel');
-    const imgH=`<div class="ec-img"><img src="${card.img}" alt="${card.sym}" onerror="this.parentNode.innerHTML='<b style=&quot;font-size:1.5rem;color:#dde4f5&quot;>${card.sym}</b>'"/></div>`;
-    d.innerHTML=`
-      <div class="ec-tl">${card.num}</div>
-      <div class="ec-tr"><span class="ec-atk">⚔${card.atk}</span><span class="ec-def">🛡${card.def}</span></div>
-      <div class="ec-sym">${imgH}</div>
-      <div class="ec-body">
-        <div class="ec-chip t${card.type==='spell'?'sp':card.type==='noble'?'no':card.type==='radioactive'?'rd':'nm'}">${isSpell?'Hechizo':card.type==='radioactive'?'Radioactivo':'No-metal'}</div>
-        <div class="ec-eff">${card.eff}</div>
-        <div class="ec-info">${card.info}</div>
-      </div>`;
-    if(!isSpell) d.onclick=()=>toggleSelect(card,p);
-    else d.onclick=()=>{};
-    c.appendChild(d);
+    const el = makeElemCard(card, p, G.build.includes(card));
+    c.appendChild(el);
   }
 }
 
 function renderBuildRow(){
-  const r=document.getElementById('build-row');
-  r.innerHTML='';
+  const r = document.getElementById('build-row');
+  r.innerHTML = '';
   if(!G.build.length){
-    const ph=document.createElement('span');
-    ph.style.cssText='color:var(--muted);font-size:.74rem';
-    ph.textContent='Toca un elemento…';
-    r.appendChild(ph);
+    const s=document.createElement('span');s.style.cssText='color:var(--muted);font-size:.72rem';s.textContent='Toca un elemento…';
+    r.appendChild(s);
     document.getElementById('mprev').textContent='';
     return;
   }
@@ -721,16 +840,25 @@ function renderBuildRow(){
     d.onclick=()=>toggleSelect(e,G.phase==='build_p1'?0:1);
     r.appendChild(d);
   }
-  const prev=buildMol(G.build),matched=matchMol(G.build);
-  document.getElementById('mprev').textContent=matched?`✅ ${prev.formula} ⚔${prev.atk} 🛡${prev.def}`:`📦 ${prev.formula} ⚔${prev.atk} 🛡${prev.def}`;
+  const pv=buildMol(G.build),mt=matchMol(G.build);
+  document.getElementById('mprev').textContent=mt?`✅ ${pv.formula} ⚔${pv.atk} 🛡${pv.def}`:`📦 ${pv.formula} ⚔${pv.atk} 🛡${pv.def}`;
 }
 
-function toggleSelect(card,p){
+function toggleSelect(card, p){
   const idx=G.build.indexOf(card);
-  if(idx>-1)G.build.splice(idx,1);else G.build.push(card);
+  if(idx>-1) G.build.splice(idx,1); else G.build.push(card);
+  // update stack visual immediately
+  G.buildCount[p] = G.build.length;
+  renderStack(p, G.build.length);
+  renderBuildRow();
+  renderHand(p);
+}
+function clearBuild(){
+  const p=G.phase==='build_p1'?0:1;
+  G.build=[];G.buildCount[p]=0;
+  renderStack(p,0);
   renderBuildRow();renderHand(p);
 }
-function clearBuild(){G.build=[];renderBuildRow();renderHand(G.phase==='build_p1'?0:1);}
 
 // ════════════════════════════════
 //  BUILD PANEL
@@ -742,11 +870,10 @@ function openBuildPanel(p){
 }
 function closeBuildPanel(){document.getElementById('build-panel').classList.remove('open');}
 
-function onDeckClick(p){
-  if(G.phase==='build_p1'&&p!==0)return;
-  if(G.phase==='build_p2'&&p!==1)return;
+function onDeckClick(){
   if(!G.phase.startsWith('build'))return;
-  G.deckSize[p]=Math.max(0,G.deckSize[p]-1);
+  const p=G.phase==='build_p1'?0:1;
+  G.deckSize=Math.max(0,G.deckSize-1);
   renderDecks();
   openBuildPanel(p);
 }
@@ -759,14 +886,17 @@ function startGame(){
   const n2=document.getElementById('inp-p2').value.trim()||'Jugador 2';
   initState(n1,n2);
   showScreen('game');
-  renderNames();renderAnalysts();renderDecks();
-  setSlot(0,'empty');setSlot(1,'empty');
+  renderAnalysts();renderDecks();
+  renderStack(0,0);renderStack(1,0);
+  document.getElementById('pzlbl1').textContent=n1;
+  document.getElementById('pzlbl2').textContent=n2;
   beginBuildPhase(0);
 }
 
 function beginBuildPhase(p){
   G.phase=p===0?'build_p1':'build_p2';
-  G.build=[];
+  G.build=[];G.buildCount[p]=0;
+  renderStack(p,0);
 }
 
 function confirmBuild(){
@@ -775,18 +905,20 @@ function confirmBuild(){
   const p=G.phase==='build_p1'?0:1;
   G.mols[p]=buildMol(G.build);
   for(const e of G.build){const i=G.hands[p].indexOf(e);if(i>-1)G.hands[p].splice(i,1);}
-  // used cards go to discard
   G.discardSize[p]+=G.build.length;
+  // collapse stack to single face-down card showing molecule (hidden)
+  G.buildCount[p]=G.build.length;
   G.build=[];
   closeBuildPanel();
-  setSlot(p,'facedown');
+  // Show single face-down card in zone (mol stored, not revealed yet)
+  renderStack(p, 0, G.mols[p]); // pass mol so front is ready, starts face-down
   renderDecks();
   if(p===0){
     G.phase='pass_p2';
     document.getElementById('pass-h').textContent=`Pasa el dispositivo a ${G.names[1]}`;
     document.getElementById('pass-p').textContent=`Es el turno de ${G.names[1]}. Que ${G.names[0]} no vea la pantalla.`;
     document.getElementById('pass-name').textContent=G.names[1];
-    setTimeout(()=>showScreen('pass'),400);
+    setTimeout(()=>showScreen('pass'),500);
   } else {
     G.phase='reveal';
     setTimeout(showReveal,600);
@@ -799,13 +931,16 @@ function resumePass(){
 }
 
 function showReveal(){
+  // flip both cards
+  flipRevealZone(0);
+  setTimeout(()=>flipRevealZone(1), 250);
+
   const m0=G.mols[0],m1=G.mols[1];
-  setSlot(0,m0);setSlot(1,m1);
   G.attacker=m0.atk>=m1.atk?0:1;
   const def=1-G.attacker;
   let atkV=G.mols[G.attacker].atk;
   let defV=G.mols[def].def;
-  if(G.mols[G.attacker].hasU)defV=Math.floor(defV/2);
+  if(G.mols[G.attacker].hasU) defV=Math.floor(defV/2);
   G.dmg[def]=Math.max(0,atkV-defV);
   G.dmg[G.attacker]=Math.max(0,G.mols[def].atk-G.mols[G.attacker].def);
   const an=G.names[G.attacker],dn=G.names[def];
@@ -819,8 +954,8 @@ function showReveal(){
     <div class="crow"><span>DEF ${dn}${G.mols[G.attacker].hasU?' (½ uranio)':''}</span><span class="cv">${defV}</span></div>
     <div class="crow"><span>Daño a ${dn}</span><span class="cv ${G.dmg[def]===0?'bad':''}">${G.dmg[def]}</span></div>
     <div class="crow"><span>💀 Analistas pierde ${dn}</span><span class="cv bad">${aLd}</span></div>
-    <div class="crow"><span>Contraataque → analistas pierde ${an}</span><span class="cv bad">${aLa}</span></div>`;
-  document.getElementById('ov-reveal').classList.add('open');
+    <div class="crow"><span>Contraataque → pierde ${an}</span><span class="cv bad">${aLa}</span></div>`;
+  setTimeout(()=>document.getElementById('ov-reveal').classList.add('open'), 700);
 }
 
 function startSpellPhase(){
@@ -839,27 +974,15 @@ function openSpellModal(p){
   document.getElementById('sp-hover').textContent='Pasa el cursor sobre una carta para ver su efecto.';
   const grid=document.getElementById('sp-grid');
   grid.innerHTML='';
-  const spells=G.spells[p];
-  if(!spells.length){
-    grid.innerHTML='<div style="color:var(--muted);font-size:.85rem">Sin hechizos disponibles.</div>';
+  if(!G.spells[p].length){
+    grid.innerHTML='<div style="color:var(--muted);font-size:.83rem">Sin hechizos disponibles.</div>';
   } else {
-    for(const sp of spells){
+    for(const sp of G.spells[p]){
       if(G.helioCast[rival]&&sp.id==='He')continue;
-      const d=document.createElement('div');
-      d.className='ecard spell ai';
-      const imgH=`<div class="ec-img"><img src="${sp.img}" alt="${sp.sym}" onerror="this.parentNode.innerHTML='<b style=&quot;font-size:1.5rem;color:#dde4f5&quot;>${sp.sym}</b>'"/></div>`;
-      d.innerHTML=`
-        <div class="ec-tl">${sp.num}</div>
-        <div class="ec-tr"><span class="ec-atk">⚔${sp.atk}</span><span class="ec-def">🛡${sp.def}</span></div>
-        <div class="ec-sym">${imgH}</div>
-        <div class="ec-body">
-          <div class="ec-chip tsp">Hechizo</div>
-          <div class="ec-eff">${sp.eff}</div>
-          <div class="ec-info">${sp.info}</div>
-        </div>`;
-      d.onmouseenter=()=>{document.getElementById('sp-hover').textContent=sp.name+': '+sp.eff;};
-      d.onclick=()=>{G.selSpell=sp.id;grid.querySelectorAll('.ecard').forEach(c=>c.classList.remove('sel'));d.classList.add('sel');document.getElementById('btn-cast').style.display='';};
-      grid.appendChild(d);
+      const el=makeElemCard(sp,p,false);
+      el.onmouseenter=()=>{document.getElementById('sp-hover').textContent=sp.name+': '+sp.eff;};
+      el.onclick=()=>{G.selSpell=sp.id;grid.querySelectorAll('.card').forEach(c=>c.classList.remove('sel'));el.classList.add('sel');document.getElementById('btn-cast').style.display='';};
+      grid.appendChild(el);
     }
   }
   document.getElementById('ov-spells').classList.add('open');
@@ -870,16 +993,15 @@ function castSpell(){
   const p=G.spellTurn;
   const sp=G.spells[p].find(s=>s.id===id);if(!sp)return;
   G.spells[p]=G.spells[p].filter(s=>s.id!==id);
-  G.discardSize[p]++;
-  G.stats.spells++;
+  G.discardSize[p]++;G.stats.spells++;
   const rival=1-p;
-  if(sp.id==='Pb'){G.dmg[p]=Math.max(0,G.dmg[p]-4);}
+  if(sp.id==='Pb') G.dmg[p]=Math.max(0,G.dmg[p]-4);
   else if(sp.id==='He'){G.dmg[rival]+=3;G.helioCast[p]=true;}
   G.spellPassed[p]=false;
   renderDecks();
   document.getElementById('ov-spells').classList.remove('open');
   G.spellTurn=rival;
-  if(G.spellPassed[rival]||!G.spells[rival].length||G.helioCast[p])setTimeout(resolveCombat,500);
+  if(G.spellPassed[rival]||!G.spells[rival].length||G.helioCast[p]) setTimeout(resolveCombat,500);
   else setTimeout(()=>openSpellModal(rival),500);
 }
 
@@ -887,7 +1009,7 @@ function passSpell(){
   const p=G.spellTurn;G.spellPassed[p]=true;
   document.getElementById('ov-spells').classList.remove('open');
   const rival=1-p;G.spellTurn=rival;
-  if(G.spellPassed[rival]||!G.spells[rival].length)resolveCombat();
+  if(G.spellPassed[rival]||!G.spells[rival].length) resolveCombat();
   else setTimeout(()=>openSpellModal(rival),400);
 }
 
@@ -908,22 +1030,17 @@ function resolveCombat(){
     const fresh=shuffle(ELEMENTS).slice(0,3).map(e=>({...e}));
     G.hands[p]=[...G.hands[p],...fresh].slice(0,7);
     if(G.spells[p].length<1){const pool=SPELLS.filter(s=>!G.spells[p].find(x=>x.id===s.id));if(pool.length)G.spells[p].push({...rand(pool)});}
-    G.deckSize[p]=Math.max(0,G.deckSize[p]-2);
+    G.deckSize=Math.max(0,G.deckSize-2);
   }
   renderDecks();
-  setSlot(0,'empty');setSlot(1,'empty');
+  renderStack(0,0);renderStack(1,0);
   beginBuildPhase(0);
 }
 
 function endGame(){
   const w=G.an[0]>0?0:(G.an[1]>0?1:-1);
-  if(w===-1){
-    document.getElementById('rtitle').textContent='🤝 ¡Empate!';
-    document.getElementById('rsub').textContent='Ambos equipos de analistas han caído simultáneamente.';
-  } else {
-    document.getElementById('rtitle').textContent=`🏆 ¡${G.names[w]} gana!`;
-    document.getElementById('rsub').textContent=`Los analistas de ${G.names[1-w]} han sido eliminados.`;
-  }
+  if(w===-1){document.getElementById('rtitle').textContent='🤝 ¡Empate!';document.getElementById('rsub').textContent='Ambos equipos de analistas han caído.';}
+  else{document.getElementById('rtitle').textContent=`🏆 ¡${G.names[w]} gana!`;document.getElementById('rsub').textContent=`Los analistas de ${G.names[1-w]} han sido eliminados.`;}
   document.getElementById('rstats').innerHTML=`
     <div class="crow"><span>Rondas jugadas</span><span class="cv">${G.stats.rounds}</span></div>
     <div class="crow"><span>Analistas perdidos ${G.names[0]}</span><span class="cv bad">${G.stats.anLost[0]}</span></div>
