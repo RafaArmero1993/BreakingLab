@@ -165,9 +165,12 @@
       flex-direction:column;
       padding:clamp(.35rem,1.5vw,.7rem) clamp(.3rem,1.5vw,.6rem);
       gap:clamp(.28rem,.9vw,.5rem);
-      transition:transform .6s cubic-bezier(.4,0,.2,1),opacity .4s;
+      transition:transform .6s cubic-bezier(.4,0,.2,1);
     }
+    /* Rotate the container but counter-rotate each direct child so
+       content stays upright — net effect: strips swap top/bottom */
     .table.rotated{transform:rotate(180deg);}
+    .table.rotated > *{transform:rotate(180deg);}
 
     /* ── Analyst strip ── */
     .astrip{
@@ -210,15 +213,12 @@
 
     /* ── ARENA ── */
     .arena{
-      flex:1;
       display:flex;
       flex-direction:column;
       gap:clamp(.28rem,.9vw,.48rem);
-      min-height:0;
     }
 
     .pzone{
-      flex:1;
       background:linear-gradient(170deg,#f5f7ff 0%,#eef0ff 100%);
       border:2px solid var(--brd);
       border-radius:14px;
@@ -227,7 +227,7 @@
       justify-content:center;
       position:relative;
       overflow:hidden;
-      min-height:clamp(100px,22vh,180px);
+      height:calc(var(--ch) + clamp(18px,4vw,28px));
       box-shadow:inset 0 2px 8px rgba(91,106,240,.07);
     }
     .pzone-lbl{
@@ -260,10 +260,16 @@
       background:linear-gradient(165deg,#f9fafb,#f3f4f6);
       border:2px dashed var(--brd);
     }
+    .cpile.draw{
+      background:linear-gradient(135deg,var(--acc),var(--a2));
+      border:none;
+      box-shadow:0 4px 14px rgba(91,106,240,.35),0 2px 0 #3b42c0;
+    }
+    .cpile.draw .cpile-cnt{color:rgba(255,255,255,.9);}
+    .cpile.draw .cpile-lbl{color:rgba(255,255,255,.7);}
     .cpile-icon{font-size:clamp(.9rem,2.4vw,1.2rem);position:relative;z-index:1;}
     .cpile-cnt{font-size:clamp(.36rem,.95vw,.56rem);font-weight:700;letter-spacing:1px;z-index:1;color:var(--mut);}
     .cpile-lbl{font-size:clamp(.27rem,.72vw,.4rem);text-transform:uppercase;letter-spacing:1.5px;color:var(--mut);z-index:1;}
-    .vs-lbl{font-size:clamp(.75rem,2.5vw,1.2rem);font-weight:900;color:var(--gold);text-shadow:0 2px 8px rgba(245,158,11,.35);}
 
     /* ════════════════════════════════════
        BUILD PANEL
@@ -383,16 +389,18 @@
         <div class="card-stack" id="stack2" style="display:none"></div>
       </div>
 
-      <!-- Center: shared discard + VS -->
+      <!-- Center: shared draw deck + shared discard -->
       <div class="center-row">
-        <span class="vs-lbl" id="vs-lbl-l" style="visibility:hidden">←</span>
+        <div class="cpile draw" title="Mazo compartido de robo">
+          <div class="cpile-icon">🃏</div>
+          <div class="cpile-cnt" id="shared-cnt">32</div>
+          <div class="cpile-lbl">Mazo</div>
+        </div>
         <div class="cpile disc" title="Pila de descarte compartida">
           <div class="cpile-icon">♻️</div>
           <div class="cpile-cnt" id="disc-cnt">0</div>
           <div class="cpile-lbl">Descarte</div>
         </div>
-        <span class="vs-lbl">⚔️ VS</span>
-        <span class="vs-lbl" id="vs-lbl-r" style="visibility:hidden">→</span>
       </div>
 
       <!-- P1 zone (bottom) -->
@@ -566,7 +574,7 @@ let G={};
 
 function initState(n1,n2){
   G={round:1,names:[n1||'J1',n2||'J2'],an:[MAX_AN,MAX_AN],
-     hands:[[],[]],spells:[[],[]],deckSize:[16,16],discardSize:0,
+     hands:[[],[]],spells:[[],[]],deckSize:[16,16],sharedDeck:32,discardSize:0,
      build:[],mols:[null,null],phase:'build_p1',
      attacker:0,spellTurn:0,spellPassed:[false,false],helioCast:[false,false],
      dmg:[0,0],selSpell:null,stats:{rounds:0,anLost:[0,0],spells:0}};
@@ -661,6 +669,7 @@ function renderStrip(p){
 function renderDecks(){
   for(let p=0;p<2;p++){const el=document.getElementById('pcnt'+p);if(el)el.textContent=G.deckSize[p];}
   document.getElementById('disc-cnt').textContent=G.discardSize;
+  document.getElementById('shared-cnt').textContent=G.sharedDeck;
 }
 
 function renderStack(p,count,molObj=null){
@@ -786,6 +795,7 @@ function onDeckClick(p){
   if(G.phase==='build_p2'&&p!==1)return;
   if(!G.phase.startsWith('build'))return;
   G.deckSize[p]=Math.max(0,G.deckSize[p]-1);
+  G.sharedDeck=Math.max(0,G.sharedDeck-1);
   renderDecks();
   openBuildPanel(p);
 }
