@@ -25,7 +25,7 @@
       --card2: #fff0f0;
       --shadow: 0 4px 16px rgba(91,106,240,.15);
 
-      --cw: clamp(52px, 13vw, 76px);
+      --cw: clamp(58px, 15.5vw, 88px);
       --ch: calc(var(--cw) * 12 / 7);
       --cr: clamp(6px, 1.4vw, 10px);
     }
@@ -176,7 +176,7 @@
     .astrip{
       display:flex;
       align-items:center;
-      gap:clamp(.18rem,.7vw,.36rem);
+      gap:clamp(.1rem,.4vw,.22rem);
     }
     .pname-lbl{
       writing-mode:vertical-rl;
@@ -190,7 +190,7 @@
     .pname-lbl.c1{color:var(--acc);}
     .pname-lbl.c2{color:var(--red);transform:rotate(180deg);}
 
-    .analysts{display:flex;gap:clamp(.14rem,.55vw,.3rem);align-items:center;}
+    .analysts{display:flex;gap:clamp(.08rem,.35vw,.2rem);align-items:center;}
 
     /* personal draw deck */
     .pdeck{
@@ -213,12 +213,15 @@
 
     /* ── ARENA ── */
     .arena{
+      flex:1;
       display:flex;
       flex-direction:column;
       gap:clamp(.28rem,.9vw,.48rem);
+      min-height:0;
     }
 
     .pzone{
+      flex:1;
       background:linear-gradient(170deg,#f5f7ff 0%,#eef0ff 100%);
       border:2px solid var(--brd);
       border-radius:14px;
@@ -227,7 +230,9 @@
       justify-content:center;
       position:relative;
       overflow:hidden;
-      height:calc(var(--ch) + clamp(18px,4vw,28px));
+      /* small padding keeps the zone from feeling cavernous */
+      padding:clamp(6px,1.5vw,10px) 0;
+      min-height:calc(var(--ch) + 20px);
       box-shadow:inset 0 2px 8px rgba(91,106,240,.07);
     }
     .pzone-lbl{
