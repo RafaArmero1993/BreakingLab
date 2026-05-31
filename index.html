@@ -851,22 +851,26 @@ function cancelBuild(){
 
 /* ════════════════════════════════
    TABLE SWAP (pass device)
-   DOM swap so P2's strip/zone is at the bottom, P1's at the top.
-   No CSS rotation — avoids all coordinate system confusion.
+   Target order for P2:  astrip1 | arena[pzone1,center,pzone2] | astrip2
+   Target order for P1:  astrip2 | arena[pzone2,center,pzone1] | astrip1
 ════════════════════════════════ */
 function rotateTable(toP2){
   const table = document.getElementById('game-table');
   const arena = document.querySelector('.arena');
   if(toP2){
-    // Put P2's analyst strip at the bottom (append = last child)
+    // table: astrip1, arena, astrip2
+    table.insertBefore(document.getElementById('astrip1'), table.firstElementChild);
     table.appendChild(document.getElementById('astrip2'));
-    // Put P2's zone at the bottom inside arena (append = last child)
+    // arena: pzone1, center-row, pzone2
+    arena.insertBefore(document.getElementById('pzone1'), arena.firstElementChild);
     arena.appendChild(document.getElementById('pzone2'));
   } else {
-    // Restore original order: astrip2 first, astrip1 last
+    // Restore for P1 — table: astrip2, arena, astrip1
     table.insertBefore(document.getElementById('astrip2'), table.firstElementChild);
-    // Restore arena order: pzone2 first, pzone1 last
+    table.appendChild(document.getElementById('astrip1'));
+    // arena: pzone2, center-row, pzone1
     arena.insertBefore(document.getElementById('pzone2'), arena.firstElementChild);
+    arena.appendChild(document.getElementById('pzone1'));
   }
 }
 
