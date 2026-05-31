@@ -80,14 +80,9 @@
 
     /* ── HEADER BAR ── */
     .hbar{display:flex;align-items:center;justify-content:space-between;padding:.4rem .7rem;background:var(--panel);border-radius:10px;border:1px solid var(--border);}
-    .hbar-name{font-size:.8rem;font-weight:700;}
+    .hbar-name{font-size:.85rem;font-weight:700;}
     .hbar-name.c1{color:var(--accent);}
     .hbar-name.c2{color:var(--danger);}
-    .hbar-hp{font-size:.7rem;color:var(--muted);}
-    .hp-strip{width:90px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:2px;}
-    .hp-fill{height:100%;border-radius:3px;transition:width .4s;}
-    .hp-fill.c1{background:linear-gradient(90deg,var(--success),#1dd1a1);}
-    .hp-fill.c2{background:linear-gradient(90deg,var(--danger),#ff6b81);}
     .phase-pill{background:var(--card-bg);border:1px solid var(--border);border-radius:20px;padding:.25rem .8rem;font-size:.7rem;color:var(--accent);font-weight:700;letter-spacing:1px;text-transform:uppercase;text-align:center;}
     .round-sub{font-size:.6rem;color:var(--muted);text-align:center;}
 
@@ -333,20 +328,12 @@
 
     <!-- HEADER -->
     <div class="hbar">
-      <div>
-        <div class="hbar-name c2" id="hbar-n2">Jugador 2</div>
-        <div class="hbar-hp"><span id="hbar-hp2">20 HP</span></div>
-        <div class="hp-strip"><div class="hp-fill c2" id="hp-fill2" style="width:100%"></div></div>
-      </div>
+      <div class="hbar-name c2" id="hbar-n2">Jugador 2</div>
       <div>
         <div class="phase-pill" id="phase-pill">Preparar</div>
         <div class="round-sub">Ronda <span id="rnd">1</span></div>
       </div>
-      <div style="text-align:right">
-        <div class="hbar-name c1" id="hbar-n1">Jugador 1</div>
-        <div class="hbar-hp"><span id="hbar-hp1">20 HP</span></div>
-        <div class="hp-strip"><div class="hp-fill c1" id="hp-fill1" style="width:100%"></div></div>
-      </div>
+      <div class="hbar-name c1" id="hbar-n1">Jugador 1</div>
     </div>
 
     <!-- RIVAL ANALYSTS (top) -->
@@ -479,10 +466,11 @@
   <div class="modal ai" style="max-width:560px;text-align:left">
     <h2 style="text-align:center;margin-bottom:1rem">📖 Reglas</h2>
     <div style="font-size:.82rem;line-height:1.75;color:var(--muted)">
-      <p><strong style="color:var(--text)">Vista inicial</strong><br>Solo ves los analistas de cada jugador, la arena central y el mazo. Cada jugador tiene 5 analistas — cuando pierde HP, los analistas caen.</p><br>
+      <p><strong style="color:var(--text)">Vista inicial</strong><br>Solo ves los 5 analistas de cada jugador, la arena central y el mazo. No hay HP — los analistas son la única vida.</p><br>
       <p><strong style="color:var(--text)">Construcción</strong><br>Pulsa el mazo para robar y ver tu mano. Selecciona elementos y pulsa «Construir». La carta va boca abajo a la arena. El rival no ve tu selección.</p><br>
-      <p><strong style="color:var(--text)">Combate</strong><br>Cuando ambos han construido, se revelan las moléculas. Daño = ATK atacante − DEF defensor (mín 0). Uranio ignora la mitad de la DEF rival.</p><br>
-      <p><strong style="color:var(--text)">Hechizos</strong><br>Empieza el defensor. Puede usar Plomo (escudo −4 daño) o Helio (+3 ATK y bloquea hechizos del rival). Se alterna hasta que alguien pasa.</p>
+      <p><strong style="color:var(--text)">Combate</strong><br>Se revelan las moléculas. Daño = ATK atacante − DEF defensor. Cada 2 puntos de daño = 1 analista eliminado (mínimo 1 si hay daño). Uranio ignora la mitad de la DEF rival.</p><br>
+      <p><strong style="color:var(--text)">Victoria</strong><br>El jugador que se queda sin analistas pierde. El juego termina en ese instante.</p><br>
+      <p><strong style="color:var(--text)">Hechizos</strong><br>Empieza el defensor. Plomo = escudo (−4 daño). Helio = +3 ATK y bloquea hechizos del rival. Se alterna hasta que alguien pasa.</p>
     </div>
     <div style="text-align:center;margin-top:1.4rem">
       <button class="btn" onclick="document.getElementById('ov-rules').classList.remove('open')">Entendido</button>
@@ -554,15 +542,14 @@ const MOLECULES = [
 //  STATE
 // ═══════════════════════════════════════════
 
-const MAX_HP = 20, MAX_AN = 5;
+const MAX_AN = 5;
 let G = {};
 
 function initState(n1, n2) {
   G = {
     round: 1,
     names: [n1||'Jugador 1', n2||'Jugador 2'],
-    hp:    [MAX_HP, MAX_HP],
-    an:    [MAX_AN, MAX_AN],   // analysts
+    an:    [MAX_AN, MAX_AN],   // analysts — única "vida"
     hands: [[], []],
     spells:[[], []],
     deckSize: 32,
@@ -573,9 +560,9 @@ function initState(n1, n2) {
     spellTurn: 0,
     spellPassed: [false,false],
     helioCast:  [false,false],
-    dmg: [0,0],
+    dmg: [0,0],   // daño bruto acumulado en la ronda (se convierte en analistas al resolver)
     selSpell: null,
-    stats:{ rounds:0, dmgDone:[0,0], spells:0 },
+    stats:{ rounds:0, anLost:[0,0], spells:0 },
   };
   dealHand(0); dealHand(1);
 }
@@ -612,15 +599,6 @@ function log(msg,cls=''){
 //  RENDER
 // ═══════════════════════════════════════════
 
-function renderHP(){
-  for(let p=0;p<2;p++){
-    const hp=Math.max(0,G.hp[p]);
-    const n=p+1;
-    document.getElementById('hp-fill'+n).style.width=(hp/MAX_HP*100)+'%';
-    document.getElementById('hbar-hp'+n).textContent=hp+' HP';
-  }
-}
-
 function renderAnalysts(){
   for(let p=0;p<2;p++){
     const n=p+1;
@@ -642,6 +620,8 @@ function renderNames(){
   document.getElementById('hbar-n2').textContent=G.names[1];
   document.getElementById('slbl1').textContent=G.names[0];
   document.getElementById('slbl2').textContent=G.names[1];
+  document.getElementById('albl1').textContent=G.names[0];
+  document.getElementById('albl2').textContent=G.names[1];
 }
 
 function setSlot(p, state){
@@ -777,7 +757,7 @@ function startGame(){
   G.deckSize=32;
   document.getElementById('deck-count').textContent='32 cartas';
   document.getElementById('deck-count-badge').textContent='32';
-  renderNames(); renderHP(); renderAnalysts();
+  renderNames(); renderAnalysts();
   setSlot(1,'empty'); setSlot(2,'empty');
   document.getElementById('phase-pill').textContent='Construir';
   beginBuildPhase(0);
@@ -850,12 +830,15 @@ function showReveal(){
   const an=G.names[G.attacker], dn=G.names[def];
   document.getElementById('rev-text').textContent=
     `${G.names[0]}: ${m0.formula} (⚔${m0.atk} 🛡${m0.def})   ·   ${G.names[1]}: ${m1.formula} (⚔${m1.atk} 🛡${m1.def})`;
+  const anLostDef = G.dmg[def]>0 ? Math.max(1,Math.floor(G.dmg[def]/2)) : 0;
+  const anLostAtk = G.dmg[G.attacker]>0 ? Math.max(1,Math.floor(G.dmg[G.attacker]/2)) : 0;
   document.getElementById('rev-summary').innerHTML=`
     <div class="crow"><span>⚔ ${an} ataca</span></div>
     <div class="crow"><span>ATK de ${an}</span><span class="cv">${atkV}</span></div>
     <div class="crow"><span>DEF de ${dn}${G.mols[G.attacker].hasU?' (½ uranio)':''}</span><span class="cv">${defV}</span></div>
-    <div class="crow"><span>Daño a ${dn}</span><span class="cv ${G.dmg[def]===0?'bad':''}">${G.dmg[def]}</span></div>
-    <div class="crow"><span>Contraataque de ${dn}</span><span class="cv bad">${G.dmg[G.attacker]}</span></div>`;
+    <div class="crow"><span>Daño bruto a ${dn}</span><span class="cv ${G.dmg[def]===0?'bad':''}">${G.dmg[def]}</span></div>
+    <div class="crow"><span>💀 Analistas pierde ${dn}</span><span class="cv bad">${anLostDef}</span></div>
+    <div class="crow"><span>Contraataque → analistas pierde ${an}</span><span class="cv bad">${anLostAtk}</span></div>`;
 
   document.getElementById('ov-reveal').classList.add('open');
   document.getElementById('phase-pill').textContent='Combate';
@@ -949,16 +932,22 @@ function passSpell(){
 
 function resolveCombat(){
   document.getElementById('ov-spells').classList.remove('open');
+
+  // Cada 2 puntos de daño = 1 analista perdido (mínimo 1 si hay daño > 0)
   for(let p=0;p<2;p++){
-    G.hp[p]=Math.max(0,G.hp[p]-G.dmg[p]);
-    G.an[p]=Math.ceil(G.hp[p]/4);
-    G.stats.dmgDone[G.attacker]+=G.dmg[1-G.attacker];
+    if(G.dmg[p]>0){
+      const lost = Math.max(1, Math.floor(G.dmg[p]/2));
+      G.an[p] = Math.max(0, G.an[p] - lost);
+      G.stats.anLost[p] += lost;
+      log(`💀 ${G.names[p]} pierde ${lost} analista${lost>1?'s':''} (daño: ${G.dmg[p]}).`,'bad');
+    } else {
+      log(`🛡 ${G.names[p]} resiste sin perder analistas.`,'good');
+    }
   }
   G.stats.rounds++;
-  renderHP(); renderAnalysts();
-  log(`💥 ${G.names[0]}: −${G.dmg[0]} HP | ${G.names[1]}: −${G.dmg[1]} HP`,G.dmg[0]>0||G.dmg[1]>0?'bad':'good');
+  renderAnalysts();
 
-  if(G.hp[0]<=0||G.hp[1]<=0){ endGame(); return; }
+  if(G.an[0]<=0||G.an[1]<=0){ endGame(); return; }
 
   // Next round
   G.round++;
@@ -985,16 +974,21 @@ function resolveCombat(){
 }
 
 function endGame(){
-  const w=G.hp[0]>0?0:1;
-  document.getElementById('rtitle').textContent=`🏆 ¡${G.names[w]} gana!`;
-  document.getElementById('rsub').textContent=`${G.names[1-w]} ha sido eliminado del laboratorio.`;
+  const w = G.an[0]>0 ? 0 : (G.an[1]>0 ? 1 : -1); // -1 = empate (ambos a 0)
+  if(w===-1){
+    document.getElementById('rtitle').textContent='🤝 ¡Empate!';
+    document.getElementById('rsub').textContent='Ambos equipos de analistas han sido eliminados simultáneamente.';
+  } else {
+    document.getElementById('rtitle').textContent=`🏆 ¡${G.names[w]} gana!`;
+    document.getElementById('rsub').textContent=`Los analistas de ${G.names[1-w]} han sido eliminados del laboratorio.`;
+  }
   document.getElementById('rstats').innerHTML=`
-    <div class="crow"><span>Rondas</span><span class="cv">${G.stats.rounds}</span></div>
-    <div class="crow"><span>Daño de ${G.names[0]}</span><span class="cv">${G.stats.dmgDone[0]}</span></div>
-    <div class="crow"><span>Daño de ${G.names[1]}</span><span class="cv">${G.stats.dmgDone[1]}</span></div>
-    <div class="crow"><span>Hechizos</span><span class="cv">${G.stats.spells}</span></div>
-    <div class="crow"><span>HP final ${G.names[0]}</span><span class="cv ${G.hp[0]<=0?'bad':'good'}">${Math.max(0,G.hp[0])}</span></div>
-    <div class="crow"><span>HP final ${G.names[1]}</span><span class="cv ${G.hp[1]<=0?'bad':'good'}">${Math.max(0,G.hp[1])}</span></div>`;
+    <div class="crow"><span>Rondas jugadas</span><span class="cv">${G.stats.rounds}</span></div>
+    <div class="crow"><span>Analistas perdidos por ${G.names[0]}</span><span class="cv bad">${G.stats.anLost[0]}</span></div>
+    <div class="crow"><span>Analistas perdidos por ${G.names[1]}</span><span class="cv bad">${G.stats.anLost[1]}</span></div>
+    <div class="crow"><span>Hechizos lanzados</span><span class="cv">${G.stats.spells}</span></div>
+    <div class="crow"><span>Analistas restantes ${G.names[0]}</span><span class="cv ${G.an[0]>0?'':'bad'}">${G.an[0]}</span></div>
+    <div class="crow"><span>Analistas restantes ${G.names[1]}</span><span class="cv ${G.an[1]>0?'':'bad'}">${G.an[1]}</span></div>`;
   showScreen('result');
 }
 
