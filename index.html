@@ -35,6 +35,8 @@
 
     .screen{display:none;}
     .screen.active{display:flex;flex-direction:column;align-items:center;min-height:100vh;}
+    /* Game screen must not overflow — browser chrome eats into 100vh */
+    #screen-game.active{min-height:unset;height:100svh;height:100dvh;overflow:hidden;}
 
     /* ─── Buttons ─── */
     .btn{background:linear-gradient(135deg,var(--acc),var(--a2));border:none;color:#fff;font-size:clamp(.82rem,3vw,1rem);font-weight:700;padding:.72rem 1.9rem;border-radius:50px;cursor:pointer;transition:opacity .2s,transform .15s;box-shadow:0 4px 14px rgba(91,106,240,.35);}
@@ -160,8 +162,7 @@
       width:100%;
       max-width:860px;
       margin:0 auto;
-      height:100dvh;
-      height:100vh; /* fallback */
+      height:100%;   /* fills #screen-game which is exactly the viewport */
       display:flex;
       flex-direction:column;
       padding:clamp(.25rem,1vw,.5rem) clamp(.3rem,1.5vw,.6rem);
@@ -427,6 +428,18 @@
   <div class="rsub"   id="rsub"></div>
   <div class="rstats" id="rstats"></div>
   <button class="btn" style="margin-top:1rem" onclick="showScreen('names')">🔄 Jugar de nuevo</button>
+</div>
+
+<!-- ACTION CHOICE -->
+<div class="ov" id="ov-action">
+  <div class="modal ai" style="max-width:320px">
+    <h2>🧪 Tu turno</h2>
+    <p id="act-name-lbl" style="font-weight:700;color:var(--txt)"></p>
+    <div class="mbtns" style="flex-direction:column;gap:.65rem;margin-top:1rem">
+      <button class="btn" style="width:100%" onclick="chooseAttack()">⚔️ Atacar — construir molécula</button>
+      <button class="btn sec" style="width:100%" onclick="chooseDraw()">🃏 Robar 2 cartas del mazo</button>
+    </div>
+  </div>
 </div>
 
 <!-- BUILD PANEL -->
@@ -789,10 +802,49 @@ function onDeckClick(p){
   if(G.phase==='build_p1'&&p!==0)return;
   if(G.phase==='build_p2'&&p!==1)return;
   if(!G.phase.startsWith('build'))return;
+  G._actionP=p;
+  document.getElementById('act-name-lbl').textContent=`¿Qué haces, ${G.names[p]}?`;
+  document.getElementById('ov-action').classList.add('open');
+}
+
+function chooseAttack(){
+  document.getElementById('ov-action').classList.remove('open');
+  const p=G._actionP;
   G.deckSize[p]=Math.max(0,G.deckSize[p]-1);
   G.sharedDeck=Math.max(0,G.sharedDeck-1);
   renderDecks();
   openBuildPanel(p);
+}
+
+function chooseDraw(){
+  document.getElementById('ov-action').classList.remove('open');
+  const p=G._actionP;
+  const drawn=shuffle(ELEMENTS).slice(0,2).map(e=>({...e}));
+  G.hands[p]=[...G.hands[p],...drawn].slice(0,8);
+  G.sharedDeck=Math.max(0,G.sharedDeck-2);
+  G.mols[p]=null; // no attack this round
+  renderDecks();
+  if(p===0){
+    // P1 drew → pass to P2
+    G.phase='pass_p2';
+    document.getElementById('pass-h').textContent=`Pasa el dispositivo a ${G.names[1]}`;
+    document.getElementById('pass-p').textContent=`${G.names[0]} robó cartas. Es el turno de ${G.names[1]}.`;
+    document.getElementById('pass-name').textContent=G.names[1];
+    setTimeout(()=>{rotateTable(true);showScreen('pass');},200);
+  } else {
+    // P2 drew
+    rotateTable(false);
+    if(G.mols[0]){
+      // P1 built a molecule → P1 attacks with no defender
+      G.attacker=0;
+      G.dmg[1]=Math.max(0,G.mols[0].atk); // full ATK, no DEF
+      G.dmg[0]=0;
+      setTimeout(showReveal,400);
+    } else {
+      // Both drew → skip combat, next round
+      nextRound();
+    }
+  }
 }
 
 /* ════════════════════════════════
@@ -856,20 +908,30 @@ function resumePass(){
 }
 
 function showReveal(){
-  flipZone(0);setTimeout(()=>flipZone(1),250);
-  const m0=G.mols[0],m1=G.mols[1];
-  G.attacker=m0.atk>=m1.atk?0:1;const def=1-G.attacker;
-  let atkV=G.mols[G.attacker].atk,defV=G.mols[def].def;
-  if(G.mols[G.attacker].hasU)defV=Math.floor(defV/2);
-  G.dmg[def]=Math.max(0,atkV-defV);G.dmg[G.attacker]=Math.max(0,G.mols[def].atk-G.mols[G.attacker].def);
+  // One player may have drawn (mol=null) — handle gracefully
+  const m0=G.mols[0]||{formula:'(robó)',atk:0,def:0,name:'Robó cartas',combo:false,hasU:false,valid:false};
+  const m1=G.mols[1]||{formula:'(robó)',atk:0,def:0,name:'Robó cartas',combo:false,hasU:false,valid:false};
+  // Only flip zones that have a molecule
+  if(G.mols[0]) flipZone(0);
+  if(G.mols[1]) setTimeout(()=>flipZone(1),250);
+  // If attacker not already set (both built), determine by ATK
+  if(G.mols[0]&&G.mols[1]){
+    G.attacker=m0.atk>=m1.atk?0:1;const def=1-G.attacker;
+    let atkV=G.mols[G.attacker].atk,defV=G.mols[def].def;
+    if(G.mols[G.attacker].hasU)defV=Math.floor(defV/2);
+    G.dmg[def]=Math.max(0,atkV-defV);G.dmg[G.attacker]=Math.max(0,G.mols[def].atk-G.mols[G.attacker].def);
+  }
+  // G.attacker + G.dmg[] already set if one player drew
+  const def=1-G.attacker;
   const an=G.names[G.attacker],dn=G.names[def];
   const aLd=G.dmg[def]>0?Math.max(1,Math.floor(G.dmg[def]/2)):0;
   const aLa=G.dmg[G.attacker]>0?Math.max(1,Math.floor(G.dmg[G.attacker]/2)):0;
-  document.getElementById('rev-text').textContent=`${G.names[0]}: ${m0.formula} (⚔${m0.atk} 🛡${m0.def})  ·  ${G.names[1]}: ${m1.formula} (⚔${m1.atk} 🛡${m1.def})`;
+  const atMol=G.mols[G.attacker]||m0;const dfMol=G.mols[def]||m1;
+  document.getElementById('rev-text').textContent=`${G.names[0]}: ${m0.formula}  ·  ${G.names[1]}: ${m1.formula}`;
   document.getElementById('rev-summary').innerHTML=`
-    <div class="crow"><span>⚔ ${an} ataca</span></div>
-    <div class="crow"><span>ATK ${an}</span><span class="cv">${atkV}</span></div>
-    <div class="crow"><span>DEF ${dn}${G.mols[G.attacker].hasU?' (½ uranio)':''}</span><span class="cv">${defV}</span></div>
+    <div class="crow"><span>⚔ ${an} ataca</span><span class="cv">${atMol.formula}</span></div>
+    <div class="crow"><span>ATK ${an}</span><span class="cv">${atMol.atk}</span></div>
+    <div class="crow"><span>DEF ${dn}${atMol.hasU?' (½ uranio)':''}</span><span class="cv">${dfMol.def}</span></div>
     <div class="crow"><span>Daño a ${dn}</span><span class="cv ${G.dmg[def]===0?'bad':''}">${G.dmg[def]}</span></div>
     <div class="crow"><span>💀 Analistas pierde ${dn}</span><span class="cv bad">${aLd}</span></div>
     <div class="crow"><span>Contraataque → pierde ${an}</span><span class="cv bad">${aLa}</span></div>`;
@@ -928,6 +990,10 @@ function resolveCombat(){
   G.stats.rounds++;
   renderStrip(0);renderStrip(1);
   if(G.an[0]<=0||G.an[1]<=0){endGame();return;}
+  nextRound();
+}
+
+function nextRound(){
   G.round++;G.mols=[null,null];G.dmg=[0,0];
   for(let p=0;p<2;p++){
     const fr=shuffle(ELEMENTS).slice(0,3).map(e=>({...e}));
