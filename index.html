@@ -106,6 +106,7 @@
       box-shadow:0 3px 10px rgba(91,106,240,.12),inset 0 1px 0 #fff;
     }
     .cf-red{background:linear-gradient(165deg,#fff5f5 0%,#fff0f0 60%,#ffe8e8 100%);border-color:#fcc;}
+    .cf-blue{background:linear-gradient(165deg,#f0f5ff 0%,#e8eeff 60%,#dce6ff 100%);border-color:#b8c8f0;}
     .cf-grn{background:linear-gradient(165deg,#f0fff8 0%,#e8fff2 60%,#dcfce7 100%);border-color:#86efac;}
     .cf-purp{background:linear-gradient(165deg,#faf5ff 0%,#f3e8ff 60%,#ede9fe 100%);border-color:#d8b4fe;}
     .cf-gold{background:linear-gradient(165deg,#fffbeb 0%,#fef3c7 60%,#fde68a 100%);border-color:#fcd34d;}
@@ -235,8 +236,15 @@
       position:absolute;top:6px;left:50%;transform:translateX(-50%);
       font-size:clamp(.36rem,.85vw,.48rem);letter-spacing:3px;color:var(--mut);text-transform:uppercase;white-space:nowrap;font-weight:700;
     }
-    .zone-empty{font-size:clamp(.54rem,1.4vw,.66rem);color:var(--mut);text-align:center;line-height:1.7;}
+    #pzone1{background:linear-gradient(170deg,#f0f5ff 0%,#e4ecff 100%);border-color:#b8c8f0;}
+    #pzone2{background:linear-gradient(170deg,#fff5f5 0%,#ffe4e4 100%);border-color:#f0b8b8;}
+    .pzone-lbl{display:none;}
+    .zone-empty{font-size:clamp(.54rem,1.4vw,.66rem);color:var(--mut);text-align:center;line-height:1.7;display:flex;flex-direction:column;align-items:center;justify-content:center;}
     .zone-empty .zi{font-size:clamp(.9rem,2.4vw,1.2rem);display:block;margin-bottom:3px;}
+    /* ── Zoom overlay ── */
+    #ov-zoom{background:rgba(0,0,0,.78);z-index:200;}
+    #ov-zoom .zoom-card-wrap{--cw:clamp(180px,46vw,250px);--ch:calc(var(--cw)*12/7);--cr:16px;width:var(--cw);height:var(--ch);}
+    #ov-zoom .card{pointer-events:none;width:var(--cw);height:var(--ch);}
 
     .card-stack{position:relative;width:var(--cw);}
     .pzone-cards{display:flex;gap:.4rem;align-items:center;justify-content:center;flex-wrap:wrap;width:100%;padding:0 .4rem;}
@@ -342,9 +350,9 @@
   <div class="intro-icon pi-anim">⚗️</div>
   <div class="logo">BreakingLab</div>
   <div class="logo-sub">El Duelo Molecular</div>
-  <div style="color:var(--mut);font-size:.72rem;letter-spacing:1px;margin-top:-.4rem">by Rafa Armero &amp; Tomás Aznar</div>
+  <div style="color:var(--mut);font-size:.57rem;letter-spacing:1px;margin-top:-.4rem">by Rafa Armero &amp; Tomás Aznar</div>
   <div style="display:flex;flex-direction:column;gap:.55rem;margin-top:1.2rem;align-items:center">
-    <button class="btn" onclick="showScreen('names')">🚀 Iniciar Partida</button>
+    <button class="btn" onclick="showScreen('names')">⚗️ Iniciar Partida</button>
     <button class="btn sec" onclick="openRules()">📖 Ver Reglas</button>
   </div>
 </div>
@@ -358,7 +366,7 @@
     <div class="nf"><label class="c2">Laboratorio 2</label><input id="inp-p2" type="text" placeholder="Nombre Laboratorio 2" maxlength="20"/></div>
     <div id="names-error" style="color:var(--red);font-size:.75rem;min-height:1rem;margin-top:.3rem;text-align:center"></div>
     <div style="margin-top:.5rem">
-      <button class="btn" style="width:100%" onclick="startGame()">¡A por el Nobel!</button>
+      <button class="btn" style="width:100%" onclick="startGame()">🥇 ¡A por el Nobel!</button>
     </div>
   </div>
 </div>
@@ -401,7 +409,7 @@
           <div class="cpile-lbl">Robar</div>
         </div>
         <div class="cpile disc" title="Pila de descarte compartida">
-          <div class="cpile-icon">🧪</div>
+          <div class="cpile-icon">🃏</div>
           <div class="cpile-cnt" id="disc-cnt">0</div>
           <div class="cpile-lbl">Descarte</div>
         </div>
@@ -481,6 +489,11 @@
   <div class="hand-row" id="sp-hand"></div>
 </div>
 
+<!-- ZOOM -->
+<div class="ov" id="ov-zoom" onclick="closeZoom()">
+  <div class="zoom-card-wrap" id="zoom-card-inner"></div>
+</div>
+
 <!-- RULES -->
 <div class="ov" id="ov-rules">
   <div class="modal ai" style="max-width:520px;text-align:left">
@@ -554,6 +567,21 @@ function usableIds(selectedIds){
   return useful;
 }
 
+/* Which card IDs in a hand can actually contribute to a valid molecule
+   using only cards available in that same hand. */
+function handUsableIds(hand){
+  const useful=new Set();
+  const handIds=hand.map(e=>e.id);
+  if(handIds.includes('U'))useful.add('U');
+  for(const mol of VALID_MOLECULES){
+    const needed=[...mol.ids],avail=[...handIds];
+    let ok=true;
+    for(const id of needed){const i=avail.indexOf(id);if(i===-1){ok=false;break;}avail.splice(i,1);}
+    if(ok)mol.ids.forEach(id=>useful.add(id));
+  }
+  return useful;
+}
+
 /* ════════════════════════════════
    DATA
 ════════════════════════════════ */
@@ -589,7 +617,7 @@ let G={};
 function initState(n1,n2){
   G={round:1,names:[n1||'J1',n2||'J2'],an:[MAX_AN,MAX_AN],
      hands:[[],[]],spells:[[],[]],deckSize:[16,16],sharedDeck:32,discardSize:0,
-     build:[],mols:[null,null],phase:'build_p1',spellsInArena:[[],[]],
+     build:[],selBuildSpell:null,mols:[null,null],phase:'build_p1',spellsInArena:[[],[]],
      attacker:0,spellTurn:0,spellPassed:[false,false],helioCast:[false,false],
      dmg:[0,0],selSpell:null,stats:{rounds:0,anLost:[0,0],spells:0}};
   dealHand(0);dealHand(1);
@@ -649,13 +677,14 @@ function makeElemCard(card,p,inBuild,dimmed){
     <div class="card-face card-back"></div>
   </div></div>`;
   if(!isSpell) w.onclick=()=>toggleSelect(card,p);
+  addLongPress(w,()=>showZoom(card));
   return w;
 }
 
 function makeAnalystCard(p,idx,alive){
   const w=document.createElement('div');
   w.className='card';
-  const fc=p===0?'':'cf-red';
+  const fc=p===0?'cf-blue':'cf-red';
   w.innerHTML=`<div class="card-flip${alive?'':' flipped'}"><div class="card-inner">
     <div class="card-face card-front ${fc} an-front">
       <div class="an-icon">🧪</div>
@@ -743,32 +772,55 @@ function renderStack(p,count,molObj=null){
 
 function flipZone(p){
   const el=document.getElementById('mf'+(p+1));
-  if(el)el.classList.remove('flipped'); // remove to reveal front face
+  if(el){
+    el.classList.remove('flipped');
+    const molCard=el.closest('.card');
+    if(molCard&&G.mols[p])addLongPress(molCard,()=>showZoomMol(G.mols[p]));
+  }
 }
 
 function renderHand(p){
-  const selectedIds = G.build.map(e=>e.id);
-  const useful = usableIds(selectedIds);
-  const canForm = canFormAnyMol(G.hands[p]);
+  const selectedIds=G.build.map(e=>e.id);
+  const useful=usableIds(selectedIds);
+  const handUseful=handUsableIds(G.hands[p]);
+  const canForm=canFormAnyMol(G.hands[p]);
+  const hasSpellSel=!!G.selBuildSpell;
+  const hasElemSel=G.build.length>0;
 
-  document.getElementById('no-mol-msg').style.display = canForm ? 'none' : '';
+  document.getElementById('no-mol-msg').style.display=canForm?'none':'';
 
   const hc=document.getElementById('hand-cards');hc.innerHTML='';
-  // Elements
+
+  // Elements — mutual exclusion: dim all when spell selected; otherwise hand-usability dimming
   G.hands[p].forEach(card=>{
-    const inBuild = G.build.includes(card);
-    const dimmed = !inBuild && !useful.has(card.id);
+    const inBuild=G.build.includes(card);
+    let dimmed;
+    if(hasSpellSel) dimmed=true;
+    else if(hasElemSel) dimmed=!inBuild&&!useful.has(card.id);
+    else dimmed=!handUseful.has(card.id);
     hc.appendChild(makeElemCard(card,p,inBuild,dimmed));
   });
-  // Spells — same row, just different card color (cf-purp/cf-gold already applied)
+
+  // Spells — dim when elements selected; selectable when no elements selected
   G.spells[p].forEach(card=>{
-    hc.appendChild(makeElemCard(card,p,false,false));
+    const inSpellSel=(G.selBuildSpell===card);
+    const dimmed=hasElemSel;
+    const el=makeElemCard(card,p,inSpellSel,dimmed);
+    if(!dimmed){
+      el.classList.add('clickable');
+      el.onclick=()=>toggleSelectSpell(card,p);
+    }
+    hc.appendChild(el);
   });
 
   // Update Reaccionar button
   const confirmBtn=document.getElementById('btn-confirm');
   const prev=document.getElementById('mprev');
-  if(!G.build.length){
+  if(hasSpellSel){
+    confirmBtn.disabled=false;confirmBtn.style.opacity='1';
+    prev.className='mprev valid';
+    prev.textContent=`✨ ${G.selBuildSpell.name} → pasar turno`;
+  } else if(!hasElemSel){
     confirmBtn.disabled=true;confirmBtn.style.opacity='.45';
     prev.textContent='';prev.className='mprev';
   } else {
@@ -786,10 +838,17 @@ function renderHand(p){
 }
 
 function toggleSelect(card,p){
+  G.selBuildSpell=null;
   const idx=G.build.indexOf(card);
   if(idx>-1) G.build.splice(idx,1);
   else G.build.push(card);
   renderStack(p,G.build.length);
+  renderHand(p);
+}
+
+function toggleSelectSpell(card,p){
+  if(G.selBuildSpell===card)G.selBuildSpell=null;
+  else{G.selBuildSpell=card;G.build=[];renderStack(p,0);}
   renderHand(p);
 }
 
@@ -848,7 +907,7 @@ function confirmDraw(){
 /* Cancel attack — close panel and clear selection */
 function cancelBuild(){
   const p=G.phase==='build_p1'?0:1;
-  G.build=[];
+  G.build=[];G.selBuildSpell=null;
   renderStack(p,0);
   closeBuildPanel();
 }
@@ -893,16 +952,34 @@ function startGame(){
   rotateTable(false);
   renderStrip(0);renderStrip(1);renderDecks();
   renderStack(0,0);renderStack(1,0);
-  document.getElementById('pzlbl1').textContent=n1;
-  document.getElementById('pzlbl2').textContent=n2;
   G.phase='build_p1';
 }
 
 function confirmBuild(){
-  if(!G.phase.startsWith('build')||!G.build.length)return;
-  const mol=buildMol(G.build);
-  if(!mol.valid) return; // must be a valid molecule
+  if(!G.phase.startsWith('build'))return;
   const p=G.phase==='build_p1'?0:1;
+
+  if(G.selBuildSpell){
+    // Spell reserved as action: pass build turn, spell stays in hand for spell phase
+    G.selBuildSpell=null;G.mols[p]=null;
+    closeBuildPanel();
+    if(p===0){
+      G.phase='pass_p2';
+      document.getElementById('pass-h').textContent=`Pasa el dispositivo a ${G.names[1]}`;
+      document.getElementById('pass-p').textContent=`${G.names[0]} pasó su turno. Es el turno de ${G.names[1]}.`;
+      document.getElementById('pass-name').textContent=G.names[1];
+      setTimeout(()=>{rotateTable(true);showScreen('pass');},200);
+    } else {
+      rotateTable(false);
+      if(G.mols[0]){G.attacker=0;G.dmg[1]=Math.max(0,G.mols[0].atk);G.dmg[0]=0;setTimeout(showReveal,400);}
+      else nextRound();
+    }
+    return;
+  }
+
+  if(!G.build.length)return;
+  const mol=buildMol(G.build);
+  if(!mol.valid)return;
   G.mols[p]=mol;
   G.build.forEach(e=>{const i=G.hands[p].indexOf(e);if(i>-1)G.hands[p].splice(i,1);});
   G.discardSize+=G.build.length;G.build=[];
@@ -911,14 +988,10 @@ function confirmBuild(){
   renderDecks();
   if(p===0){
     G.phase='pass_p2';
-    // Rotate table 180° so P2 sees it right-side-up when they pick up the device
     document.getElementById('pass-h').textContent=`Pasa el dispositivo a ${G.names[1]}`;
     document.getElementById('pass-p').textContent=`Es el turno de ${G.names[1]}. Que ${G.names[0]} no vea la pantalla.`;
     document.getElementById('pass-name').textContent=G.names[1];
-    setTimeout(()=>{
-      rotateTable(true);
-      showScreen('pass');
-    }, 450);
+    setTimeout(()=>{rotateTable(true);showScreen('pass');},450);
   } else {
     G.phase='reveal';
     rotateTable(false);
@@ -1084,6 +1157,53 @@ function endGame(){
     <div class="crow"><span>Analistas restantes ${G.names[1]}</span><span class="cv ${G.an[1]>0?'':'bad'}">${G.an[1]}</span></div>`;
   showScreen('result');
 }
+
+/* ════════════════════════════════
+   LONG PRESS + ZOOM
+════════════════════════════════ */
+let _lpTimer=null;
+function addLongPress(el,fn){
+  const start=()=>{_lpTimer=setTimeout(fn,2000);};
+  const end=()=>{if(_lpTimer){clearTimeout(_lpTimer);_lpTimer=null;}};
+  el.addEventListener('mousedown',start);
+  el.addEventListener('touchstart',start,{passive:true});
+  el.addEventListener('mouseup',end);
+  el.addEventListener('mouseleave',end);
+  el.addEventListener('touchend',end);
+  el.addEventListener('touchcancel',end);
+}
+function showZoom(card){
+  const wrap=document.getElementById('zoom-card-inner');
+  wrap.innerHTML='';
+  const el=makeElemCard(card,0,false,false);
+  el.classList.remove('clickable');
+  el.style.width='var(--cw)';el.style.height='var(--ch)';
+  wrap.appendChild(el);
+  document.getElementById('ov-zoom').classList.add('open');
+}
+function showZoomMol(mol){
+  const wrap=document.getElementById('zoom-card-inner');
+  wrap.innerHTML='';
+  const badge=mol.valid?`<span class="mol-hint">★ ${mol.name}</span>`:`<span style="font-size:.42rem;color:var(--mut)">Compuesto</span>`;
+  const el=document.createElement('div');
+  el.className='card';
+  el.style.width='var(--cw)';el.style.height='var(--ch)';
+  el.innerHTML=`<div class="card-flip"><div class="card-inner">
+    <div class="card-face card-front">
+      <div class="ec-tl">MOL</div>
+      <div class="ec-tr"><span class="ec-a">⚔${mol.atk}</span><span class="ec-d">🛡${mol.def}</span></div>
+      <div class="ec-sym" style="flex-direction:column;gap:3px;padding-top:1rem">
+        <span style="font-size:clamp(.95rem,3vw,1.15rem);font-weight:900;color:var(--txt)">${mol.formula}</span>
+        ${badge}
+      </div>
+      <div class="ec-body"><div class="ec-eff">${mol.hasU?'☢ Uranio activo':mol.name}</div></div>
+    </div>
+    <div class="card-face card-back"></div>
+  </div></div>`;
+  wrap.appendChild(el);
+  document.getElementById('ov-zoom').classList.add('open');
+}
+function closeZoom(){document.getElementById('ov-zoom').classList.remove('open');}
 
 function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById('screen-'+id).classList.add('active');}
 function openRules(){document.getElementById('ov-rules').classList.add('open');}
