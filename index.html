@@ -126,9 +126,9 @@
     .ec-tr{position:absolute;top:3px;right:4px;display:flex;flex-direction:column;align-items:flex-end;gap:1px;}
     .ec-a{font-size:clamp(.34rem,.8vw,.52rem);color:var(--red);font-weight:900;background:#fee2e2;padding:1px 3px;border-radius:3px;}
     .ec-d{font-size:clamp(.34rem,.8vw,.52rem);color:var(--ok);font-weight:900;background:#dcfce7;padding:1px 3px;border-radius:3px;}
-    .ec-sym{display:flex;align-items:center;justify-content:center;flex:1;padding-top:clamp(.9rem,2.4vw,1.2rem);}
-    .ec-img{width:clamp(28px,8vw,42px);height:clamp(28px,8vw,42px);border-radius:6px;background:rgba(91,106,240,.07);border:1px solid rgba(91,106,240,.15);display:flex;align-items:center;justify-content:center;overflow:hidden;}
-    .ec-img img{width:100%;height:100%;object-fit:contain;}
+    .ec-sym{display:flex;align-items:center;justify-content:center;flex:1;padding-top:clamp(.9rem,2.4vw,1.2rem);overflow:hidden;}
+    .ec-img{width:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;background:none;border:none;border-radius:0;}
+    .ec-img img{width:100%;height:auto;object-fit:contain;}
     .ec-body{border-top:1px solid rgba(91,106,240,.1);padding:clamp(.16rem,.45vw,.28rem) clamp(.22rem,.55vw,.36rem);display:flex;flex-direction:column;gap:.1rem;}
     .ec-chip{font-size:clamp(.3rem,.7vw,.4rem);font-weight:800;text-transform:uppercase;letter-spacing:.4px;padding:1px 4px;border-radius:3px;align-self:flex-start;}
     .tnm{background:#dbeafe;color:#1d4ed8;}
@@ -268,7 +268,7 @@
     #ov-zoom .card{pointer-events:none;width:var(--cw);height:var(--ch);}
     #ov-zoom .ec-tl{font-size:clamp(1.1rem,2.8vw,1.8rem);}
     #ov-zoom .ec-a,#ov-zoom .ec-d{font-size:clamp(1rem,2.6vw,1.6rem);padding:2px 6px;}
-    #ov-zoom .ec-img{width:clamp(72px,20vw,110px);height:clamp(72px,20vw,110px);}
+    #ov-zoom .ec-img{width:100%;}
     #ov-zoom .ec-body{padding:clamp(.5rem,1.4vw,.9rem) clamp(.6rem,1.6vw,1rem);gap:.35rem;}
     #ov-zoom .ec-chip{font-size:clamp(.85rem,2.3vw,1.3rem);padding:3px 8px;}
     #ov-zoom .ec-eff{font-size:clamp(.82rem,2.2vw,1.2rem);line-height:1.35;}
@@ -434,7 +434,7 @@
 <div id="screen-pass" class="screen">
   <div class="pass-box ai">
     <h2 id="pass-h">Pasa el dispositivo</h2>
-    <button class="btn" onclick="resumePass()">Soy <span id="pass-name">Jugador</span></button>
+    <button class="btn gold" onclick="resumePass()">Soy <span id="pass-name" style="color:#fff">Jugador</span></button>
   </div>
 </div>
 
@@ -530,10 +530,9 @@
 <!-- REVEAL MODAL -->
 <div class="ov" id="ov-reveal">
   <div class="modal ai">
-    <div id="rev-header" style="margin-bottom:.7rem;font-size:1.5rem"></div>
-    <div id="rev-mols" style="margin-bottom:1.1rem;font-size:.9rem;font-weight:700;line-height:1.9"></div>
+    <div id="rev-header" style="margin-bottom:1.2rem;font-size:1.5rem"></div>
     <div class="mbtns">
-      <button class="btn gold" onclick="startSpellPhase()">Fase de revisión →</button>
+      <button class="btn gold" onclick="startSpellPhase()">Segunda ronda →</button>
     </div>
   </div>
 </div>
@@ -544,10 +543,14 @@
   <div class="bp-react-row">
     <span id="sp-panel-title" style="font-weight:700;font-size:.82rem"></span>
     <button class="btn gold" id="btn-cast-panel" disabled style="opacity:.45;margin-left:auto" onclick="castSpell()">¡Reaccionar!</button>
-    <button class="btn sec" style="padding:.4rem .7rem" onclick="passSpell()">✕</button>
+    <button class="btn sec" onclick="passSpell()">Pasar</button>
+    <button class="btn sec" style="padding:.4rem .7rem" onclick="closeSpellPanelOnly()">✕</button>
   </div>
   <div class="hand-row" id="sp-hand"></div>
 </div>
+
+<!-- floating reopen button during spell phase -->
+<button id="spell-reopen-btn" style="display:none;position:fixed;bottom:1.4rem;left:50%;transform:translateX(-50%);z-index:95;white-space:nowrap" class="btn gold" onclick="reopenSpellPanel()">✨ Ver hechizos</button>
 
 <!-- ZOOM -->
 <div class="ov" id="ov-zoom" onclick="closeZoom()">
@@ -730,7 +733,7 @@ function makePDeck(p){
   d.className='pdeck';
   d.title='Ver mazo';
   d.onclick=()=>onDeckClick(p);
-  d.innerHTML=`<div class="pdeck-icon">🧪</div>
+  d.innerHTML=`<div class="pdeck-icon">🃏</div>
     <div class="pdeck-cnt" id="pcnt${p}">${G.hands[p].length}</div>
     <div class="pdeck-lbl">Mazo</div>`;
   return d;
@@ -999,7 +1002,6 @@ function showPassScreen(toP){
   const color=toP===0?'var(--acc)':'var(--red)';
   const nameEl=document.getElementById('pass-name');
   nameEl.textContent=G.names[toP];
-  nameEl.style.color=color;
   document.getElementById('pass-h').textContent='Pasa el dispositivo';
   rotateTable(toP===1);
   setTimeout(()=>showScreen('pass'),200);
@@ -1081,11 +1083,8 @@ function showReveal(){
   const dfColor=def===0?'var(--acc)':'var(--red)';
   document.getElementById('rev-header').innerHTML=
     `<span style="color:${atColor};font-weight:900">⚔${atMol.atk}</span>`+
-    `<span style="color:var(--mut);font-size:.9rem"> vs </span>`+
+    `<span style="color:var(--mut);font-size:.9rem;margin:0 1.1rem">vs</span>`+
     `<span style="color:${dfColor};font-weight:900">🛡${dfMol.def}</span>`;
-  document.getElementById('rev-mols').innerHTML=
-    `<div style="color:${atColor}">${G.names[G.attacker]}: ${atMol.formula}</div>`+
-    `<div style="color:${dfColor}">${G.names[def]}: ${dfMol.formula}</div>`;
   setTimeout(()=>document.getElementById('ov-reveal').classList.add('open'),700);
 }
 
@@ -1139,6 +1138,20 @@ function openSpellPanel(p){
     });
   }
   document.getElementById('spell-panel').classList.add('open');
+  document.getElementById('spell-reopen-btn').style.display='none';
+}
+
+function closeSpellPanelOnly(){
+  document.getElementById('spell-panel').classList.remove('open');
+  const btn=document.getElementById('spell-reopen-btn');
+  btn.style.display='flex';
+  const color=G.spellTurn===0?'var(--acc)':'var(--red)';
+  btn.style.setProperty('--spell-btn-color',color);
+}
+
+function reopenSpellPanel(){
+  document.getElementById('spell-reopen-btn').style.display='none';
+  document.getElementById('spell-panel').classList.add('open');
 }
 
 function castSpell(){
@@ -1164,11 +1177,13 @@ function castSpell(){
 
 function passSpell(){
   document.getElementById('spell-panel').classList.remove('open');
+  document.getElementById('spell-reopen-btn').style.display='none';
   resolveCombat();
 }
 
 function resolveCombat(){
   document.getElementById('spell-panel').classList.remove('open');
+  document.getElementById('spell-reopen-btn').style.display='none';
   for(let p=0;p<2;p++){if(G.dmg[p]>0){G.an[p]=Math.max(0,G.an[p]-1);G.stats.anLost[p]+=1;}}
   G.stats.rounds++;
   renderStrip(0);renderStrip(1);
