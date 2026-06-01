@@ -229,7 +229,7 @@
       position:relative;
       overflow:hidden;
       padding:4px 0;
-      min-height:0;
+      min-height:calc(var(--ch) + 1.2rem);
       box-shadow:inset 0 2px 8px rgba(91,106,240,.07);
     }
     .pzone-lbl{
@@ -469,6 +469,9 @@
         </div>
       </div>
 
+      <!-- Spell phase hint -->
+      <div id="spell-phase-hint" style="display:none;text-align:center;font-size:clamp(.58rem,1.5vw,.75rem);font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:var(--gold);text-shadow:0 1px 6px rgba(245,158,11,.4);padding:.15rem 0;animation:pulse-hint 2s ease-in-out infinite"></div>
+
       <!-- Center: shared draw deck + shared discard -->
       <div class="center-row">
         <div class="cpile draw" title="Robar 2 cartas" style="cursor:pointer" onclick="onSharedDeckClick()">
@@ -510,9 +513,11 @@
 
 <!-- DRAW CONFIRM -->
 <div class="ov" id="ov-draw">
-  <div class="modal ai" style="max-width:310px;position:relative">
-    <button class="btn sec" onclick="document.getElementById('ov-draw').classList.remove('open')" style="position:absolute;top:.6rem;left:.7rem;padding:.25rem .6rem;font-size:.85rem;line-height:1;border-radius:8px;min-width:unset">✕</button>
-    <h2>Robar cartas</h2>
+  <div class="modal ai" style="max-width:310px">
+    <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.8rem">
+      <button class="btn sec" onclick="document.getElementById('ov-draw').classList.remove('open')" style="padding:.25rem .6rem;font-size:.85rem;line-height:1;border-radius:8px;min-width:unset;flex-shrink:0">✕</button>
+      <h2 style="margin:0;font-size:1.1rem">Robar cartas</h2>
+    </div>
     <p>¿Seguro que quieres robar 2 cartas del mazo central y pasar el turno?</p>
     <div class="mbtns">
       <button class="btn gold" onclick="confirmDraw()">Robar</button>
@@ -844,8 +849,23 @@ function renderStack(p,cards,revealed){
 }
 
 function flipZone(p){
-  /* Re-render revealed so cards are face-up and tappable (showZoom) */
-  if(G.molCards[p]&&G.molCards[p].length) renderStack(p,G.molCards[p],true);
+  const cards=G.molCards[p];
+  if(!cards||!cards.length) return;
+  /* Render all face-down first, then flip one by one L→R */
+  renderStack(p,cards,false);
+  const stack=document.getElementById('stack'+(p+1));
+  if(!stack) return;
+  const flips=stack.querySelectorAll('.card-flip');
+  flips.forEach((flip,i)=>{
+    setTimeout(()=>flip.classList.remove('flipped'), i*480);
+  });
+  /* Enable click after all flips complete */
+  setTimeout(()=>{
+    stack.querySelectorAll('.card').forEach((w,i)=>{
+      w.classList.add('clickable');
+      w.onclick=()=>showZoom(cards[i]);
+    });
+  }, flips.length*480+300);
 }
 
 /* ── Hand pagination ── */
@@ -1190,6 +1210,8 @@ function startSpellPhase(){
 }
 
 function openSpellPanel(p){
+  const hint=document.getElementById('spell-phase-hint');
+  if(hint){hint.style.display='';hint.textContent='⚡ Ronda de Efectos — '+G.names[p];}
   if(p===1) rotateTable(true); else rotateTable(false);
   G.selSpell=null;
   const castBtn=document.getElementById('btn-cast-panel');
@@ -1257,6 +1279,7 @@ function resolveCombat(){
 }
 
 function nextRound(){
+  const hint=document.getElementById('spell-phase-hint');if(hint)hint.style.display='none';
   G.round++;G.mols=[null,null];G.molCards=[[],[]];G.dmg=[0,0];G.spellsInArena=[[],[]];
   G.acted=[false,false];
   document.getElementById('zspells1').innerHTML='';
@@ -1329,7 +1352,12 @@ function showZoom(card){
   wrap.innerHTML='';
   const el=makeElemCard(card,0,false,false);
   el.classList.remove('clickable');
-  el.onclick=null; /* remove toggleSelect handler from the zoomed copy */
+  el.onclick=null;
+  const marco=document.createElement('img');
+  marco.src='img/marco.png';
+  marco.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none;z-index:30';
+  marco.onerror=()=>marco.remove();
+  el.appendChild(marco);
   wrap.appendChild(el);
   _zoomJustOpened=true;
   document.getElementById('ov-zoom').classList.add('open');
