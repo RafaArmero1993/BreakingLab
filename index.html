@@ -116,7 +116,7 @@
       border:2px solid #7c6df0;
       box-shadow:0 3px 10px rgba(91,106,240,.25);
       overflow:hidden;
-      background:#5b6af0 url('img/mazo.png') center/contain no-repeat;
+      background:#5b6af0 url('img/mazo.png') center/cover no-repeat;
     }
     .card-back::before{content:none;}
 
@@ -459,12 +459,12 @@
       <!-- Center: shared draw deck + shared discard -->
       <div class="center-row">
         <div class="cpile draw" title="Robar 2 cartas" style="cursor:pointer;position:relative" onclick="onSharedDeckClick()">
-          <img src="img/mazo.png" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;z-index:0">
+          <img src="img/mazo.png" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0">
           <div class="cpile-cnt" id="shared-cnt" style="position:relative;z-index:1">32</div>
           <div class="cpile-lbl" style="position:relative;z-index:1">Robar</div>
         </div>
         <div class="cpile disc" title="Pila de descarte compartida" style="position:relative">
-          <img src="img/mazo.png" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;z-index:0;opacity:.45">
+          <img src="img/mazo.png" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;opacity:.45">
           <div class="cpile-cnt" id="disc-cnt" style="position:relative;z-index:1">0</div>
           <div class="cpile-lbl" style="position:relative;z-index:1">Descarte</div>
         </div>
@@ -750,7 +750,7 @@ function makePDeck(p){
   d.className='pdeck';
   d.title='Ver mazo';
   d.onclick=()=>onDeckClick(p);
-  d.innerHTML=`<img src="img/mazo.png" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;z-index:0">
+  d.innerHTML=`<img src="img/mazo.png" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0">
     <div class="pdeck-cnt" id="pcnt${p}">${G.hands[p].length}</div>
     <div class="pdeck-lbl">Mazo</div>`;
   return d;
