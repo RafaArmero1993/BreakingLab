@@ -113,13 +113,12 @@
     /* ── Back face ── */
     .card-back{
       transform:rotateY(180deg);
-      background:linear-gradient(135deg,#5b6af0 0%,#a855f7 100%);
       border:2px solid #7c6df0;
       box-shadow:0 3px 10px rgba(91,106,240,.25);
-      display:flex;align-items:center;justify-content:center;
-      font-size:1.2rem;
+      overflow:hidden;
+      background:#5b6af0 url('img/mazo.png') center/contain no-repeat;
     }
-    .card-back::before{content:'⚗️';font-size:clamp(.9rem,2.5vw,1.2rem);}
+    .card-back::before{content:none;}
 
     /* ── Card content ── */
     .ec-tl{position:absolute;top:4px;left:5px;font-size:clamp(.36rem,.85vw,.5rem);color:var(--mut);line-height:1.2;font-weight:700;}
@@ -204,8 +203,8 @@
     }
     .pdeck:hover{transform:translateY(-6px) rotate(-2deg);box-shadow:0 8px 20px rgba(91,106,240,.45),0 2px 0 #3b42c0;}
     .pdeck-icon{font-size:clamp(.9rem,2.5vw,1.3rem);position:relative;z-index:1;}
-    .pdeck-cnt{font-size:clamp(.38rem,1vw,.58rem);color:rgba(255,255,255,.9);font-weight:700;letter-spacing:1px;z-index:1;}
-    .pdeck-lbl{font-size:clamp(.28rem,.75vw,.42rem);text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,.7);z-index:1;}
+    .pdeck-cnt{font-size:clamp(.38rem,1vw,.58rem);color:rgba(255,255,255,.9);font-weight:700;letter-spacing:1px;position:relative;z-index:1;}
+    .pdeck-lbl{font-size:clamp(.28rem,.75vw,.42rem);text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,.7);position:relative;z-index:1;}
 
     /* ── ARENA ── */
     .arena{
@@ -459,15 +458,15 @@
 
       <!-- Center: shared draw deck + shared discard -->
       <div class="center-row">
-        <div class="cpile draw" title="Robar 2 cartas" style="cursor:pointer" onclick="onSharedDeckClick()">
-          <div class="cpile-icon"><img src="img/mazo.png" style="width:clamp(24px,6vw,36px);height:clamp(24px,6vw,36px);object-fit:contain"></div>
-          <div class="cpile-cnt" id="shared-cnt">32</div>
-          <div class="cpile-lbl">Robar</div>
+        <div class="cpile draw" title="Robar 2 cartas" style="cursor:pointer;position:relative" onclick="onSharedDeckClick()">
+          <img src="img/mazo.png" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;z-index:0">
+          <div class="cpile-cnt" id="shared-cnt" style="position:relative;z-index:1">32</div>
+          <div class="cpile-lbl" style="position:relative;z-index:1">Robar</div>
         </div>
-        <div class="cpile disc" title="Pila de descarte compartida">
-          <div class="cpile-icon"><img src="img/mazo.png" style="width:clamp(24px,6vw,36px);height:clamp(24px,6vw,36px);object-fit:contain;opacity:.5"></div>
-          <div class="cpile-cnt" id="disc-cnt">0</div>
-          <div class="cpile-lbl">Descarte</div>
+        <div class="cpile disc" title="Pila de descarte compartida" style="position:relative">
+          <img src="img/mazo.png" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;z-index:0;opacity:.45">
+          <div class="cpile-cnt" id="disc-cnt" style="position:relative;z-index:1">0</div>
+          <div class="cpile-lbl" style="position:relative;z-index:1">Descarte</div>
         </div>
       </div>
 
@@ -751,7 +750,7 @@ function makePDeck(p){
   d.className='pdeck';
   d.title='Ver mazo';
   d.onclick=()=>onDeckClick(p);
-  d.innerHTML=`<div class="pdeck-icon"><img src="img/mazo.png" style="width:clamp(26px,7vw,40px);height:clamp(26px,7vw,40px);object-fit:contain"></div>
+  d.innerHTML=`<img src="img/mazo.png" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;z-index:0">
     <div class="pdeck-cnt" id="pcnt${p}">${G.hands[p].length}</div>
     <div class="pdeck-lbl">Mazo</div>`;
   return d;
