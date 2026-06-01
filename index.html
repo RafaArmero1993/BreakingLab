@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>BreakingLab</title>
   <script src="card-config.js"></script>
+  <script src="game-data.js"></script>
   <style>
     /* ─── Variables & reset ─── */
     :root{
@@ -66,11 +67,9 @@
     .nf input:focus{border-color:var(--acc);}
 
     /* ─── PASS ─── */
-    #screen-pass{justify-content:center;background:linear-gradient(160deg,#1e2040,#3b1f5e);}
-    .pass-box{background:rgba(255,255,255,.08);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.15);border-radius:22px;padding:2.5rem 2rem;text-align:center;max-width:360px;width:92vw;}
-    .pass-box .pi{font-size:4rem;margin-bottom:.8rem;filter:drop-shadow(0 0 20px #a855f788);}
-    .pass-box h2{font-size:1.4rem;margin-bottom:.4rem;color:#fff;}
-    .pass-box p{color:rgba(255,255,255,.6);margin-bottom:1.8rem;font-size:.84rem;}
+    #screen-pass{justify-content:center;background:linear-gradient(160deg,#f0f4ff,#e8eaf6);}
+    .pass-box{background:var(--panel);border:1px solid var(--brd);border-radius:22px;padding:2.5rem 2rem;text-align:center;max-width:360px;width:92vw;box-shadow:var(--shadow);}
+    .pass-box h2{font-size:1.4rem;margin-bottom:1.8rem;color:var(--txt);}
 
     /* ════════════════════════════════════
        CARD BASE
@@ -267,6 +266,13 @@
       height:var(--ch);
     }
     #ov-zoom .card{pointer-events:none;width:var(--cw);height:var(--ch);}
+    #ov-zoom .ec-tl{font-size:clamp(1.1rem,2.8vw,1.8rem);}
+    #ov-zoom .ec-a,#ov-zoom .ec-d{font-size:clamp(1rem,2.6vw,1.6rem);padding:2px 6px;}
+    #ov-zoom .ec-img{width:clamp(72px,20vw,110px);height:clamp(72px,20vw,110px);}
+    #ov-zoom .ec-body{padding:clamp(.5rem,1.4vw,.9rem) clamp(.6rem,1.6vw,1rem);gap:.35rem;}
+    #ov-zoom .ec-chip{font-size:clamp(.85rem,2.3vw,1.3rem);padding:3px 8px;}
+    #ov-zoom .ec-eff{font-size:clamp(.82rem,2.2vw,1.2rem);line-height:1.35;}
+    #ov-zoom .ec-info{font-size:clamp(.72rem,2vw,1.05rem);}
 
     .card-stack{
       display:flex;
@@ -427,10 +433,8 @@
 <!-- ═══ PASS ═══ -->
 <div id="screen-pass" class="screen">
   <div class="pass-box ai">
-    <div class="pi">🔄</div>
     <h2 id="pass-h">Pasa el dispositivo</h2>
-    <p id="pass-p">Es el turno del siguiente jugador.</p>
-    <button class="btn" onclick="resumePass()">✅ Listo — soy <span id="pass-name">Jugador</span></button>
+    <button class="btn" onclick="resumePass()">Soy <span id="pass-name">Jugador</span></button>
   </div>
 </div>
 
@@ -526,11 +530,10 @@
 <!-- REVEAL MODAL -->
 <div class="ov" id="ov-reveal">
   <div class="modal ai">
-    <h2>⚔️ ¡Combate!</h2>
-    <p id="rev-text"></p>
-    <div class="cbox" id="rev-summary"></div>
+    <div id="rev-header" style="margin-bottom:.7rem;font-size:1.5rem"></div>
+    <div id="rev-mols" style="margin-bottom:1.1rem;font-size:.9rem;font-weight:700;line-height:1.9"></div>
     <div class="mbtns">
-      <button class="btn" onclick="startSpellPhase()">🔮 Fase de Hechizos →</button>
+      <button class="btn gold" onclick="startSpellPhase()">Fase de revisión →</button>
     </div>
   </div>
 </div>
@@ -540,10 +543,9 @@
   <div class="bp-handle"></div>
   <div class="bp-react-row">
     <span id="sp-panel-title" style="font-weight:700;font-size:.82rem"></span>
-    <button class="btn gold" id="btn-cast-panel" disabled style="opacity:.45;margin-left:auto" onclick="castSpell()">✨ Lanzar</button>
-    <button class="btn sec" onclick="passSpell()">Pasar →</button>
+    <button class="btn gold" id="btn-cast-panel" disabled style="opacity:.45;margin-left:auto" onclick="castSpell()">¡Reaccionar!</button>
+    <button class="btn sec" style="padding:.4rem .7rem" onclick="passSpell()">✕</button>
   </div>
-  <div class="sdesc" id="sp-hover-panel">Toca un hechizo para seleccionarlo.</div>
   <div class="hand-row" id="sp-hand"></div>
 </div>
 
@@ -570,27 +572,7 @@
 </div>
 
 <script>
-/* ════════════════════════════════
-   VALID MOLECULES
-════════════════════════════════ */
-const VALID_MOLECULES = [
-  {ids:['H','H','O'],       name:'Agua',     formula:'H₂O',   atk:4, def:4},
-  {ids:['H','H','O','O'],   name:'Peróxido', formula:'H₂O₂',  atk:5, def:3},
-  {ids:['O','O'],           name:'O₂',       formula:'O₂',    atk:4, def:2},
-  {ids:['H','H'],           name:'H₂',       formula:'H₂',    atk:2, def:3},
-  {ids:['H','H','H'],       name:'H₃',       formula:'H₃',    atk:3, def:4},
-  {ids:['C','O'],           name:'CO',       formula:'CO',    atk:4, def:2},
-  {ids:['C','O','O'],       name:'CO₂',      formula:'CO₂',   atk:5, def:2},
-  {ids:['N','N'],           name:'N₂',       formula:'N₂',    atk:3, def:5},
-  {ids:['N','O','P'],       name:'NOP',      formula:'NOP',   atk:6, def:3},
-  {ids:['N','O','O'],       name:'NO₂',      formula:'NO₂',   atk:5, def:3},
-  {ids:['H','H','H','N'],   name:'Amoníaco', formula:'NH₃',   atk:5, def:3},
-  {ids:['H','H','S'],       name:'H₂S',      formula:'H₂S',   atk:6, def:2},
-  {ids:['O','O','S'],       name:'SO₂',      formula:'SO₂',   atk:6, def:2},
-  {ids:['S','S'],           name:'S₂',       formula:'S₂',    atk:5, def:2},
-  {ids:['H','H','H','P'],   name:'PH₃',      formula:'PH₃',   atk:5, def:3},
-  {ids:['O','P'],           name:'PO',       formula:'PO',    atk:4, def:3},
-];
+/* VALID_MOLECULES, ELEMENTS and SPELLS are loaded from game-data.js */
 
 function sortIds(arr){ return [...arr].sort(); }
 function matchMol(elems){
@@ -631,31 +613,6 @@ function handUsableIds(hand){
   return useful;
 }
 
-/* ════════════════════════════════
-   DATA
-════════════════════════════════ */
-const ELEMENTS=[
-  {id:'O',sym:'O',name:'Oxígeno',  num:8, atk:3,def:1,type:'nonmetal',img:'img/O.png',
-   eff:'Potencia moléculas oxidantes.',info:'Gas esencial. 21% de la atmósfera.'},
-  {id:'H',sym:'H',name:'Hidrógeno',num:1, atk:1,def:2,type:'nonmetal',img:'img/H.png',
-   eff:'Base de toda molécula.',info:'El elemento más abundante del universo.'},
-  {id:'N',sym:'N',name:'Nitrógeno',num:7, atk:2,def:3,type:'nonmetal',img:'img/N.png',
-   eff:'Estabilizador. +1 DEF al activarse.',info:'Compone el 78% del aire.'},
-  {id:'C',sym:'C',name:'Carbono',  num:6, atk:2,def:2,type:'nonmetal',img:'img/C.png',
-   eff:'Base orgánica. +1 ATK y +1 DEF.',info:'El elemento de la vida.'},
-  {id:'S',sym:'S',name:'Azufre',   num:16,atk:4,def:1,type:'nonmetal',img:'img/S.png',
-   eff:'Corrosivo. Con H inflige daño extra.',info:'Elemento volcánico.'},
-  {id:'P',sym:'P',name:'Fósforo',  num:15,atk:3,def:2,type:'nonmetal',img:'img/P.png',
-   eff:'Potenciador. +2 ATK con O.',info:'Esencial en el ADN. Fósforo blanco es inflamable.'},
-  {id:'U',sym:'U',name:'Uranio',   num:92,atk:6,def:3,type:'radioactive',img:'img/U.png',
-   eff:'☢ CRÍTICO: Ignora la mitad de la DEF rival.',info:'Metal radiactivo. Fisión nuclear.'},
-];
-const SPELLS=[
-  {id:'Pb',sym:'Pb',name:'Plomo',num:82,atk:0,def:5,type:'spell',img:'img/Pb.png',
-   eff:'🛡 ESCUDO: Reduce el daño entrante en 4 puntos.',info:'Blindaje contra radiación.'},
-  {id:'He',sym:'He',name:'Helio',num:2, atk:3,def:0,type:'noble',img:'img/He.png',
-   eff:'🎈 EVASIÓN: +3 ATK y el rival no puede usar hechizos.',info:'Gas noble inerte.'},
-];
 
 /* ════════════════════════════════
    WEIGHTED RANDOM
@@ -684,7 +641,8 @@ function initState(n1,n2){
      build:[],selBuildSpell:null,mols:[null,null],molCards:[[],[]],
      phase:'build_p1',spellsInArena:[[],[]],
      attacker:0,spellTurn:0,spellPassed:[false,false],helioCast:[false,false],
-     dmg:[0,0],selSpell:null,stats:{rounds:0,anLost:[0,0],spells:0}};
+     dmg:[0,0],selSpell:null,acted:[false,false],passFor:0,
+     stats:{rounds:0,anLost:[0,0],spells:0}};
   dealHand(0);dealHand(1);
 }
 
@@ -730,11 +688,9 @@ function imgH(src,alt){
 
 function makeElemCard(card,p,inBuild,dimmed){
   const isSpell=card.type==='spell'||card.type==='noble';
-  /* All spells use gold styling */
-  const fc=card.type==='radioactive'?'cf-grn':isSpell?'cf-gold':'';
-  /* Chip color: spells amber/gold, radioactive green, elements blue */
-  const cc=isSpell?'trao':card.type==='radioactive'?'trd':'tnm';
-  const cl=isSpell?'Hechizo':card.type==='radioactive'?'Radioactivo':'Elemento';
+  const fc=isSpell?'cf-gold':'';
+  const cc=isSpell?'trao':'tnm';
+  const cl=isSpell?'Hechizo':'Elemento';
   const w=document.createElement('div');
   w.className='card clickable'+(inBuild?' sel':'')+(dimmed?' dimmed':'');
   w.innerHTML=`<div class="card-flip"><div class="card-inner">
@@ -989,7 +945,6 @@ function onSharedDeckClick(){
 function confirmDraw(){
   document.getElementById('ov-draw').classList.remove('open');
   const p=G._drawP;
-  /* Draw 2 cards with weights from shared deck */
   const drawn=[{...weightedRandom(ELEMENTS)},{...weightedRandom(ELEMENTS)}];
   G.hands[p]=[...G.hands[p],...drawn].slice(0,8);
   G.sharedDeck=Math.max(0,G.sharedDeck-2);
@@ -997,22 +952,16 @@ function confirmDraw(){
   G.molCards[p]=[];
   renderStack(p,[],false);
   renderDecks();
-  if(p===0){
-    G.phase='pass_p2';
-    document.getElementById('pass-h').textContent=`Pasa el dispositivo a ${G.names[1]}`;
-    document.getElementById('pass-p').textContent=`${G.names[0]} robó cartas. Turno de ${G.names[1]}.`;
-    document.getElementById('pass-name').textContent=G.names[1];
-    setTimeout(()=>{rotateTable(true);showScreen('pass');},200);
+
+  G.acted[p]=true;
+  const other=1-p;
+  if(!G.acted[other]){
+    G.phase=other===0?'build_p1':'build_p2';
+    showPassScreen(other);
   } else {
     rotateTable(false);
-    if(G.mols[0]){
-      G.attacker=0;
-      G.dmg[1]=Math.max(0,G.mols[0].atk);
-      G.dmg[0]=0;
-      setTimeout(showReveal,400);
-    } else {
-      nextRound();
-    }
+    if(G.mols[0]||G.mols[1]){ G.phase='reveal'; setTimeout(showReveal,400); }
+    else nextRound();
   }
 }
 
@@ -1045,6 +994,17 @@ function rotateTable(toP2){
 /* ════════════════════════════════
    GAME FLOW
 ════════════════════════════════ */
+function showPassScreen(toP){
+  G.passFor=toP;
+  const color=toP===0?'var(--acc)':'var(--red)';
+  const nameEl=document.getElementById('pass-name');
+  nameEl.textContent=G.names[toP];
+  nameEl.style.color=color;
+  document.getElementById('pass-h').textContent='Pasa el dispositivo';
+  rotateTable(toP===1);
+  setTimeout(()=>showScreen('pass'),200);
+}
+
 function startGame(){
   const n1=document.getElementById('inp-p1').value.trim();
   const n2=document.getElementById('inp-p2').value.trim();
@@ -1058,6 +1018,7 @@ function startGame(){
   renderStrip(0);renderStrip(1);renderDecks();
   renderStack(0,[],false);renderStack(1,[],false);
   G.phase='build_p1';
+  showPassScreen(0);
 }
 
 function confirmBuild(){
@@ -1067,47 +1028,34 @@ function confirmBuild(){
   if(G.selBuildSpell){
     G.selBuildSpell=null;G.mols[p]=null;
     closeBuildPanel();
-    if(p===0){
-      G.phase='pass_p2';
-      document.getElementById('pass-h').textContent=`Pasa el dispositivo a ${G.names[1]}`;
-      document.getElementById('pass-p').textContent=`${G.names[0]} pasó su turno. Es el turno de ${G.names[1]}.`;
-      document.getElementById('pass-name').textContent=G.names[1];
-      setTimeout(()=>{rotateTable(true);showScreen('pass');},200);
-    } else {
-      rotateTable(false);
-      if(G.mols[0]){G.attacker=0;G.dmg[1]=Math.max(0,G.mols[0].atk);G.dmg[0]=0;setTimeout(showReveal,400);}
-      else nextRound();
-    }
-    return;
+  } else {
+    if(!G.build.length)return;
+    const mol=buildMol(G.build);
+    if(!mol.valid)return;
+    G.mols[p]=mol;
+    G.molCards[p]=[...G.build];
+    G.build.forEach(e=>{const i=G.hands[p].indexOf(e);if(i>-1)G.hands[p].splice(i,1);});
+    G.discardSize+=G.molCards[p].length;
+    G.build=[];
+    closeBuildPanel();
+    renderStack(p,G.molCards[p],false);
+    renderDecks();
   }
 
-  if(!G.build.length)return;
-  const mol=buildMol(G.build);
-  if(!mol.valid)return;
-  G.mols[p]=mol;
-  G.molCards[p]=[...G.build]; /* Store the element cards used */
-  G.build.forEach(e=>{const i=G.hands[p].indexOf(e);if(i>-1)G.hands[p].splice(i,1);});
-  G.discardSize+=G.molCards[p].length;
-  G.build=[];
-  closeBuildPanel();
-  renderStack(p,G.molCards[p],false);
-  renderDecks();
-  if(p===0){
-    G.phase='pass_p2';
-    document.getElementById('pass-h').textContent=`Pasa el dispositivo a ${G.names[1]}`;
-    document.getElementById('pass-p').textContent=`Es el turno de ${G.names[1]}. Que ${G.names[0]} no vea la pantalla.`;
-    document.getElementById('pass-name').textContent=G.names[1];
-    setTimeout(()=>{rotateTable(true);showScreen('pass');},450);
+  G.acted[p]=true;
+  const other=1-p;
+  if(!G.acted[other]){
+    G.phase=other===0?'build_p1':'build_p2';
+    showPassScreen(other);
   } else {
-    G.phase='reveal';
     rotateTable(false);
-    setTimeout(showReveal,600);
+    if(G.mols[0]||G.mols[1]){ G.phase='reveal'; setTimeout(showReveal,600); }
+    else nextRound();
   }
 }
 
 function resumePass(){
   showScreen('game');
-  if(G.phase==='pass_p2'){G.phase='build_p2';}
 }
 
 function showReveal(){
@@ -1116,24 +1064,28 @@ function showReveal(){
   if(G.mols[0]) flipZone(0);
   if(G.mols[1]) setTimeout(()=>flipZone(1),250);
   if(G.mols[0]&&G.mols[1]){
-    G.attacker=m0.atk>=m1.atk?0:1;const def=1-G.attacker;
+    G.attacker=m0.atk>=m1.atk?0:1;
+    const def=1-G.attacker;
     let atkV=G.mols[G.attacker].atk,defV=G.mols[def].def;
     if(G.mols[G.attacker].hasU)defV=Math.floor(defV/2);
-    G.dmg[def]=Math.max(0,atkV-defV);G.dmg[G.attacker]=Math.max(0,G.mols[def].atk-G.mols[G.attacker].def);
+    G.dmg[def]=Math.max(0,atkV-defV);
+    G.dmg[G.attacker]=Math.max(0,G.mols[def].atk-G.mols[G.attacker].def);
+  } else if(G.mols[0]){
+    G.attacker=0;G.dmg[1]=Math.max(0,G.mols[0].atk);G.dmg[0]=0;
+  } else if(G.mols[1]){
+    G.attacker=1;G.dmg[0]=Math.max(0,G.mols[1].atk);G.dmg[1]=0;
   }
   const def=1-G.attacker;
-  const an=G.names[G.attacker],dn=G.names[def];
-  const aLd=G.dmg[def]>0?Math.max(1,Math.floor(G.dmg[def]/2)):0;
-  const aLa=G.dmg[G.attacker]>0?Math.max(1,Math.floor(G.dmg[G.attacker]/2)):0;
-  const atMol=G.mols[G.attacker]||m0;const dfMol=G.mols[def]||m1;
-  document.getElementById('rev-text').textContent=`${G.names[0]}: ${m0.formula}  ·  ${G.names[1]}: ${m1.formula}`;
-  document.getElementById('rev-summary').innerHTML=`
-    <div class="crow"><span>⚔ ${an} ataca</span><span class="cv">${atMol.formula}</span></div>
-    <div class="crow"><span>ATK ${an}</span><span class="cv">${atMol.atk}</span></div>
-    <div class="crow"><span>DEF ${dn}${atMol.hasU?' (½ uranio)':''}</span><span class="cv">${dfMol.def}</span></div>
-    <div class="crow"><span>Daño a ${dn}</span><span class="cv ${G.dmg[def]===0?'bad':''}">${G.dmg[def]}</span></div>
-    <div class="crow"><span>💀 Analistas pierde ${dn}</span><span class="cv bad">${aLd}</span></div>
-    <div class="crow"><span>Contraataque → pierde ${an}</span><span class="cv bad">${aLa}</span></div>`;
+  const atMol=G.mols[G.attacker]||m0, dfMol=G.mols[def]||m1;
+  const atColor=G.attacker===0?'var(--acc)':'var(--red)';
+  const dfColor=def===0?'var(--acc)':'var(--red)';
+  document.getElementById('rev-header').innerHTML=
+    `<span style="color:${atColor};font-weight:900">⚔${atMol.atk}</span>`+
+    `<span style="color:var(--mut);font-size:.9rem"> vs </span>`+
+    `<span style="color:${dfColor};font-weight:900">🛡${dfMol.def}</span>`;
+  document.getElementById('rev-mols').innerHTML=
+    `<div style="color:${atColor}">${G.names[G.attacker]}: ${atMol.formula}</div>`+
+    `<div style="color:${dfColor}">${G.names[def]}: ${dfMol.formula}</div>`;
   setTimeout(()=>document.getElementById('ov-reveal').classList.add('open'),700);
 }
 
@@ -1155,7 +1107,9 @@ function startSpellPhase(){
   G.helioCast=[false,false];
   G.spellPassed=[false,false];
   G.spellsInArena=[[],[]];
-  G.spellTurn=1-G.attacker;
+  const atMol=G.mols[G.attacker],dfMol=G.mols[1-G.attacker];
+  /* attacker starts if their ATK <= defender DEF (tie → attacker); else defender starts */
+  G.spellTurn=(atMol&&dfMol&&atMol.atk<=dfMol.def)?G.attacker:(1-G.attacker);
   openSpellPanel(G.spellTurn);
 }
 
@@ -1167,7 +1121,6 @@ function openSpellPanel(p){
   const _nameColor=p===0?'var(--acc)':'var(--red)';
   document.getElementById('sp-panel-title').innerHTML=
     `<span style="color:${_nameColor};font-weight:800;font-size:.9rem">${G.names[p]}</span>`;
-  document.getElementById('sp-hover-panel').textContent='Toca un hechizo para seleccionarlo.';
   const hand=document.getElementById('sp-hand');hand.innerHTML='';
   const rival=1-p;
   const avail=G.spells[p].filter(sp=>!(G.helioCast[rival]&&sp.id==='He'));
@@ -1181,7 +1134,6 @@ function openSpellPanel(p){
         hand.querySelectorAll('.card').forEach(c=>c.classList.remove('sel'));
         el.classList.add('sel');
         castBtn.disabled=false;castBtn.style.opacity='1';
-        document.getElementById('sp-hover-panel').textContent=sp.name+': '+sp.eff;
       };
       hand.appendChild(el);
     });
@@ -1211,20 +1163,13 @@ function castSpell(){
 }
 
 function passSpell(){
-  const p=G.spellTurn;
-  G.spellPassed[p]=true;
   document.getElementById('spell-panel').classList.remove('open');
-  const rival=1-p;G.spellTurn=rival;
-  if(G.spellPassed[rival]||!G.spells[rival].length){
-    resolveCombat();
-  } else {
-    setTimeout(()=>openSpellPanel(rival),400);
-  }
+  resolveCombat();
 }
 
 function resolveCombat(){
   document.getElementById('spell-panel').classList.remove('open');
-  for(let p=0;p<2;p++){if(G.dmg[p]>0){const l=Math.max(1,Math.floor(G.dmg[p]/2));G.an[p]=Math.max(0,G.an[p]-l);G.stats.anLost[p]+=l;}}
+  for(let p=0;p<2;p++){if(G.dmg[p]>0){G.an[p]=Math.max(0,G.an[p]-1);G.stats.anLost[p]+=1;}}
   G.stats.rounds++;
   renderStrip(0);renderStrip(1);
   if(G.an[0]<=0||G.an[1]<=0){endGame();return;}
@@ -1233,10 +1178,10 @@ function resolveCombat(){
 
 function nextRound(){
   G.round++;G.mols=[null,null];G.molCards=[[],[]];G.dmg=[0,0];G.spellsInArena=[[],[]];
+  G.acted=[false,false];
   document.getElementById('zspells1').innerHTML='';
   document.getElementById('zspells2').innerHTML='';
   for(let p=0;p<2;p++){
-    /* Add 3 cards with weights (duplicates allowed) and cap at 8 */
     for(let i=0;i<3;i++) G.hands[p].push({...weightedRandom(ELEMENTS)});
     if(G.hands[p].length>8) G.hands[p]=G.hands[p].slice(G.hands[p].length-8);
     if(!G.spells[p].length) G.spells[p]=[{...weightedRandom(SPELLS)}];
@@ -1244,7 +1189,9 @@ function nextRound(){
   }
   renderDecks();
   renderStack(0,[],false);renderStack(1,[],false);
-  G.phase='build_p1';
+  const firstP=1-G.attacker; /* defender goes first next round */
+  G.phase=firstP===0?'build_p1':'build_p2';
+  showPassScreen(firstP);
 }
 
 function endGame(){
@@ -1273,7 +1220,7 @@ function addLongPress(el,fn){
   function startTimer(){
     if(timer)clearTimeout(timer);
     fired=false;
-    timer=setTimeout(()=>{fired=true;timer=null;fn();},2000);
+    timer=setTimeout(()=>{fired=true;timer=null;fn();},1000);
   }
   function cancelTimer(){
     if(timer){clearTimeout(timer);timer=null;}
