@@ -49,15 +49,15 @@
     .btn.sm{font-size:.75rem;padding:.4rem .95rem;}
 
     /* ─── INTRO ─── */
-    #screen-intro{justify-content:center;gap:1.2rem;background:url('img/mazo.png') center/cover no-repeat;position:relative;height:100svh;height:100dvh;min-height:unset;overflow:hidden;}
-    #screen-intro::before{content:'';position:absolute;inset:0;background:rgba(0,0,0,.48);pointer-events:none;z-index:0;}
+    #screen-intro{justify-content:center;gap:1.2rem;position:relative;height:100svh;height:100dvh;min-height:unset;overflow:hidden;}
     #screen-intro>*{position:relative;z-index:1;}
+    .screen-bg-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;pointer-events:none;display:block;}
+    .screen-bg-overlay{position:absolute;inset:0;background:rgba(0,0,0,.48);z-index:0;pointer-events:none;}
     .logo{font-size:clamp(2.2rem,8vw,3.6rem);font-weight:900;letter-spacing:-2px;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.4);}
     .logo-sub{color:rgba(255,255,255,.85);letter-spacing:4px;text-transform:uppercase;font-size:.75rem;text-shadow:0 1px 6px rgba(0,0,0,.4);}
 
     /* ─── NAMES ─── */
-    #screen-names{justify-content:center;background:url('img/mazo.png') center/cover no-repeat;position:relative;height:100svh;height:100dvh;min-height:unset;overflow:hidden;}
-    #screen-names::before{content:'';position:absolute;inset:0;background:rgba(0,0,0,.48);pointer-events:none;z-index:0;}
+    #screen-names{justify-content:center;position:relative;height:100svh;height:100dvh;min-height:unset;overflow:hidden;}
     #screen-names>*{position:relative;z-index:1;}
     .names-box{background:var(--panel);border:1px solid var(--brd);border-radius:22px;padding:2rem;width:min(390px,93vw);margin:auto;box-shadow:var(--shadow);}
     .names-box h2{font-size:1.2rem;margin-bottom:.3rem;text-align:center;}
@@ -204,7 +204,8 @@
       position:relative;
       overflow:hidden;
       flex-shrink:0;
-      transform:translateZ(0);
+      will-change:transform;
+      isolation:isolate;
     }
     .pdeck:hover{transform:translateY(-6px) rotate(-2deg);box-shadow:0 8px 20px rgba(91,106,240,.45);}
     .pdeck-icon{font-size:clamp(.9rem,2.5vw,1.3rem);position:relative;z-index:1;}
@@ -243,7 +244,7 @@
     .pzone-lbl{display:none;}
 
     /* zone-empty: centered absolutely so it doesn't affect layout of cards */
-    @keyframes pulse-hint{0%,100%{transform:translate(-50%,-50%) scale(1);}50%{transform:translate(-50%,-50%) scale(1.08);}}
+    @keyframes pulse-hint{0%,100%{transform:translate(-50%,-50%) scale(1);}50%{transform:translate(-50%,-50%) scale(1.1);}}
     .zone-empty{
       position:absolute;
       top:50%;left:50%;
@@ -259,10 +260,10 @@
       white-space:nowrap;
       pointer-events:none;
       text-transform:uppercase;
-      font-weight:700;
+      font-weight:900;
       letter-spacing:.5px;
-      animation:pulse-hint 2.2s ease-in-out infinite;
     }
+    .pzone:last-child .zone-empty{animation:pulse-hint 2s ease-in-out infinite;}
 
     /* ── Zoom overlay ── */
     #ov-zoom{background:rgba(0,0,0,.82);z-index:200;}
@@ -328,7 +329,8 @@
       background:var(--acc) url('img/mazo.png') center/cover no-repeat;
       border:none;
       box-shadow:0 4px 14px rgba(91,106,240,.35);
-      transform:translateZ(0);
+      will-change:transform;
+      isolation:isolate;
     }
     .cpile-icon{font-size:clamp(.9rem,2.4vw,1.2rem);position:relative;z-index:1;}
     .cpile-cnt{font-size:clamp(.68rem,1.6vw,.9rem);font-weight:900;letter-spacing:1px;z-index:1;color:var(--mut);position:relative;}
@@ -415,6 +417,8 @@
 
 <!-- ═══ INTRO ═══ -->
 <div id="screen-intro" class="screen active">
+  <img src="img/mazo.png" class="screen-bg-img">
+  <div class="screen-bg-overlay"></div>
   <div class="logo">BreakingLab</div>
   <div class="logo-sub">El Duelo Molecular</div>
   <div style="color:rgba(255,255,255,.7);font-size:.57rem;letter-spacing:1px;margin-top:-.4rem">by Rafa Armero &amp; Tomás Aznar</div>
@@ -426,6 +430,8 @@
 
 <!-- ═══ NAMES ═══ -->
 <div id="screen-names" class="screen">
+  <img src="img/mazo.png" class="screen-bg-img">
+  <div class="screen-bg-overlay"></div>
   <div class="names-box ai" style="position:relative">
     <button class="btn sec" onclick="showScreen('intro')" style="position:absolute;top:.6rem;right:.6rem;padding:.25rem .6rem;font-size:.85rem;line-height:1;border-radius:8px;min-width:unset">✕</button>
     <h2 style="margin-bottom:1.2rem">Registro de Laboratorios</h2>
@@ -508,7 +514,7 @@
 <!-- DRAW CONFIRM -->
 <div class="ov" id="ov-draw">
   <div class="modal ai" style="max-width:310px;position:relative">
-    <button onclick="document.getElementById('ov-draw').classList.remove('open')" style="position:absolute;top:.6rem;left:.7rem;background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--mut);line-height:1">✕</button>
+    <button class="btn sec" onclick="document.getElementById('ov-draw').classList.remove('open')" style="position:absolute;top:.6rem;left:.7rem;padding:.25rem .6rem;font-size:.85rem;line-height:1;border-radius:8px;min-width:unset">✕</button>
     <h2>Robar cartas</h2>
     <p>¿Seguro que quieres robar 2 cartas del mazo central y pasar el turno?</p>
     <div class="mbtns">
@@ -517,12 +523,17 @@
   </div>
 </div>
 
+<!-- DEFENDER PASS BUTTON -->
+<div id="defender-pass-wrap" style="display:none;position:fixed;bottom:6rem;left:50%;transform:translateX(-50%);z-index:80">
+  <button class="btn sec" style="font-size:.75rem;padding:.35rem .9rem;opacity:.85" onclick="defenderPass()">Pasar turno</button>
+</div>
+
 <!-- BUILD PANEL -->
 <div class="build-panel" id="build-panel">
   <div class="bp-react-row">
     <button class="btn" id="btn-confirm" onclick="confirmBuild()" disabled style="opacity:.45">⚡ Reaccionar</button>
-    <div class="mprev" id="mprev"></div>
-    <div id="build-stats" style="margin-left:auto;display:flex;gap:.3rem;align-items:center;flex-shrink:0"></div>
+    <div class="mprev" id="mprev" style="display:none"></div>
+    <div id="build-stats" style="display:none"></div>
     <button class="btn sec" style="padding:.4rem .7rem" onclick="cancelBuild()" title="Cancelar">✕</button>
   </div>
   <div id="no-mol-msg" class="no-mol-msg" style="display:none">⚠️ No puedes formar ninguna molécula con estas cartas.</div>
@@ -608,27 +619,20 @@ function usableIds(selectedIds, handIds){
   if(selectedIds.includes('U')) return new Set();
   const useful = new Set();
   if(selectedIds.length === 0 && handIds && handIds.includes('U')) useful.add('U');
-  /* available = hand minus already-selected (count-sensitive) */
+  /* available hand minus already-selected */
   const avail = handIds ? [...handIds] : [];
   for(const id of selectedIds){ const i=avail.indexOf(id); if(i>-1) avail.splice(i,1); }
+  /* ordered prefix matching: selectedIds must be an exact prefix of mol.ids */
   for(const mol of VALID_MOLECULES){
-    const remaining = sortIds([...mol.ids]);
-    let ok = true;
-    for(const id of sortIds(selectedIds)){
-      const idx = remaining.indexOf(id);
-      if(idx === -1){ ok = false; break; }
-      remaining.splice(idx, 1);
+    const molIds = mol.ids;
+    if(molIds.length <= selectedIds.length) continue;
+    let isPrefix = true;
+    for(let i=0;i<selectedIds.length;i++){
+      if(molIds[i] !== selectedIds[i]){ isPrefix=false; break; }
     }
-    if(!ok) continue;
-    /* verify remaining cards exist in hand */
-    const availCopy = [...avail];
-    let canComplete = true;
-    for(const id of remaining){
-      const idx = availCopy.indexOf(id);
-      if(idx === -1){ canComplete = false; break; }
-      availCopy.splice(idx, 1);
-    }
-    if(canComplete) remaining.forEach(id => useful.add(id));
+    if(!isPrefix) continue;
+    const nextId = molIds[selectedIds.length];
+    if(avail.includes(nextId)) useful.add(nextId);
   }
   return useful;
 }
@@ -723,7 +727,7 @@ function makeElemCard(card,p,inBuild,dimmed){
   const isSpell=card.type==='spell'||card.type==='noble';
   const fc=isSpell?'cf-gold':'';
   const cc=isSpell?'trao':'tnm';
-  const cl=isSpell?'Efecto':'Elemento';
+  const cl=isSpell?'Efecto':card.name;
   const w=document.createElement('div');
   w.className='card clickable'+(inBuild?' sel':'')+(dimmed?' dimmed':'');
   w.innerHTML=`<div class="card-flip"><div class="card-inner">
@@ -823,6 +827,12 @@ function renderStack(p,cards,revealed){
       w.classList.add('clickable');
       w.onclick=()=>showZoom(card);
     }
+    /* marco.png frame overlay */
+    const marco=document.createElement('img');
+    marco.src='img/marco.png';
+    marco.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none;z-index:30';
+    marco.onerror=()=>marco.remove();
+    w.appendChild(marco);
     addLongPress(w,()=>showZoom(card));
     stack.appendChild(w);
   });
@@ -880,13 +890,8 @@ function renderHand(p){
   pageCards.forEach(card=>{
     const isSpell=card.type==='spell'||card.type==='noble';
     if(isSpell){
-      const inSpellSel=(G.selBuildSpell===card);
-      const dimmed=hasElemSel;
-      const el=makeElemCard(card,p,inSpellSel,dimmed);
-      if(!dimmed){
-        el.classList.add('clickable');
-        el.onclick=()=>toggleSelectSpell(card,p);
-      }
+      /* spells only selectable in spell phase — dimmed/disabled during build */
+      const el=makeElemCard(card,p,false,true);
       hc.appendChild(el);
     } else {
       const inBuild=G.build.includes(card);
@@ -1092,6 +1097,8 @@ function executeBuild(){
 }
 
 function _finishTurn(p){
+  const w=document.getElementById('defender-pass-wrap');
+  if(w) w.style.display='none';
   G.acted[p]=true;
   const other=1-p;
   if(!G.acted[other]){
@@ -1106,13 +1113,27 @@ function _finishTurn(p){
 
 function resumePass(){
   showScreen('game');
+  updateDefenderPass();
+}
+
+function updateDefenderPass(){
+  const w=document.getElementById('defender-pass-wrap');
+  if(w) w.style.display=G.phase==='build_p2'?'':'none';
+}
+
+function defenderPass(){
+  document.getElementById('defender-pass-wrap').style.display='none';
+  G.build=[];G.selBuildSpell=null;
+  closeBuildPanel();
+  G.mols[1]=null;G.molCards[1]=[];
+  renderStack(1,[],false);
+  _finishTurn(1);
 }
 
 function showReveal(){
   const m0=G.mols[0]||{formula:'(robó)',atk:0,def:0,name:'Robó cartas',combo:false,hasU:false,valid:false};
   const m1=G.mols[1]||{formula:'(robó)',atk:0,def:0,name:'Robó cartas',combo:false,hasU:false,valid:false};
-  if(G.mols[0]) flipZone(0);
-  if(G.mols[1]) setTimeout(()=>flipZone(1),250);
+  /* Calculate damage */
   if(G.mols[0]&&G.mols[1]){
     G.attacker=m0.atk>=m1.atk?0:1;
     const def=1-G.attacker;
@@ -1133,7 +1154,18 @@ function showReveal(){
     `<span style="color:${atColor};font-weight:900">🗡${atMol.atk}</span>`+
     `<span style="color:var(--mut);font-size:.9rem;margin:0 1.1rem">vs</span>`+
     `<span style="color:${dfColor};font-weight:900">🛡${dfMol.def}</span>`;
-  setTimeout(()=>document.getElementById('ov-reveal').classList.add('open'),700);
+  /* Staggered flip: zone 0, pause 1s, zone 1, pause 1s, then show modal */
+  const flip0 = G.mols[0] ? ()=>flipZone(0) : ()=>{};
+  const flip1 = G.mols[1] ? ()=>flipZone(1) : ()=>{};
+  const wait0 = G.mols[0] ? 1000 : 0;
+  const wait1 = G.mols[1] ? 1000 : 0;
+  flip0();
+  setTimeout(()=>{
+    flip1();
+    setTimeout(()=>{
+      document.getElementById('ov-reveal').classList.add('open');
+    }, wait1 + 200);
+  }, wait0);
 }
 
 function renderZoneSpells(p){
