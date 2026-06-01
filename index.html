@@ -49,13 +49,17 @@
     .btn.sm{font-size:.75rem;padding:.4rem .95rem;}
 
     /* ─── INTRO ─── */
-    #screen-intro{justify-content:center;gap:1.2rem;background:linear-gradient(160deg,#f0f4ff 0%,#e8eaf6 50%,#fce4ff 100%);}
+    #screen-intro{justify-content:center;gap:1.2rem;background:linear-gradient(160deg,#f0f4ff 0%,#e8eaf6 50%,#fce4ff 100%);position:relative;overflow:hidden;}
+    #screen-intro::before{content:'⚗️';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:70vmin;opacity:.07;pointer-events:none;z-index:0;}
+    #screen-intro>*{position:relative;z-index:1;}
     .logo{font-size:clamp(2.2rem,8vw,3.6rem);font-weight:900;letter-spacing:-2px;background:linear-gradient(135deg,var(--acc),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
     .logo-sub{color:var(--mut);letter-spacing:4px;text-transform:uppercase;font-size:.75rem;}
     .intro-icon{font-size:4rem;filter:drop-shadow(0 4px 12px rgba(91,106,240,.3));}
 
     /* ─── NAMES ─── */
-    #screen-names{justify-content:center;background:linear-gradient(160deg,#f0f4ff,#fce4ff 100%);}
+    #screen-names{justify-content:center;background:linear-gradient(160deg,#f0f4ff,#fce4ff 100%);position:relative;overflow:hidden;}
+    #screen-names::before{content:'⚗️';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:70vmin;opacity:.07;pointer-events:none;z-index:0;}
+    #screen-names>*{position:relative;z-index:1;}
     .names-box{background:var(--panel);border:1px solid var(--brd);border-radius:22px;padding:2rem;width:min(390px,93vw);margin:auto;box-shadow:var(--shadow);}
     .names-box h2{font-size:1.2rem;margin-bottom:.3rem;text-align:center;}
     .names-box p{color:var(--mut);font-size:.8rem;text-align:center;margin-bottom:1.5rem;}
@@ -578,7 +582,7 @@
       <p><strong style="color:var(--txt)">Moléculas válidas</strong><br>H₂O · H₂O₂ · O₂ · H₂ · H₃ · CO · CO₂ · N₂ · NOP · NO₂ · NH₃ · H₂S · SO₂ · S₂ · PH₃ · PO. Las cartas que no pueden combinarse se oscurecen automáticamente.</p><br>
       <p><strong style="color:var(--txt)">Construcción</strong><br>Pulsa tu mazo para robar. Selecciona elementos — aparecen boca abajo en tu zona. Pulsa «Construir» para fijar.</p><br>
       <p><strong style="color:var(--txt)">Combate</strong><br>ATK atacante − DEF defensor = daño. Cada 2 pts = 1 analista eliminado (mín 1). Uranio ignora la mitad de la DEF rival.</p><br>
-      <p><strong style="color:var(--txt)">Hechizos</strong><br>Empieza el defensor. Plomo = escudo −4 daño. Helio = +3 ATK, bloquea hechizos del rival.</p>
+      <p><strong style="color:var(--txt)">Efectos</strong><br>Empieza el defensor. Plomo = escudo −4 daño. Helio = +3 ATK, bloquea efectos del rival.</p>
     </div>
     <div style="text-align:center;margin-top:1.2rem">
       <button class="btn" onclick="document.getElementById('ov-rules').classList.remove('open')">¡Entendido!</button>
@@ -715,7 +719,7 @@ function makeElemCard(card,p,inBuild,dimmed){
   const isSpell=card.type==='spell'||card.type==='noble';
   const fc=isSpell?'cf-gold':'';
   const cc=isSpell?'trao':'tnm';
-  const cl=isSpell?'Hechizo':'Elemento';
+  const cl=isSpell?'Efecto':'Elemento';
   const w=document.createElement('div');
   w.className='card clickable'+(inBuild?' sel':'')+(dimmed?' dimmed':'');
   w.innerHTML=`<div class="card-flip"><div class="card-inner">
@@ -1165,7 +1169,7 @@ function openSpellPanel(p){
   const rival=1-p;
   const avail=G.spells[p].filter(sp=>!(G.helioCast[rival]&&sp.id==='He'));
   if(!avail.length){
-    hand.innerHTML='<div class="no-mol-msg">Sin hechizos disponibles.</div>';
+    hand.innerHTML='<div class="no-mol-msg">Sin efectos disponibles.</div>';
   } else {
     avail.forEach(sp=>{
       const el=makeElemCard(sp,p,false,false);
@@ -1246,7 +1250,7 @@ function endGame(){
     <div class="crow"><span>Rondas</span><span class="cv">${G.stats.rounds}</span></div>
     <div class="crow"><span>Analistas perdidos ${G.names[0]}</span><span class="cv bad">${G.stats.anLost[0]}</span></div>
     <div class="crow"><span>Analistas perdidos ${G.names[1]}</span><span class="cv bad">${G.stats.anLost[1]}</span></div>
-    <div class="crow"><span>Hechizos</span><span class="cv">${G.stats.spells}</span></div>
+    <div class="crow"><span>Efectos</span><span class="cv">${G.stats.spells}</span></div>
     <div class="crow"><span>Analistas restantes ${G.names[0]}</span><span class="cv ${G.an[0]>0?'':'bad'}">${G.an[0]}</span></div>
     <div class="crow"><span>Analistas restantes ${G.names[1]}</span><span class="cv ${G.an[1]>0?'':'bad'}">${G.an[1]}</span></div>`;
   showScreen('result');
