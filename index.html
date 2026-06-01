@@ -754,9 +754,10 @@ function makeElemCard(card,p,inBuild,dimmed){
 function makeAnalystCard(p,idx,alive){
   const w=document.createElement('div');
   w.className='card';
-  const img=alive?'img/analista.png':'img/analista_eliminado.png';
-  w.innerHTML=`<div style="width:100%;height:100%;border-radius:var(--cr);overflow:hidden">
-    <img src="${img}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentNode.innerHTML='<div style=&quot;width:100%;height:100%;background:${alive?(p===0?'#c5cde8':'#fcc'):'#e5e7eb'};border-radius:var(--cr);display:flex;align-items:center;justify-content:center;font-size:1.4rem&quot;>${alive?'🧪':'💀'}</div>'">
+  const opacity=alive?'1':'.22';
+  const filter=alive?'none':'grayscale(1) brightness(.5)';
+  w.innerHTML=`<div style="width:100%;height:100%;border-radius:var(--cr);overflow:hidden;opacity:${opacity};filter:${filter};transition:opacity .4s,filter .4s">
+    <img src="img/analista.png" style="width:100%;height:100%;object-fit:cover" onerror="this.parentNode.innerHTML='<div style=&quot;width:100%;height:100%;background:${alive?(p===0?'#c5cde8':'#fcc'):'#e5e7eb'};border-radius:var(--cr);display:flex;align-items:center;justify-content:center;font-size:1.4rem&quot;>${alive?'🧪':'💀'}</div>'">
   </div>`;
   return w;
 }
