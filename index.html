@@ -512,7 +512,8 @@
   <div class="bp-react-row">
     <button class="btn" id="btn-confirm" onclick="confirmBuild()" disabled style="opacity:.45">⚡ Reaccionar</button>
     <div class="mprev" id="mprev"></div>
-    <button class="btn sec" style="margin-left:auto;padding:.4rem .7rem" onclick="cancelBuild()" title="Cancelar">✕</button>
+    <div id="build-stats" style="margin-left:auto;display:flex;gap:.3rem;align-items:center;flex-shrink:0"></div>
+    <button class="btn sec" style="padding:.4rem .7rem" onclick="cancelBuild()" title="Cancelar">✕</button>
   </div>
   <div id="no-mol-msg" class="no-mol-msg" style="display:none">⚠️ No puedes formar ninguna molécula con estas cartas.</div>
   <div class="hand-nav">
@@ -690,12 +691,12 @@ function initState(n1,n2){
 function rand(a){return a[Math.floor(Math.random()*a.length)];}
 function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
 
-/* Deal 6 element cards (with weights, duplicates allowed) + 1 spell */
+/* Deal 5 element cards + 1 spell = 6 total (with weights, duplicates allowed) */
 function dealHand(p){
   G.hands[p]=[];
-  for(let i=0;i<6;i++) G.hands[p].push({...weightedRandom(ELEMENTS)});
+  for(let i=0;i<5;i++) G.hands[p].push({...weightedRandom(ELEMENTS)});
   G.spells[p]=[{...weightedRandom(SPELLS)}];
-  G.deckSize[p]=G.hands[p].length;
+  G.deckSize[p]=G.hands[p].length+G.spells[p].length;
 }
 
 function canFormAnyMol(hand){
@@ -798,7 +799,7 @@ function renderStrip(p){
 
 function renderDecks(){
   for(let p=0;p<2;p++){
-    G.deckSize[p]=G.hands[p].length;
+    G.deckSize[p]=G.hands[p].length+G.spells[p].length;
     const el=document.getElementById('pcnt'+p);
     if(el)el.textContent=G.deckSize[p];
   }
@@ -918,23 +919,30 @@ function renderHand(p){
   /* Update Reaccionar button — based on full selection, not just visible page */
   const confirmBtn=document.getElementById('btn-confirm');
   const prev=document.getElementById('mprev');
+  const stats=document.getElementById('build-stats');
   if(hasSpellSel){
     confirmBtn.disabled=false;confirmBtn.style.opacity='1';
     prev.className='mprev valid';
     prev.textContent=`✨ ${G.selBuildSpell.name} → pasar turno`;
+    if(stats)stats.innerHTML='';
   } else if(!hasElemSel){
     confirmBtn.disabled=true;confirmBtn.style.opacity='.45';
     prev.textContent='';prev.className='mprev';
+    if(stats)stats.innerHTML='';
   } else {
     const pv=buildMol(G.build);
+    /* Always show ATK/DEF stats next to X (⚔ green, 🛡 red) */
+    if(stats)stats.innerHTML=
+      `<span style="color:var(--ok);font-weight:900;font-size:.8rem">⚔${pv.atk}</span>`+
+      `<span style="color:var(--red);font-weight:900;font-size:.8rem">🛡${pv.def}</span>`;
     if(pv.valid){
       confirmBtn.disabled=false;confirmBtn.style.opacity='1';
       prev.className='mprev valid';
-      prev.textContent=`✅ ${pv.formula} ⚔${pv.atk} 🛡${pv.def}`;
+      prev.textContent=`✅ ${pv.formula}`;
     } else {
       confirmBtn.disabled=true;confirmBtn.style.opacity='.45';
-      prev.className='mprev invalid';
-      prev.textContent=`⚠ Combinación no válida`;
+      prev.className='mprev';
+      prev.textContent=''; /* No "Combinación no válida" */
     }
   }
 }
@@ -1156,8 +1164,9 @@ function openSpellPanel(p){
   G.selSpell=null;
   const castBtn=document.getElementById('btn-cast-panel');
   castBtn.disabled=true;castBtn.style.opacity='.45';
-  document.getElementById('sp-panel-title').textContent=
-    `🔮 ${G.names[p]} — ${p!==G.attacker?'Defensor':'Atacante'}`;
+  const _nameColor=p===0?'var(--acc)':'var(--red)';
+  document.getElementById('sp-panel-title').innerHTML=
+    `<span style="color:${_nameColor};font-weight:800;font-size:.9rem">${G.names[p]}</span>`;
   document.getElementById('sp-hover-panel').textContent='Toca un hechizo para seleccionarlo.';
   const hand=document.getElementById('sp-hand');hand.innerHTML='';
   const rival=1-p;
@@ -1231,7 +1240,7 @@ function nextRound(){
     for(let i=0;i<3;i++) G.hands[p].push({...weightedRandom(ELEMENTS)});
     if(G.hands[p].length>8) G.hands[p]=G.hands[p].slice(G.hands[p].length-8);
     if(!G.spells[p].length) G.spells[p]=[{...weightedRandom(SPELLS)}];
-    G.deckSize[p]=G.hands[p].length;
+    G.deckSize[p]=G.hands[p].length+G.spells[p].length;
   }
   renderDecks();
   renderStack(0,[],false);renderStack(1,[],false);
@@ -1260,23 +1269,32 @@ let _zoomJustOpened=false;
 function addLongPress(el,fn){
   let timer=null;
   let fired=false;
-  const start=(e)=>{
+
+  function startTimer(){
+    if(timer)clearTimeout(timer);
     fired=false;
-    timer=setTimeout(()=>{fired=true;fn();},2000);
-  };
-  const end=()=>{
+    timer=setTimeout(()=>{fired=true;timer=null;fn();},2000);
+  }
+  function cancelTimer(){
     if(timer){clearTimeout(timer);timer=null;}
-  };
-  /* Block the subsequent click event after a long press fires */
-  el.addEventListener('click',(e)=>{
-    if(fired){e.stopImmediatePropagation();fired=false;}
-  },true);
-  el.addEventListener('mousedown',start);
-  el.addEventListener('touchstart',start,{passive:true});
-  el.addEventListener('mouseup',end);
-  el.addEventListener('mouseleave',end);
-  el.addEventListener('touchend',end);
-  el.addEventListener('touchcancel',end);
+  }
+
+  /* Touch (mobile): use preventDefault on touchend to block the synthetic click */
+  el.addEventListener('touchstart',startTimer,{passive:true});
+  el.addEventListener('touchend',(e)=>{
+    cancelTimer();
+    if(fired){
+      e.preventDefault(); /* stops the synthetic click that would close the zoom */
+      fired=false;
+    }
+  });
+  el.addEventListener('touchmove',cancelTimer,{passive:true});
+  el.addEventListener('touchcancel',cancelTimer);
+
+  /* Mouse (desktop) */
+  el.addEventListener('mousedown',startTimer);
+  el.addEventListener('mouseup',cancelTimer);
+  el.addEventListener('mouseleave',cancelTimer);
 }
 
 function showZoom(card){
@@ -1284,11 +1302,12 @@ function showZoom(card){
   wrap.innerHTML='';
   const el=makeElemCard(card,0,false,false);
   el.classList.remove('clickable');
+  el.onclick=null; /* remove toggleSelect handler from the zoomed copy */
   wrap.appendChild(el);
   _zoomJustOpened=true;
   document.getElementById('ov-zoom').classList.add('open');
-  /* Prevent the overlay's own click from firing immediately */
-  setTimeout(()=>{_zoomJustOpened=false;},300);
+  /* Safety window for desktop (mouse): block accidental immediate close */
+  setTimeout(()=>{_zoomJustOpened=false;},600);
 }
 
 function closeZoom(){
