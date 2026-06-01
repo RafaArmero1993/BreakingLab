@@ -460,12 +460,12 @@
       <!-- Center: shared draw deck + shared discard -->
       <div class="center-row">
         <div class="cpile draw" title="Robar 2 cartas" style="cursor:pointer" onclick="onSharedDeckClick()">
-          <div class="cpile-icon">🃏</div>
+          <div class="cpile-icon"><img src="img/mazo.png" style="width:clamp(24px,6vw,36px);height:clamp(24px,6vw,36px);object-fit:contain"></div>
           <div class="cpile-cnt" id="shared-cnt">32</div>
           <div class="cpile-lbl">Robar</div>
         </div>
         <div class="cpile disc" title="Pila de descarte compartida">
-          <div class="cpile-icon">🃏</div>
+          <div class="cpile-icon"><img src="img/mazo.png" style="width:clamp(24px,6vw,36px);height:clamp(24px,6vw,36px);object-fit:contain;opacity:.5"></div>
           <div class="cpile-cnt" id="disc-cnt">0</div>
           <div class="cpile-lbl">Descarte</div>
         </div>
@@ -547,21 +547,20 @@
 </div>
 
 <!-- floating reopen button during spell phase -->
-<button id="spell-reopen-btn" style="display:none;position:fixed;bottom:1.4rem;left:50%;transform:translateX(-50%);z-index:95;white-space:nowrap" class="btn gold" onclick="reopenSpellPanel()">✨ Ver hechizos</button>
 
 <!-- ZOOM -->
 <!-- MOL CONFIRM -->
 <div class="ov" id="ov-mol-confirm">
-  <div class="modal ai" style="max-width:320px">
+  <div class="modal ai" style="max-width:320px;position:relative">
+    <button onclick="document.getElementById('ov-mol-confirm').classList.remove('open')" style="position:absolute;top:.6rem;right:.7rem;background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--mut);line-height:1">✕</button>
     <div id="mc-formula" style="font-size:2rem;font-weight:900;margin-bottom:.2rem"></div>
     <div id="mc-name" style="color:var(--mut);margin-bottom:.9rem;font-size:.9rem"></div>
     <div style="display:flex;gap:1.5rem;justify-content:center;margin-bottom:1.1rem">
-      <span id="mc-atk" style="color:var(--red);font-weight:900;font-size:1.1rem"></span>
-      <span id="mc-def" style="color:var(--ok);font-weight:900;font-size:1.1rem"></span>
+      <span id="mc-atk" style="color:var(--red);font-weight:900;font-size:1.3rem"></span>
+      <span id="mc-def" style="color:var(--ok);font-weight:900;font-size:1.3rem"></span>
     </div>
     <div class="mbtns">
       <button class="btn" onclick="executeBuild()">⚡ Confirmar</button>
-      <button class="btn sec" onclick="document.getElementById('ov-mol-confirm').classList.remove('open')">Cancelar</button>
     </div>
   </div>
 </div>
@@ -722,7 +721,7 @@ function makeElemCard(card,p,inBuild,dimmed){
   w.innerHTML=`<div class="card-flip"><div class="card-inner">
     <div class="card-face card-front ${fc}">
       <div class="ec-tl">${card.num}</div>
-      <div class="ec-tr"><span class="ec-a">⚔${card.atk}</span><span class="ec-d">🛡${card.def}</span></div>
+      <div class="ec-tr"><span class="ec-a">🗡${card.atk}</span><span class="ec-d">🛡${card.def}</span></div>
       <div class="ec-sym">${imgH(card.img,card.sym)}</div>
       <div class="ec-body">
         <div class="ec-chip ${cc}">${cl}</div>
@@ -740,14 +739,10 @@ function makeElemCard(card,p,inBuild,dimmed){
 function makeAnalystCard(p,idx,alive){
   const w=document.createElement('div');
   w.className='card';
-  const fc=p===0?'cf-blue':'cf-red';
-  w.innerHTML=`<div class="card-flip${alive?'':' flipped'}"><div class="card-inner">
-    <div class="card-face card-front ${fc} an-front">
-      <div class="an-icon">🧪</div>
-      <div class="an-label">Analista</div>
-    </div>
-    <div class="card-face card-back"></div>
-  </div></div>`;
+  const img=alive?'img/analista.png':'img/analista_eliminado.png';
+  w.innerHTML=`<div style="width:100%;height:100%;border-radius:var(--cr);overflow:hidden">
+    <img src="${img}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentNode.innerHTML='<div style=&quot;width:100%;height:100%;background:${alive?(p===0?'#c5cde8':'#fcc'):'#e5e7eb'};border-radius:var(--cr);display:flex;align-items:center;justify-content:center;font-size:1.4rem&quot;>${alive?'🧪':'💀'}</div>'">
+  </div>`;
   return w;
 }
 
@@ -756,7 +751,7 @@ function makePDeck(p){
   d.className='pdeck';
   d.title='Ver mazo';
   d.onclick=()=>onDeckClick(p);
-  d.innerHTML=`<div class="pdeck-icon">🃏</div>
+  d.innerHTML=`<div class="pdeck-icon"><img src="img/mazo.png" style="width:clamp(26px,7vw,40px);height:clamp(26px,7vw,40px);object-fit:contain"></div>
     <div class="pdeck-cnt" id="pcnt${p}">${G.hands[p].length}</div>
     <div class="pdeck-lbl">Mazo</div>`;
   return d;
@@ -827,23 +822,14 @@ function renderStack(p,cards,revealed){
   if(revealed && G.mols[p]){
     const badge=document.createElement('div');
     badge.className='mol-badge';
-    badge.textContent=`${G.mols[p].formula} ⚔${G.mols[p].atk} 🛡${G.mols[p].def}`;
+    badge.textContent=`${G.mols[p].formula} 🗡${G.mols[p].atk} 🛡${G.mols[p].def}`;
     stack.appendChild(badge);
   }
 }
 
 function flipZone(p){
-  const stack=document.getElementById('stack'+(p+1));
-  if(!stack)return;
-  stack.querySelectorAll('.card-flip.flipped').forEach(el=>el.classList.remove('flipped'));
-  /* Add mol badge if mol exists */
-  if(G.mols[p]){
-    stack.querySelectorAll('.mol-badge').forEach(b=>b.remove());
-    const badge=document.createElement('div');
-    badge.className='mol-badge';
-    badge.textContent=`${G.mols[p].formula} ⚔${G.mols[p].atk} 🛡${G.mols[p].def}`;
-    stack.appendChild(badge);
-  }
+  /* Re-render revealed so cards are face-up and tappable (showZoom) */
+  if(G.molCards[p]&&G.molCards[p].length) renderStack(p,G.molCards[p],true);
 }
 
 /* ── Hand pagination ── */
@@ -918,9 +904,9 @@ function renderHand(p){
     if(stats)stats.innerHTML='';
   } else {
     const pv=buildMol(G.build);
-    /* Always show ATK/DEF stats next to X (⚔ green, 🛡 red) */
+    /* Always show ATK/DEF stats next to X (🗡 green, 🛡 red) */
     if(stats)stats.innerHTML=
-      `<span style="color:var(--ok);font-weight:900;font-size:.8rem">⚔${pv.atk}</span>`+
+      `<span style="color:var(--ok);font-weight:900;font-size:.8rem">🗡${pv.atk}</span>`+
       `<span style="color:var(--red);font-weight:900;font-size:.8rem">🛡${pv.def}</span>`;
     if(pv.valid){
       confirmBtn.disabled=false;confirmBtn.style.opacity='1';
@@ -960,6 +946,10 @@ function openBuildPanel(p){
 function closeBuildPanel(){document.getElementById('build-panel').classList.remove('open');}
 
 function onDeckClick(p){
+  if(G.phase==='spells'&&p===G.spellTurn){
+    document.getElementById('spell-panel').classList.add('open');
+    return;
+  }
   if(G.phase==='build_p1'&&p!==0)return;
   if(G.phase==='build_p2'&&p!==1)return;
   if(!G.phase.startsWith('build'))return;
@@ -1058,7 +1048,10 @@ function confirmBuild(){
   if(G.selBuildSpell){
     G.selBuildSpell=null;G.mols[p]=null;
     closeBuildPanel();
-    _finishTurn(p);
+    /* Jump straight to spell phase — current player goes first */
+    G.phase='spells';G.helioCast=[false,false];G.spellPassed=[false,false];
+    G.spellsInArena=[[],[]];G.dmg=[0,0];G.attacker=p;G.spellTurn=p;
+    openSpellPanel(p);
     return;
   }
 
@@ -1070,8 +1063,8 @@ function confirmBuild(){
   G._pendingBuild={mol,p};
   document.getElementById('mc-formula').textContent=mol.formula;
   document.getElementById('mc-name').textContent=mol.name;
-  document.getElementById('mc-atk').textContent=`⚔ ATK: ${mol.atk}`;
-  document.getElementById('mc-def').textContent=`🛡 DEF: ${mol.def}`;
+  document.getElementById('mc-atk').textContent=`🗡 ${mol.atk}`;
+  document.getElementById('mc-def').textContent=`🛡 ${mol.def}`;
   document.getElementById('ov-mol-confirm').classList.add('open');
 }
 
@@ -1128,7 +1121,7 @@ function showReveal(){
   const atColor=G.attacker===0?'var(--acc)':'var(--red)';
   const dfColor=def===0?'var(--acc)':'var(--red)';
   document.getElementById('rev-header').innerHTML=
-    `<span style="color:${atColor};font-weight:900">⚔${atMol.atk}</span>`+
+    `<span style="color:${atColor};font-weight:900">🗡${atMol.atk}</span>`+
     `<span style="color:var(--mut);font-size:.9rem;margin:0 1.1rem">vs</span>`+
     `<span style="color:${dfColor};font-weight:900">🛡${dfMol.def}</span>`;
   setTimeout(()=>document.getElementById('ov-reveal').classList.add('open'),700);
@@ -1184,20 +1177,10 @@ function openSpellPanel(p){
     });
   }
   document.getElementById('spell-panel').classList.add('open');
-  document.getElementById('spell-reopen-btn').style.display='none';
 }
 
 function closeSpellPanelOnly(){
   document.getElementById('spell-panel').classList.remove('open');
-  const btn=document.getElementById('spell-reopen-btn');
-  btn.style.display='flex';
-  const color=G.spellTurn===0?'var(--acc)':'var(--red)';
-  btn.style.setProperty('--spell-btn-color',color);
-}
-
-function reopenSpellPanel(){
-  document.getElementById('spell-reopen-btn').style.display='none';
-  document.getElementById('spell-panel').classList.add('open');
 }
 
 function castSpell(){
@@ -1223,13 +1206,11 @@ function castSpell(){
 
 function passSpell(){
   document.getElementById('spell-panel').classList.remove('open');
-  document.getElementById('spell-reopen-btn').style.display='none';
   resolveCombat();
 }
 
 function resolveCombat(){
   document.getElementById('spell-panel').classList.remove('open');
-  document.getElementById('spell-reopen-btn').style.display='none';
   for(let p=0;p<2;p++){if(G.dmg[p]>0){G.an[p]=Math.max(0,G.an[p]-1);G.stats.anLost[p]+=1;}}
   G.stats.rounds++;
   renderStrip(0);renderStrip(1);
