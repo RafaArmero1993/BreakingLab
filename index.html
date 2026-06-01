@@ -831,12 +831,7 @@ function renderStack(p,cards,revealed){
       w.classList.add('clickable');
       w.onclick=()=>showZoom(card);
     }
-    /* marco.png frame overlay */
-    const marco=document.createElement('img');
-    marco.src='img/marco.png';
-    marco.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none;z-index:30';
-    marco.onerror=()=>marco.remove();
-    w.appendChild(marco);
+    addMarco(w);
     addLongPress(w,()=>showZoom(card));
     stack.appendChild(w);
   });
@@ -1173,18 +1168,27 @@ function showReveal(){
     `<span style="color:${atColor};font-weight:900">🗡${atMol.atk}</span>`+
     `<span style="color:var(--mut);font-size:.9rem;margin:0 1.1rem">vs</span>`+
     `<span style="color:${dfColor};font-weight:900">🛡${dfMol.def}</span>`;
-  /* Staggered flip: zone 0, pause 1s, zone 1, pause 1s, then show modal */
-  const flip0 = G.mols[0] ? ()=>flipZone(0) : ()=>{};
-  const flip1 = G.mols[1] ? ()=>flipZone(1) : ()=>{};
-  const wait0 = G.mols[0] ? 1000 : 0;
-  const wait1 = G.mols[1] ? 1000 : 0;
-  flip0();
+  /* Flip attacker first, then defender, 2s between, 2s before modal */
+  const at=G.attacker, df=1-G.attacker;
+  const flipAt = G.mols[at] ? ()=>flipZone(at) : null;
+  const flipDf = G.mols[df] ? ()=>flipZone(df) : null;
+  const waitAt = flipAt ? 2000 : 0;
+  const waitDf = flipDf ? 2000 : 0;
+  if(flipAt) flipAt();
   setTimeout(()=>{
-    flip1();
+    if(flipDf) flipDf();
     setTimeout(()=>{
       document.getElementById('ov-reveal').classList.add('open');
-    }, wait1 + 200);
-  }, wait0);
+    }, waitDf + 200);
+  }, waitAt);
+}
+
+function addMarco(el){
+  const m=document.createElement('img');
+  m.src='img/marco.png';
+  m.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none;z-index:30';
+  m.onerror=()=>m.remove();
+  el.appendChild(m);
 }
 
 function renderZoneSpells(p){
@@ -1194,6 +1198,7 @@ function renderZoneSpells(p){
   (G.spellsInArena[p]||[]).forEach(sp=>{
     const el=makeElemCard(sp,p,false,false);
     el.classList.remove('clickable','dimmed');
+    addMarco(el);
     addLongPress(el,()=>showZoom(sp));
     zs.appendChild(el);
   });
@@ -1235,6 +1240,7 @@ function openSpellPanel(p){
         el.classList.add('sel');
         castBtn.disabled=false;castBtn.style.opacity='1';
       };
+      addMarco(el);
       hand.appendChild(el);
     });
   }
@@ -1297,8 +1303,7 @@ function animateFireball(winnerP, loserP, cb){
     left:${sx-sz/2}px;top:${sy-sz/2}px;`;
   document.body.appendChild(fb);
 
-  const dist = Math.hypot(tx-sx, ty-sy);
-  const dur  = Math.min(700, Math.max(300, dist * 0.6));
+  const dur = 3000; /* 3 seconds travel */
   fb.getBoundingClientRect(); /* force reflow so transition fires */
   fb.style.transition = `left ${dur}ms ease-in, top ${dur}ms ease-in, transform ${dur}ms ease-in`;
   fb.style.left = (tx-sz/2)+'px';
@@ -1307,11 +1312,11 @@ function animateFireball(winnerP, loserP, cb){
 
   setTimeout(()=>{
     fb.remove();
-    /* Flash: fade card to dark, wait 1s, then callback */
+    /* Flash: fade card to dark, wait 2s, then callback */
     targetCard.style.transition = 'opacity .25s, filter .25s';
     targetCard.style.opacity = '.15';
     targetCard.style.filter = 'brightness(.2) saturate(0)';
-    setTimeout(()=>{ cb&&cb(); }, 1000);
+    setTimeout(()=>{ cb&&cb(); }, 2000);
   }, dur+50);
 }
 
@@ -1412,11 +1417,7 @@ function showZoom(card){
   const el=makeElemCard(card,0,false,false);
   el.classList.remove('clickable');
   el.onclick=null;
-  const marco=document.createElement('img');
-  marco.src='img/marco.png';
-  marco.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none;z-index:30';
-  marco.onerror=()=>marco.remove();
-  el.appendChild(marco);
+  addMarco(el);
   wrap.appendChild(el);
   _zoomJustOpened=true;
   document.getElementById('ov-zoom').classList.add('open');
