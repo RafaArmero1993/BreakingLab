@@ -49,16 +49,15 @@
     .btn.sm{font-size:.75rem;padding:.4rem .95rem;}
 
     /* ─── INTRO ─── */
-    #screen-intro{justify-content:center;gap:1.2rem;background:url('img/mazo.png') center/cover no-repeat;position:relative;overflow:hidden;}
-    #screen-intro::before{content:'';position:absolute;inset:0;background:rgba(255,255,255,.72);pointer-events:none;z-index:0;}
+    #screen-intro{justify-content:center;gap:1.2rem;background:url('img/mazo.png') center/cover no-repeat;position:relative;min-height:100svh;min-height:100dvh;overflow:hidden;}
+    #screen-intro::before{content:'';position:absolute;inset:0;background:rgba(0,0,0,.48);pointer-events:none;z-index:0;}
     #screen-intro>*{position:relative;z-index:1;}
-    .logo{font-size:clamp(2.2rem,8vw,3.6rem);font-weight:900;letter-spacing:-2px;background:linear-gradient(135deg,var(--acc),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-    .logo-sub{color:var(--mut);letter-spacing:4px;text-transform:uppercase;font-size:.75rem;}
-    .intro-icon{font-size:4rem;filter:drop-shadow(0 4px 12px rgba(91,106,240,.3));}
+    .logo{font-size:clamp(2.2rem,8vw,3.6rem);font-weight:900;letter-spacing:-2px;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.4);}
+    .logo-sub{color:rgba(255,255,255,.85);letter-spacing:4px;text-transform:uppercase;font-size:.75rem;text-shadow:0 1px 6px rgba(0,0,0,.4);}
 
     /* ─── NAMES ─── */
-    #screen-names{justify-content:center;background:url('img/mazo.png') center/cover no-repeat;position:relative;overflow:hidden;}
-    #screen-names::before{content:'';position:absolute;inset:0;background:rgba(255,255,255,.72);pointer-events:none;z-index:0;}
+    #screen-names{justify-content:center;background:url('img/mazo.png') center/cover no-repeat;position:relative;min-height:100svh;min-height:100dvh;overflow:hidden;}
+    #screen-names::before{content:'';position:absolute;inset:0;background:rgba(0,0,0,.48);pointer-events:none;z-index:0;}
     #screen-names>*{position:relative;z-index:1;}
     .names-box{background:var(--panel);border:1px solid var(--brd);border-radius:22px;padding:2rem;width:min(390px,93vw);margin:auto;box-shadow:var(--shadow);}
     .names-box h2{font-size:1.2rem;margin-bottom:.3rem;text-align:center;}
@@ -410,13 +409,12 @@
 
 <!-- ═══ INTRO ═══ -->
 <div id="screen-intro" class="screen active">
-  <div class="intro-icon pi-anim">⚗️</div>
   <div class="logo">BreakingLab</div>
   <div class="logo-sub">El Duelo Molecular</div>
-  <div style="color:var(--mut);font-size:.57rem;letter-spacing:1px;margin-top:-.4rem">by Rafa Armero &amp; Tomás Aznar</div>
+  <div style="color:rgba(255,255,255,.7);font-size:.57rem;letter-spacing:1px;margin-top:-.4rem">by Rafa Armero &amp; Tomás Aznar</div>
   <div style="display:flex;flex-direction:column;gap:.55rem;margin-top:1.2rem;align-items:center">
-    <button class="btn" onclick="showScreen('names')">🧪 Iniciar Partida</button>
-    <button class="btn sec" onclick="openRules()">📖 Ver Reglas</button>
+    <button class="btn gold" onclick="showScreen('names')">Iniciar Partida</button>
+    <button class="btn sec" onclick="openRules()">Ver Reglas</button>
   </div>
 </div>
 
@@ -424,12 +422,12 @@
 <div id="screen-names" class="screen">
   <div class="names-box ai" style="position:relative">
     <button class="btn sec" onclick="showScreen('intro')" style="position:absolute;top:.6rem;right:.6rem;padding:.25rem .6rem;font-size:.85rem;line-height:1;border-radius:8px;min-width:unset">✕</button>
-    <h2 style="margin-bottom:1.2rem">🔬 Registro de Laboratorios</h2>
+    <h2 style="margin-bottom:1.2rem">Registro de Laboratorios</h2>
     <div class="nf"><label class="c1">Laboratorio 1</label><input id="inp-p1" type="text" placeholder="Nombre Laboratorio 1" maxlength="20"/></div>
     <div class="nf"><label class="c2">Laboratorio 2</label><input id="inp-p2" type="text" placeholder="Nombre Laboratorio 2" maxlength="20"/></div>
     <div id="names-error" style="color:var(--red);font-size:.75rem;min-height:1rem;margin-top:.3rem;text-align:center"></div>
     <div style="margin-top:.5rem">
-      <button class="btn gold" style="width:100%" onclick="startGame()">🥇 ¡A por el Nobel!</button>
+      <button class="btn gold" style="width:100%" onclick="startGame()">¡A por el Nobel!</button>
     </div>
   </div>
 </div>
