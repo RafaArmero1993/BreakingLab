@@ -470,9 +470,6 @@
         </div>
       </div>
 
-      <!-- Spell phase hint -->
-      <div id="spell-phase-hint" style="display:none;text-align:center;font-size:clamp(.58rem,1.5vw,.75rem);font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:var(--gold);text-shadow:0 1px 6px rgba(245,158,11,.4);padding:.15rem 0;animation:pulse-hint 2s ease-in-out infinite"></div>
-
       <!-- Center: shared draw deck + shared discard -->
       <div class="center-row">
         <div class="cpile draw" title="Robar 2 cartas" style="cursor:pointer" onclick="onSharedDeckClick()">
@@ -490,6 +487,7 @@
       <div class="pzone" id="pzone1">
         <div class="pzone-lbl" id="pzlbl1">Tu zona</div>
         <div class="zone-empty" id="zempty1">pulsa tu mazo para reaccionar o roba 2 cartas</div>
+        <div id="spell-phase-hint" style="display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;font-size:clamp(.58rem,1.5vw,.75rem);font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:var(--gold);text-shadow:0 1px 6px rgba(245,158,11,.4);pointer-events:none;animation:pulse-hint 2s ease-in-out infinite;white-space:nowrap;z-index:5"></div>
         <div class="pzone-cards">
           <div class="card-stack" id="stack1" style="display:none"></div>
           <div class="zone-spells" id="zspells1"></div>
