@@ -242,6 +242,7 @@
 
     /* zone-empty: centered absolutely so it doesn't affect layout of cards */
     @keyframes pulse-hint{0%,100%{transform:translate(-50%,-50%) scale(1);}50%{transform:translate(-50%,-50%) scale(1.1);}}
+    @keyframes fb-pulse{0%,100%{box-shadow:0 0 14px 6px var(--fb-c);}50%{box-shadow:0 0 28px 14px var(--fb-c);}}
     .zone-empty{
       position:absolute;
       top:50%;left:50%;
@@ -1269,13 +1270,70 @@ function passSpell(){
   resolveCombat();
 }
 
+function animateFireball(winnerP, loserP, cb){
+  const targetIdx = G.an[loserP] - 1; /* last alive analyst = the one being eliminated */
+  const strip = document.getElementById('astrip'+(loserP+1));
+  const cards = strip ? strip.querySelectorAll('.card') : [];
+  const targetCard = cards[targetIdx];
+
+  /* Source: center of winner's pzone */
+  const srcZone = document.getElementById('pzone'+(winnerP+1));
+  if(!srcZone||!targetCard){ cb&&cb(); return; }
+  const sr = srcZone.getBoundingClientRect();
+  const tr = targetCard.getBoundingClientRect();
+  const sx = sr.left+sr.width/2, sy = sr.top+sr.height/2;
+  const tx = tr.left+tr.width/2, ty = tr.top+tr.height/2;
+
+  const color = winnerP===0 ? 'rgba(91,106,240,.8)' : 'rgba(239,68,68,.8)';
+  const glow  = winnerP===0 ? '#8af' : '#f87';
+
+  const fb = document.createElement('div');
+  const sz = 28;
+  fb.style.cssText = `position:fixed;width:${sz}px;height:${sz}px;border-radius:50%;
+    background:radial-gradient(circle,#fff 0%,${glow} 55%,transparent 100%);
+    --fb-c:${color};animation:fb-pulse .35s ease-in-out infinite;
+    pointer-events:none;z-index:600;
+    left:${sx-sz/2}px;top:${sy-sz/2}px;`;
+  document.body.appendChild(fb);
+
+  const dist = Math.hypot(tx-sx, ty-sy);
+  const dur  = Math.min(700, Math.max(300, dist * 0.6));
+  fb.getBoundingClientRect(); /* force reflow so transition fires */
+  fb.style.transition = `left ${dur}ms ease-in, top ${dur}ms ease-in, transform ${dur}ms ease-in`;
+  fb.style.left = (tx-sz/2)+'px';
+  fb.style.top  = (ty-sz/2)+'px';
+  fb.style.transform = 'scale(2)';
+
+  setTimeout(()=>{
+    fb.remove();
+    /* Flash: fade card to dark, wait 1s, then callback */
+    targetCard.style.transition = 'opacity .25s, filter .25s';
+    targetCard.style.opacity = '.15';
+    targetCard.style.filter = 'brightness(.2) saturate(0)';
+    setTimeout(()=>{ cb&&cb(); }, 1000);
+  }, dur+50);
+}
+
 function resolveCombat(){
   document.getElementById('spell-panel').classList.remove('open');
-  for(let p=0;p<2;p++){if(G.dmg[p]>0){G.an[p]=Math.max(0,G.an[p]-1);G.stats.anLost[p]+=1;}}
-  G.stats.rounds++;
-  renderStrip(0);renderStrip(1);
-  if(G.an[0]<=0||G.an[1]<=0){endGame();return;}
-  nextRound();
+
+  /* Queue fireballs for each player that takes damage */
+  const losers = [0,1].filter(p=>G.dmg[p]>0);
+  function applyAndContinue(){
+    for(let p=0;p<2;p++){if(G.dmg[p]>0){G.an[p]=Math.max(0,G.an[p]-1);G.stats.anLost[p]+=1;}}
+    G.stats.rounds++;
+    renderStrip(0);renderStrip(1);
+    if(G.an[0]<=0||G.an[1]<=0){endGame();return;}
+    nextRound();
+  }
+  if(!losers.length){ applyAndContinue(); return; }
+  let i=0;
+  function next(){
+    if(i>=losers.length){ applyAndContinue(); return; }
+    const lp=losers[i++];
+    animateFireball(1-lp, lp, next);
+  }
+  next();
 }
 
 function nextRound(){
