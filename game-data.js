@@ -19,8 +19,10 @@
 
    ── HECHIZOS ──────────────────────────────────────────────────
    Igual que elementos pero con type 'spell' o 'noble'.
-   Los efectos reales (Pb = escudo, He = evasión) están
-   implementados en castSpell() dentro de index.html.
+   ⚠️ Los efectos están PENDIENTES DE DISEÑO: por ahora jugar un
+   hechizo no altera el combate. Cuando se definan, implementarlos
+   en doCastSpell() dentro de game.js (y la heurística de la IA en
+   AI.chooseSpell() dentro de ai-player.js).
 
    ── MOLÉCULAS ─────────────────────────────────────────────────
    Cada entrada requiere:
@@ -73,7 +75,7 @@ const ELEMENTS = [
 /* ── Hechizos ── */
 const SPELLS = [
   {id:'Pb', sym:'Pb', name:'Plomo', num:82, atk:0, def:5, type:'spell', img:'img/Pb.png',
-   eff:'🛡 ESCUDO: Reduce el daño entrante en 4 puntos.', info:'Blindaje contra radiación.'},
+   eff:'✨ Efecto por definir. De momento no hace nada.', info:'Blindaje contra radiación.'},
   {id:'He', sym:'He', name:'Helio', num:2,  atk:3, def:0, type:'noble', img:'img/He.png',
-   eff:'🎈 EVASIÓN: +3 ATK y el rival no puede usar hechizos.', info:'Gas noble inerte.'},
+   eff:'✨ Efecto por definir. De momento no hace nada.', info:'Gas noble inerte.'},
 ];

@@ -2,457 +2,100 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>BreakingLab</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <meta name="theme-color" content="#070b1a"/>
+  <meta name="description" content="BreakingLab — El duelo molecular. Construye moléculas, lanza efectos y derrota al laboratorio rival."/>
+  <title>BreakingLab — Duelo Molecular</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.webmanifest"/>
+  <link rel="icon" type="image/png" href="icons/icon-192.png"/>
+  <link rel="apple-touch-icon" href="icons/icon-192.png"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="BreakingLab"/>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Exo+2:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+
+  <link rel="stylesheet" href="style.css"/>
   <script src="card-config.js"></script>
   <script src="game-data.js"></script>
-  <style>
-    /* ─── Variables & reset ─── */
-    :root{
-      --bg:    #f0f4ff;
-      --panel: #ffffff;
-      --brd:   #d0d8f0;
-      --cb:    #c5cde8;
-      --acc:   #5b6af0;
-      --a2:    #a855f7;
-      --red:   #ef4444;
-      --ok:    #22c55e;
-      --gold:  #f59e0b;
-      --warn:  #fb923c;
-      --txt:   #1e2040;
-      --mut:   #7880a8;
-      --felt:  #e8edf8;
-      --arena: #dde3f5;
-      --card1: #eef1ff;
-      --card2: #fff0f0;
-      --shadow: 0 4px 16px rgba(91,106,240,.15);
-
-      --cw: clamp(58px, 15.5vw, 88px);
-      --ch: calc(var(--cw) * 12 / 7);
-      --cr: clamp(6px, 1.4vw, 10px);
-    }
-    *{box-sizing:border-box;margin:0;padding:0;}
-    html,body{height:100%;overflow-x:hidden;}
-    body{background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans-serif;}
-
-    .screen{display:none;}
-    .screen.active{display:flex;flex-direction:column;align-items:center;min-height:100vh;}
-    #screen-game.active{min-height:unset;height:100svh;height:100dvh;overflow:hidden;}
-
-    /* ─── Buttons ─── */
-    .btn{background:linear-gradient(135deg,var(--acc),var(--a2));border:none;color:#fff;font-size:clamp(.82rem,3vw,1rem);font-weight:700;padding:.72rem 1.9rem;border-radius:50px;cursor:pointer;transition:opacity .2s,transform .15s;box-shadow:0 4px 14px rgba(91,106,240,.35);}
-    .btn:hover{opacity:.88;transform:translateY(-2px);}
-    .btn.sec{background:#fff;border:2px solid var(--brd);color:var(--mut);box-shadow:none;}
-    .btn.sec:hover{border-color:var(--acc);color:var(--acc);}
-    .btn.gold{background:linear-gradient(135deg,var(--gold),var(--warn));color:#fff;box-shadow:0 4px 14px rgba(245,158,11,.35);}
-    .btn.danger{background:linear-gradient(135deg,var(--red),#c0392b);box-shadow:0 4px 14px rgba(239,68,68,.35);}
-    .btn.sm{font-size:.75rem;padding:.4rem .95rem;}
-
-    /* ─── INTRO ─── */
-    #screen-intro{justify-content:center;gap:1.2rem;position:relative;height:100svh;height:100dvh;min-height:unset;overflow:hidden;
-      background:url('img/mazo.png') center/cover no-repeat;}
-    #screen-intro::before{content:'';position:absolute;inset:0;background:rgba(0,0,0,.48);z-index:0;pointer-events:none;}
-    .logo{font-size:clamp(2.2rem,8vw,3.6rem);font-weight:900;letter-spacing:-2px;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.4);position:relative;z-index:1;}
-    .logo-sub{color:rgba(255,255,255,.85);letter-spacing:4px;text-transform:uppercase;font-size:.75rem;text-shadow:0 1px 6px rgba(0,0,0,.4);position:relative;z-index:1;}
-
-    /* ─── NAMES ─── */
-    #screen-names{justify-content:center;position:relative;height:100svh;height:100dvh;min-height:unset;overflow:hidden;
-      background:url('img/mazo.png') center/cover no-repeat;}
-    #screen-names::before{content:'';position:absolute;inset:0;background:rgba(0,0,0,.48);z-index:0;pointer-events:none;}
-    .names-box{z-index:1;position:relative;}
-    .names-box{background:var(--panel);border:1px solid var(--brd);border-radius:22px;padding:2rem;width:min(390px,93vw);margin:auto;box-shadow:var(--shadow);}
-    .names-box h2{font-size:1.2rem;margin-bottom:.3rem;text-align:center;}
-    .names-box p{color:var(--mut);font-size:.8rem;text-align:center;margin-bottom:1.5rem;}
-    .nf{display:flex;flex-direction:column;gap:.3rem;margin-bottom:.9rem;}
-    .nf label{font-size:.65rem;text-transform:uppercase;letter-spacing:2px;color:var(--mut);font-weight:700;}
-    .nf label.c1{color:var(--acc);}
-    .nf label.c2{color:var(--red);}
-    .nf input{background:var(--felt);border:2px solid var(--brd);color:var(--txt);font-size:.95rem;padding:.55rem .85rem;border-radius:10px;outline:none;transition:border-color .2s;width:100%;}
-    .nf input:focus{border-color:var(--acc);}
-
-    /* ─── PASS ─── */
-    #screen-pass{justify-content:center;background:linear-gradient(160deg,#f0f4ff,#e8eaf6);}
-    .pass-box{background:var(--panel);border:1px solid var(--brd);border-radius:22px;padding:2.5rem 2rem;text-align:center;max-width:360px;width:92vw;box-shadow:var(--shadow);}
-    .pass-box h2{font-size:1.4rem;margin-bottom:1.8rem;color:var(--txt);}
-
-    /* ════════════════════════════════════
-       CARD BASE
-    ════════════════════════════════════ */
-    .card{
-      width:var(--cw);
-      height:var(--ch);
-      border-radius:var(--cr);
-      position:relative;
-      flex-shrink:0;
-      -webkit-touch-callout:none;
-      -webkit-user-select:none;
-      user-select:none;
-      box-shadow:0 3px 10px rgba(91,106,240,.18),inset 0 1px 0 rgba(255,255,255,.6);
-      transition:transform .18s ease,box-shadow .18s ease;
-    }
-    .card-flip{width:100%;height:100%;perspective:800px;}
-    .card-inner{
-      width:100%;height:100%;
-      position:relative;
-      transform-style:preserve-3d;
-      transition:transform .55s cubic-bezier(.4,0,.2,1);
-    }
-    .card-flip.flipped .card-inner{transform:rotateY(180deg);}
-
-    .card-face{
-      position:absolute;inset:0;
-      border-radius:var(--cr);
-      backface-visibility:hidden;
-      -webkit-backface-visibility:hidden;
-    }
-
-    /* ── Front face ── */
-    .card-front{
-      display:flex;flex-direction:column;overflow:hidden;
-      background:linear-gradient(165deg,#fff 0%,#f5f7ff 60%,#eef0ff 100%);
-      border:2px solid #d0d8f0;
-    }
-    .cf-red{background:linear-gradient(165deg,#fff5f5 0%,#fff0f0 60%,#ffe8e8 100%);border-color:#fcc;}
-    .cf-blue{background:linear-gradient(165deg,#f0f5ff 0%,#e8eeff 60%,#dce6ff 100%);border-color:#b8c8f0;}
-    .cf-grn{background:linear-gradient(165deg,#f0fff8 0%,#e8fff2 60%,#dcfce7 100%);border-color:#86efac;}
-    .cf-purp{background:linear-gradient(165deg,#faf5ff 0%,#f3e8ff 60%,#ede9fe 100%);border-color:#d8b4fe;}
-    .cf-gold{background:linear-gradient(165deg,#fffbeb 0%,#fef3c7 60%,#fde68a 100%);border-color:#fcd34d;}
-
-    /* ── Back face ── */
-    .card-back{
-      transform:rotateY(180deg);
-      border:2px solid #7c6df0;
-      box-shadow:0 3px 10px rgba(91,106,240,.25);
-      overflow:hidden;
-      background:#5b6af0 url('img/mazo.png') center/cover no-repeat;
-    }
-    .card-back::before{content:none;}
-
-    /* ── Card content ── */
-    .ec-tl{position:absolute;top:4px;left:5px;font-size:clamp(.36rem,.85vw,.5rem);color:var(--mut);line-height:1.2;font-weight:700;}
-    .ec-tr{position:absolute;top:3px;right:4px;display:flex;flex-direction:column;align-items:flex-end;gap:1px;}
-    .ec-a{font-size:clamp(.34rem,.8vw,.52rem);color:var(--red);font-weight:900;background:#fee2e2;padding:1px 3px;border-radius:3px;}
-    .ec-d{font-size:clamp(.34rem,.8vw,.52rem);color:var(--ok);font-weight:900;background:#dcfce7;padding:1px 3px;border-radius:3px;}
-    .ec-sym{display:flex;align-items:center;justify-content:center;flex:1;padding-top:clamp(.9rem,2.4vw,1.2rem);overflow:hidden;}
-    .ec-img{width:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;background:none;border:none;border-radius:0;}
-    .ec-img img{width:100%;height:auto;object-fit:contain;}
-    .ec-body{border-top:1px solid rgba(91,106,240,.1);padding:clamp(.16rem,.45vw,.28rem) clamp(.22rem,.55vw,.36rem);display:flex;flex-direction:column;gap:.1rem;}
-    .ec-chip{font-size:clamp(.3rem,.7vw,.4rem);font-weight:800;text-transform:uppercase;letter-spacing:.4px;padding:1px 4px;border-radius:3px;align-self:flex-start;}
-    .tnm{background:#dbeafe;color:#1d4ed8;}
-    .tsp{background:#fef3c7;color:#92400e;}
-    .trd{background:#dcfce7;color:#15803d;}
-    .tno{background:#fef3c7;color:#92400e;}
-    .trao{background:#fef3c7;color:#b45309;}
-    .ec-eff{font-size:clamp(.28rem,.68vw,.44rem);color:var(--txt);line-height:1.25;font-weight:600;}
-    .ec-info{font-size:clamp(.25rem,.6vw,.4rem);color:var(--mut);line-height:1.2;border-top:1px solid rgba(91,106,240,.08);padding-top:.1rem;margin-top:.07rem;}
-
-    /* ── Analyst card ── */
-    .an-front{
-      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(3px,1vw,6px);
-    }
-    .an-icon{font-size:clamp(1.1rem,3.5vw,1.9rem);line-height:1;}
-    .an-label{font-size:clamp(.28rem,.72vw,.42rem);text-transform:uppercase;letter-spacing:1px;color:var(--mut);font-weight:700;}
-
-    .card.dimmed{opacity:.32;pointer-events:none;}
-    .card.clickable{cursor:pointer;}
-    .card.clickable:hover{transform:translateY(-6px);}
-    .card.clickable.sel .card-front{border-color:var(--acc);}
-    .card.clickable.sel{box-shadow:0 0 0 3px rgba(91,106,240,.4),0 8px 20px rgba(91,106,240,.25);}
-
-    /* ════════════════════════════════════
-       GAME TABLE
-    ════════════════════════════════════ */
-    #screen-game{background:var(--bg);justify-content:stretch;padding:0;overflow:hidden;}
-
-    .table{
-      width:100%;
-      max-width:860px;
-      margin:0 auto;
-      height:100%;
-      display:flex;
-      flex-direction:column;
-      padding:clamp(.25rem,1vw,.5rem) clamp(.3rem,1.5vw,.6rem);
-      gap:clamp(.18rem,.6vw,.35rem);
-      overflow:hidden;
-    }
-
-    /* ── Analyst strip ── */
-    .astrip{
-      display:flex;
-      align-items:center;
-      gap:clamp(.1rem,.4vw,.22rem);
-    }
-    .pname-lbl{
-      writing-mode:vertical-rl;
-      font-size:clamp(.48rem,1.3vw,.68rem);
-      font-weight:800;
-      letter-spacing:.5px;
-      padding:.2rem .1rem;
-      white-space:nowrap;
-      flex-shrink:0;
-    }
-    .pname-lbl.c1{color:var(--acc);}
-    .pname-lbl.c2{color:var(--red);transform:rotate(180deg);}
-
-    .analysts{display:flex;gap:clamp(.08rem,.35vw,.2rem);align-items:center;}
-
-    /* personal draw deck */
-    .pdeck{
-      width:var(--cw);
-      height:var(--ch);
-      border-radius:var(--cr);
-      background:var(--acc) url('img/mazo.png') center/cover no-repeat;
-      border:none;
-      box-shadow:0 4px 14px rgba(91,106,240,.35);
-      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
-      cursor:pointer;
-      transition:transform .15s,box-shadow .15s;
-      position:relative;
-      overflow:hidden;
-      flex-shrink:0;
-      will-change:transform;
-      isolation:isolate;
-    }
-    .pdeck:hover{transform:translateY(-6px) rotate(-2deg);box-shadow:0 8px 20px rgba(91,106,240,.45);}
-    .pdeck-icon{font-size:clamp(.9rem,2.5vw,1.3rem);position:relative;z-index:1;}
-    .pdeck-cnt{font-size:clamp(.7rem,1.7vw,.95rem);color:#fff;font-weight:900;letter-spacing:1px;position:relative;z-index:1;text-shadow:0 1px 4px rgba(0,0,0,.5);}
-    .pdeck-lbl{font-size:clamp(.52rem,1.2vw,.7rem);text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,.9);font-weight:800;position:relative;z-index:1;text-shadow:0 1px 4px rgba(0,0,0,.5);}
-
-    /* ── ARENA ── */
-    .arena{
-      flex:1;
-      display:flex;
-      flex-direction:column;
-      gap:clamp(.18rem,.6vw,.35rem);
-      min-height:0;
-    }
-
-    .pzone{
-      flex:1;
-      background:linear-gradient(170deg,#f5f7ff 0%,#eef0ff 100%);
-      border:2px solid var(--brd);
-      border-radius:12px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      position:relative;
-      overflow:hidden;
-      padding:4px 0;
-      min-height:calc(var(--ch) + 1.2rem);
-      box-shadow:inset 0 2px 8px rgba(91,106,240,.07);
-    }
-    .pzone-lbl{
-      position:absolute;top:6px;left:50%;transform:translateX(-50%);
-      font-size:clamp(.36rem,.85vw,.48rem);letter-spacing:3px;color:var(--mut);text-transform:uppercase;white-space:nowrap;font-weight:700;
-    }
-    #pzone1{background:linear-gradient(170deg,#f0f5ff 0%,#e4ecff 100%);border-color:#b8c8f0;}
-    #pzone2{background:linear-gradient(170deg,#fff5f5 0%,#ffe4e4 100%);border-color:#f0b8b8;}
-    .pzone-lbl{display:none;}
-
-    /* zone-empty: centered absolutely so it doesn't affect layout of cards */
-    @keyframes pulse-hint{0%,100%{transform:translate(-50%,-50%) scale(1);}50%{transform:translate(-50%,-50%) scale(1.1);}}
-    @keyframes fb-pulse{0%,100%{box-shadow:0 0 14px 6px var(--fb-c);}50%{box-shadow:0 0 28px 14px var(--fb-c);}}
-    .zone-empty{
-      position:absolute;
-      top:50%;left:50%;
-      transform:translate(-50%,-50%);
-      font-size:clamp(.62rem,1.6vw,.8rem);
-      color:var(--mut);
-      text-align:center;
-      line-height:1.5;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      white-space:nowrap;
-      pointer-events:none;
-      text-transform:uppercase;
-      font-weight:900;
-      letter-spacing:.5px;
-    }
-    .pzone:last-child .zone-empty{animation:pulse-hint 2s ease-in-out infinite;}
-
-    /* ── Zoom overlay ── */
-    #ov-zoom{background:rgba(0,0,0,.82);z-index:200;}
-    #ov-zoom .zoom-card-wrap{
-      --cw: min(72vw, 54vh);
-      --ch: calc(var(--cw) * 12 / 7);
-      --cr: 14px;
-      width:var(--cw);
-      height:var(--ch);
-    }
-    #ov-zoom .card{pointer-events:none;width:var(--cw);height:var(--ch);}
-    #ov-zoom .ec-tl{font-size:clamp(1.1rem,2.8vw,1.8rem);}
-    #ov-zoom .ec-a,#ov-zoom .ec-d{font-size:clamp(1rem,2.6vw,1.6rem);padding:2px 6px;}
-    #ov-zoom .ec-img{width:100%;}
-    #ov-zoom .ec-body{padding:clamp(.5rem,1.4vw,.9rem) clamp(.6rem,1.6vw,1rem);gap:.35rem;}
-    #ov-zoom .ec-chip{font-size:clamp(.85rem,2.3vw,1.3rem);padding:3px 8px;}
-    #ov-zoom .ec-eff{font-size:clamp(.82rem,2.2vw,1.2rem);line-height:1.35;}
-    #ov-zoom .ec-info{font-size:clamp(.72rem,2vw,1.05rem);}
-
-    .card-stack{
-      display:flex;
-      gap:.3rem;
-      align-items:flex-end;
-      justify-content:center;
-      flex-wrap:wrap;
-      padding:.3rem .4rem .1rem;
-    }
-    .mol-badge{
-      width:100%;
-      text-align:center;
-      font-size:clamp(.6rem,1.6vw,.8rem);
-      font-weight:800;
-      color:var(--txt);
-      margin-top:.25rem;
-      padding:.1rem;
-    }
-    .pzone-cards{display:flex;gap:.4rem;align-items:center;justify-content:center;flex-wrap:wrap;width:100%;padding:0 .4rem;}
-    .zone-spells{display:flex;gap:.25rem;flex-wrap:wrap;align-items:flex-start;}
-
-    /* ── Center row ── */
-    .center-row{
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:clamp(.5rem,2vw,1.2rem);
-      padding:clamp(.1rem,.45vw,.22rem) 0;
-      flex-shrink:0;
-    }
-    .cpile{
-      width:var(--cw);
-      height:var(--ch);
-      border-radius:var(--cr);
-      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
-      flex-shrink:0;
-      position:relative;
-      overflow:hidden;
-    }
-    .cpile.disc{
-      background:linear-gradient(165deg,#f9fafb,#f3f4f6);
-      border:2px dashed var(--brd);
-    }
-    .cpile.draw{
-      background:var(--acc) url('img/mazo.png') center/cover no-repeat;
-      border:none;
-      box-shadow:0 4px 14px rgba(91,106,240,.35);
-      will-change:transform;
-      isolation:isolate;
-    }
-    .cpile-icon{font-size:clamp(.9rem,2.4vw,1.2rem);position:relative;z-index:1;}
-    .cpile-cnt{font-size:clamp(.68rem,1.6vw,.9rem);font-weight:900;letter-spacing:1px;z-index:1;color:var(--mut);position:relative;}
-    .cpile-lbl{font-size:clamp(.5rem,1.1vw,.65rem);text-transform:uppercase;letter-spacing:1.5px;color:var(--mut);font-weight:800;z-index:1;position:relative;}
-    .cpile.draw .cpile-cnt,.cpile.draw .cpile-lbl{color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.5);}
-    .cpile.disc .cpile-cnt,.cpile.disc .cpile-lbl{color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.5);}
-
-    /* ════════════════════════════════════
-       BUILD PANEL
-    ════════════════════════════════════ */
-    .build-panel{
-      position:fixed;bottom:0;left:0;right:0;
-      background:var(--panel);border-top:2px solid var(--brd);
-      border-radius:22px 22px 0 0;
-      padding:.7rem .9rem 1.3rem;
-      z-index:90;transform:translateY(100%);
-      transition:transform .35s cubic-bezier(.4,0,.2,1);
-      max-height:88vh;overflow-y:auto;
-      box-shadow:0 -6px 30px rgba(91,106,240,.15);
-      --cw: clamp(96px, 26vw, 140px);
-      --ch: calc(var(--cw) * 12 / 7);
-      --cr: clamp(10px, 2.5vw, 16px);
-    }
-    .build-panel.open{transform:translateY(0);}
-    .bp-react-row{display:flex;align-items:center;gap:.6rem;margin-bottom:.6rem;}
-    .mprev{font-size:.75rem;font-weight:800;color:var(--mut);}
-    .mprev.valid{color:var(--ok);}
-    .mprev.invalid{color:var(--red);}
-
-    /* hand navigation with arrows */
-    .hand-nav{display:flex;align-items:center;gap:.35rem;}
-    .hand-arrow{
-      background:var(--felt);
-      border:2px solid var(--brd);
-      border-radius:50%;
-      width:36px;height:36px;
-      font-size:1.1rem;
-      cursor:pointer;
-      display:flex;align-items:center;justify-content:center;
-      flex-shrink:0;
-      color:var(--txt);
-      transition:background .15s,border-color .15s;
-      align-self:center;
-    }
-    .hand-arrow:hover{background:var(--acc);border-color:var(--acc);color:#fff;}
-
-    .hand-row{display:flex;gap:.5rem;flex-wrap:wrap;padding-bottom:.3rem;flex:1;}
-    .no-mol-msg{font-size:.82rem;color:var(--red);font-weight:700;padding:.4rem .2rem;}
-
-    /* ════════════════════════════════════
-       MODALS
-    ════════════════════════════════════ */
-    .ov{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:100;}
-    .ov.open{display:flex;}
-    .modal{background:var(--panel);border:1px solid var(--brd);border-radius:22px;padding:1.8rem;max-width:500px;width:94%;text-align:center;box-shadow:0 20px 60px rgba(91,106,240,.2);}
-    .modal h2{font-size:1.3rem;margin-bottom:.4rem;}
-    .modal p{color:var(--mut);font-size:.83rem;margin-bottom:.9rem;line-height:1.55;}
-    .cbox{background:var(--felt);border-radius:12px;padding:.8rem;margin:.65rem 0;text-align:left;}
-    .crow{display:flex;justify-content:space-between;font-size:.8rem;padding:.24rem 0;border-bottom:1px solid var(--brd);}
-    .crow:last-child{border:none;font-weight:700;}
-    .crow .cv{color:var(--acc);font-weight:700;}
-    .crow .cv.bad{color:var(--red);}
-    .mbtns{display:flex;gap:.55rem;justify-content:center;flex-wrap:wrap;margin-top:.7rem;}
-    .spell-grid{display:flex;gap:.55rem;flex-wrap:wrap;justify-content:center;margin:.65rem 0;}
-    .sdesc{background:var(--felt);border-radius:10px;padding:.6rem;font-size:.73rem;color:var(--mut);min-height:40px;text-align:left;line-height:1.45;margin-bottom:.55rem;}
-
-    .mol-hint{background:linear-gradient(135deg,var(--ok),#16a34a);color:#fff;border-radius:50px;padding:.2rem .7rem;font-size:.66rem;font-weight:700;display:inline-block;margin:.2rem 0;}
-
-    /* ─── RESULT ─── */
-    #screen-result{justify-content:center;gap:.9rem;background:linear-gradient(160deg,#f0f4ff,#fce4ff 100%);}
-    .rtitle{font-size:clamp(1.9rem,6vw,2.8rem);font-weight:900;}
-    .rsub{color:var(--mut);font-size:.87rem;text-align:center;padding:0 1rem;}
-    .rstats{background:var(--panel);border:1px solid var(--brd);border-radius:16px;padding:1.2rem;width:min(320px,90vw);text-align:left;box-shadow:var(--shadow);}
-
-    @keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
-    @keyframes popIn{from{opacity:0;transform:scale(.85);}to{opacity:1;transform:scale(1);}}
-    .ai{animation:fadeIn .3s ease;}
-    .pi-anim{animation:popIn .4s cubic-bezier(.34,1.56,.64,1);}
-
-    .card.mol-valid .card-front{box-shadow:0 0 0 2.5px var(--ok),0 4px 14px rgba(34,197,94,.25);}
-  </style>
+  <script src="ai-player.js" defer></script>
+  <script src="game.js" defer></script>
 </head>
 <body>
 
+<div id="bg-fx"></div>
+<button id="btn-sound" onclick="toggleSound()" title="Sonido">🔊</button>
+
 <!-- ═══ INTRO ═══ -->
 <div id="screen-intro" class="screen active">
-  <div class="logo">BreakingLab</div>
-  <div class="logo-sub">El Duelo Molecular</div>
-  <div style="color:rgba(255,255,255,.7);font-size:.57rem;letter-spacing:1px;margin-top:-.4rem;position:relative;z-index:1">by Rafa Armero &amp; Tomás Aznar</div>
-  <div style="color:rgba(255,255,255,.35);font-size:.52rem;letter-spacing:2px;margin-top:-.2rem;position:relative;z-index:1">v0.3</div>
-  <div style="display:flex;flex-direction:column;gap:.55rem;margin-top:1.2rem;align-items:center;position:relative;z-index:1">
-    <button class="btn gold" onclick="showScreen('names')">Iniciar Partida</button>
-    <button class="btn sec" onclick="openRules()">Ver Reglas</button>
+  <div class="logo">Breaking<span>Lab</span></div>
+  <div class="logo-sub">⚗️ El Duelo Molecular</div>
+  <div class="intro-credits">by Rafa Armero &amp; Tomás Aznar</div>
+  <div class="intro-ver">v1.0</div>
+  <div class="intro-btns">
+    <button class="btn gold" onclick="showScreen('mode')">🎮 Jugar</button>
+    <button class="btn sec" onclick="openRules()">📖 Ver Reglas</button>
+    <button class="btn sec" id="btn-install" style="display:none" onclick="installApp()">📲 Instalar en tu móvil</button>
   </div>
+  <div id="ios-hint">En iPhone/iPad: pulsa <strong>Compartir</strong> y luego <strong>«Añadir a pantalla de inicio»</strong> para instalar el juego.</div>
 </div>
 
-<!-- ═══ NAMES ═══ -->
-<div id="screen-names" class="screen">
-  <div class="names-box ai" style="position:relative;z-index:1">
-    <button class="btn sec" onclick="showScreen('intro')" style="position:absolute;top:.6rem;right:.6rem;padding:.25rem .6rem;font-size:.85rem;line-height:1;border-radius:8px;min-width:unset">✕</button>
-    <h2 style="margin-bottom:1.2rem">Registro de Laboratorios</h2>
-    <div class="nf"><label class="c1">Laboratorio 1</label><input id="inp-p1" type="text" placeholder="Rafa Armero" maxlength="20"/></div>
-    <div class="nf"><label class="c2">Laboratorio 2</label><input id="inp-p2" type="text" placeholder="Tomás Aznar" maxlength="20"/></div>
-    <div id="names-error" style="color:var(--red);font-size:.75rem;min-height:1rem;margin-top:.3rem;text-align:center"></div>
+<!-- ═══ MODE SELECT ═══ -->
+<div id="screen-mode" class="screen">
+  <h2>Elige tu duelo</h2>
+  <div class="mode-grid">
+    <button class="mode-card" onclick="chooseMode(true)">
+      <span class="mc-ico">🤖</span>
+      <span>
+        <span class="mc-t">Contra la Máquina</span><br/>
+        <span class="mc-d">Enfréntate a un científico artificial. Tres niveles de dificultad.</span>
+      </span>
+    </button>
+    <button class="mode-card" onclick="chooseMode(false)">
+      <span class="mc-ico">👥</span>
+      <span>
+        <span class="mc-t">2 Jugadores</span><br/>
+        <span class="mc-d">Duelo local en el mismo dispositivo, pasando el móvil.</span>
+      </span>
+    </button>
+  </div>
+  <button class="btn sec sm" onclick="showScreen('intro')">← Volver</button>
+</div>
+
+<!-- ═══ SETUP ═══ -->
+<div id="screen-setup" class="screen">
+  <div class="setup-box ai">
+    <button class="close-x" onclick="showScreen('mode')">✕</button>
+    <h2 id="setup-title">Tu Laboratorio</h2>
+    <div class="nf"><label class="c1">Laboratorio 1</label><input id="inp-p1" type="text" placeholder="Tu nombre" maxlength="20"/></div>
+    <div class="nf" id="wrap-p2" style="display:none"><label class="c2">Laboratorio 2</label><input id="inp-p2" type="text" placeholder="Nombre del rival" maxlength="20"/></div>
+    <div id="diff-wrap">
+      <div class="nf"><label>Dificultad</label></div>
+      <div class="diff-row">
+        <button class="diff-chip" data-level="easy" onclick="setLevel('easy')"><span class="dc-e">🥼</span><span class="dc-l">Becario</span></button>
+        <button class="diff-chip sel" data-level="normal" onclick="setLevel('normal')"><span class="dc-e">🔬</span><span class="dc-l">Doctora</span></button>
+        <button class="diff-chip" data-level="hard" onclick="setLevel('hard')"><span class="dc-e">🧠</span><span class="dc-l">Nobel</span></button>
+      </div>
+      <div class="diff-desc" id="diff-desc">Juega sólido. Un reto justo.</div>
+    </div>
+    <div id="setup-error"></div>
     <div style="margin-top:.5rem">
       <button class="btn gold" style="width:100%" onclick="startGame()">¡A por el Nobel!</button>
     </div>
   </div>
 </div>
 
-<!-- ═══ PASS ═══ -->
+<!-- ═══ PASS (solo 2 jugadores) ═══ -->
 <div id="screen-pass" class="screen">
   <div class="pass-box ai">
     <h2 id="pass-h">Pasa el dispositivo</h2>
-    <button class="btn gold" onclick="resumePass()">Soy <span id="pass-name" style="color:#fff">Jugador</span></button>
+    <button class="btn gold" onclick="resumePass()">Soy <span id="pass-name">Jugador</span></button>
   </div>
 </div>
 
@@ -483,7 +126,7 @@
           <div class="cpile-lbl" style="position:relative;z-index:1">Robar</div>
         </div>
         <div class="cpile disc" title="Pila de descarte compartida" style="position:relative">
-          <img src="img/mazo.png" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;opacity:.45;display:none">
+          <img src="img/mazo.png" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;opacity:.45;display:none" alt=""/>
           <div class="cpile-cnt" id="disc-cnt" style="position:relative;z-index:1">0</div>
           <div class="cpile-lbl" style="position:relative;z-index:1">Descarte</div>
         </div>
@@ -493,7 +136,7 @@
       <div class="pzone" id="pzone1">
         <div class="pzone-lbl" id="pzlbl1">Tu zona</div>
         <div class="zone-empty" id="zempty1">pulsa tu mazo para reaccionar o roba 2 cartas</div>
-        <div id="spell-phase-hint" style="display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;font-size:clamp(.58rem,1.5vw,.75rem);font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:var(--gold);text-shadow:0 1px 6px rgba(245,158,11,.4);pointer-events:none;animation:pulse-hint 2s ease-in-out infinite;white-space:nowrap;z-index:5"></div>
+        <div id="spell-phase-hint" style="display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;font-size:clamp(.58rem,1.5vw,.75rem);font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:var(--gold);text-shadow:0 1px 6px rgba(251,191,36,.5);pointer-events:none;animation:pulse-hint 2s ease-in-out infinite;white-space:nowrap;z-index:5"></div>
         <div class="pzone-cards">
           <div class="card-stack" id="stack1" style="display:none"></div>
           <div class="zone-spells" id="zspells1"></div>
@@ -513,15 +156,23 @@
   <div class="rtitle" id="rtitle">🏆 Victoria</div>
   <div class="rsub"   id="rsub"></div>
   <div class="rstats" id="rstats"></div>
-  <button class="btn" style="margin-top:1rem" onclick="showScreen('names')">🔄 Jugar de nuevo</button>
+  <div class="mbtns" style="margin-top:1rem">
+    <button class="btn gold" onclick="rematch()">⚔️ Revancha</button>
+    <button class="btn sec" onclick="showScreen('intro')">🏠 Menú</button>
+  </div>
 </div>
+
+<!-- feedback flotante -->
+<div id="toast"></div>
+<div id="ai-banner"></div>
+<canvas id="confetti"></canvas>
 
 <!-- DRAW CONFIRM -->
 <div class="ov" id="ov-draw">
   <div class="modal ai" style="max-width:310px">
     <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.8rem">
       <button class="btn sec" onclick="document.getElementById('ov-draw').classList.remove('open')" style="padding:.25rem .6rem;font-size:.85rem;line-height:1;border-radius:8px;min-width:unset;flex-shrink:0">✕</button>
-      <h2 style="margin:0;font-size:1.1rem">Robar cartas</h2>
+      <h2 style="margin:0;font-size:1.05rem">Robar cartas</h2>
     </div>
     <p>¿Seguro que quieres robar 2 cartas del mazo central y pasar el turno?</p>
     <div class="mbtns">
@@ -532,15 +183,15 @@
 
 <!-- DEFENDER PASS BUTTON -->
 <div id="defender-pass-wrap" style="display:none;position:fixed;bottom:6rem;left:50%;transform:translateX(-50%);z-index:80">
-  <button class="btn sec" style="font-size:.75rem;padding:.35rem .9rem;opacity:.85" onclick="defenderPass()">Pasar turno</button>
+  <button class="btn sec" style="font-size:.75rem;padding:.35rem .9rem;opacity:.9" onclick="defenderPass()">Pasar turno</button>
 </div>
 
 <!-- BUILD PANEL -->
 <div class="build-panel" id="build-panel">
   <div class="bp-react-row">
     <button class="btn" id="btn-confirm" onclick="confirmBuild()" disabled style="opacity:.45">⚡ Reaccionar</button>
-    <div class="mprev" id="mprev" style="display:none"></div>
-    <div id="build-stats" style="display:none"></div>
+    <div class="mprev" id="mprev"></div>
+    <div id="build-stats" style="display:flex;gap:.5rem;align-items:center"></div>
     <button class="btn sec" style="padding:.4rem .7rem" onclick="cancelBuild()" title="Cancelar">✕</button>
   </div>
   <div id="no-mol-msg" class="no-mol-msg" style="display:none">⚠️ No puedes formar ninguna molécula con estas cartas.</div>
@@ -572,14 +223,11 @@
   <div class="hand-row" id="sp-hand"></div>
 </div>
 
-<!-- floating reopen button during spell phase -->
-
-<!-- ZOOM -->
 <!-- MOL CONFIRM -->
 <div class="ov" id="ov-mol-confirm">
   <div class="modal ai" style="max-width:320px;position:relative">
-    <button onclick="document.getElementById('ov-mol-confirm').classList.remove('open')" style="position:absolute;top:.6rem;right:.7rem;background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--mut);line-height:1">✕</button>
-    <div id="mc-formula" style="font-size:2rem;font-weight:900;margin-bottom:.2rem"></div>
+    <button class="close-x" onclick="document.getElementById('ov-mol-confirm').classList.remove('open')">✕</button>
+    <div id="mc-formula" style="font-family:'Orbitron',sans-serif;font-size:2rem;font-weight:900;margin-bottom:.2rem"></div>
     <div id="mc-name" style="color:var(--mut);margin-bottom:.9rem;font-size:.9rem"></div>
     <div style="display:flex;gap:1.5rem;justify-content:center;margin-bottom:1.1rem">
       <span id="mc-atk" style="color:var(--red);font-weight:900;font-size:1.3rem"></span>
@@ -591,6 +239,7 @@
   </div>
 </div>
 
+<!-- ZOOM -->
 <div class="ov" id="ov-zoom" onclick="closeZoom()">
   <div class="zoom-card-wrap" id="zoom-card-inner"></div>
 </div>
@@ -600,11 +249,12 @@
   <div class="modal ai" style="max-width:520px;text-align:left">
     <h2 style="text-align:center;margin-bottom:.9rem">📖 Reglas</h2>
     <div style="font-size:.8rem;line-height:1.8;color:var(--mut)">
-      <p><strong style="color:var(--txt)">Analistas</strong><br>Cada jugador tiene 5 cartas de analista. Son su única vida.</p><br>
+      <p><strong style="color:var(--txt)">Analistas</strong><br>Cada laboratorio tiene 5 cartas de analista. Son su única vida.</p><br>
       <p><strong style="color:var(--txt)">Moléculas válidas</strong><br>H₂O · H₂O₂ · O₂ · H₂ · H₃ · CO · CO₂ · N₂ · NOP · NO₂ · NH₃ · H₂S · SO₂ · S₂ · PH₃ · PO. Las cartas que no pueden combinarse se oscurecen automáticamente.</p><br>
-      <p><strong style="color:var(--txt)">Construcción</strong><br>Pulsa tu mazo para robar. Selecciona elementos — aparecen boca abajo en tu zona. Pulsa «Construir» para fijar.</p><br>
-      <p><strong style="color:var(--txt)">Combate</strong><br>ATK atacante − DEF defensor = daño. Cada 2 pts = 1 analista eliminado (mín 1). Uranio ignora la mitad de la DEF rival.</p><br>
-      <p><strong style="color:var(--txt)">Efectos</strong><br>Empieza el defensor. Plomo = escudo −4 daño. Helio = +3 ATK, bloquea efectos del rival.</p>
+      <p><strong style="color:var(--txt)">Construcción</strong><br>Pulsa tu mazo para robar. Selecciona elementos — aparecen boca abajo en tu zona. Pulsa «Reaccionar» para fijar tu molécula.</p><br>
+      <p><strong style="color:var(--txt)">Combate</strong><br>ATK atacante − DEF defensor = daño. Quien recibe daño pierde un analista. Uranio ignora la mitad de la DEF rival.</p><br>
+      <p><strong style="color:var(--txt)">Efectos</strong><br>Las cartas de efecto (Plomo y Helio) se juegan en la segunda ronda. Sus efectos están en desarrollo: de momento no alteran el combate.</p><br>
+      <p><strong style="color:var(--txt)">Contra la Máquina</strong><br>Juega contra un científico artificial con tres niveles: Becario 🥼, Doctora 🔬 y Nobel 🧠.</p>
     </div>
     <div style="text-align:center;margin-top:1.2rem">
       <button class="btn" onclick="document.getElementById('ov-rules').classList.remove('open')">¡Entendido!</button>
@@ -612,834 +262,5 @@
   </div>
 </div>
 
-<script>
-/* VALID_MOLECULES, ELEMENTS and SPELLS are loaded from game-data.js */
-
-function sortIds(arr){ return [...arr].sort(); }
-function matchMol(elems){
-  const ids = sortIds(elems.map(e=>e.id));
-  const key = ids.join(',');
-  return VALID_MOLECULES.find(m => sortIds(m.ids).join(',') === key) || null;
-}
-
-function usableIds(selectedIds, handIds){
-  if(selectedIds.includes('U')) return new Set();
-  const useful = new Set();
-  if(selectedIds.length === 0 && handIds && handIds.includes('U')) useful.add('U');
-  /* available hand minus already-selected */
-  const avail = handIds ? [...handIds] : [];
-  for(const id of selectedIds){ const i=avail.indexOf(id); if(i>-1) avail.splice(i,1); }
-  /* ordered prefix matching: selectedIds must be an exact prefix of mol.ids */
-  for(const mol of VALID_MOLECULES){
-    const molIds = mol.ids;
-    if(molIds.length <= selectedIds.length) continue;
-    let isPrefix = true;
-    for(let i=0;i<selectedIds.length;i++){
-      if(molIds[i] !== selectedIds[i]){ isPrefix=false; break; }
-    }
-    if(!isPrefix) continue;
-    const nextId = molIds[selectedIds.length];
-    if(avail.includes(nextId)) useful.add(nextId);
-  }
-  return useful;
-}
-
-function handUsableIds(hand){
-  const useful=new Set();
-  const handIds=hand.map(e=>e.id);
-  if(handIds.includes('U'))useful.add('U');
-  for(const mol of VALID_MOLECULES){
-    const needed=[...mol.ids],avail=[...handIds];
-    let ok=true;
-    for(const id of needed){const i=avail.indexOf(id);if(i===-1){ok=false;break;}avail.splice(i,1);}
-    if(ok)mol.ids.forEach(id=>useful.add(id));
-  }
-  return useful;
-}
-
-
-/* ════════════════════════════════
-   WEIGHTED RANDOM
-════════════════════════════════ */
-/* Use CARD_WEIGHTS from card-config.js; fall back gracefully if missing */
-function getWeight(id){
-  if(typeof CARD_WEIGHTS !== 'undefined' && CARD_WEIGHTS[id] != null) return CARD_WEIGHTS[id];
-  return 1;
-}
-function weightedRandom(pool){
-  const total = pool.reduce((s,c)=>s+getWeight(c.id),0);
-  let r = Math.random()*total;
-  for(const c of pool){ r-=getWeight(c.id); if(r<=0) return c; }
-  return pool[pool.length-1];
-}
-
-/* ════════════════════════════════
-   STATE
-════════════════════════════════ */
-const MAX_AN=5;
-let G={};
-
-function initState(n1,n2){
-  G={round:1,names:[n1||'J1',n2||'J2'],an:[MAX_AN,MAX_AN],
-     hands:[[],[]],spells:[[],[]],deckSize:[6,6],sharedDeck:32,discardSize:0,
-     build:[],selBuildSpell:null,mols:[null,null],molCards:[[],[]],
-     phase:'build_p1',spellsInArena:[[],[]],
-     attacker:0,spellTurn:0,spellPassed:[false,false],helioCast:[false,false],
-     dmg:[0,0],selSpell:null,acted:[false,false],passFor:0,
-     stats:{rounds:0,anLost:[0,0],spells:0}};
-  dealHand(0);dealHand(1);
-}
-
-function rand(a){return a[Math.floor(Math.random()*a.length)];}
-function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
-
-/* Deal 5 element cards + 1 spell = 6 total (with weights, duplicates allowed) */
-function dealHand(p){
-  G.hands[p]=[];
-  for(let i=0;i<5;i++) G.hands[p].push({...weightedRandom(ELEMENTS)});
-  G.spells[p]=[{...weightedRandom(SPELLS)}];
-  G.deckSize[p]=G.hands[p].length+G.spells[p].length;
-}
-
-function canFormAnyMol(hand){
-  const handIds = hand.map(e=>e.id);
-  if(handIds.includes('U')) return true;
-  for(const mol of VALID_MOLECULES){
-    const needed=[...mol.ids], avail=[...handIds];
-    let ok=true;
-    for(const id of needed){const i=avail.indexOf(id);if(i===-1){ok=false;break;}avail.splice(i,1);}
-    if(ok) return true;
-  }
-  return false;
-}
-
-function buildMol(elems){
-  const m = matchMol(elems);
-  const bA = elems.reduce((s,x)=>s+x.atk,0);
-  const bD = elems.reduce((s,x)=>s+x.def,0);
-  const hasU = elems.some(x=>x.id==='U');
-  if(m) return {name:m.name,formula:m.formula,atk:m.atk,def:m.def,combo:true,hasU,valid:true};
-  if(elems.length===1 && hasU) return {name:'Uranio',formula:'U',atk:bA,def:bD,combo:false,hasU,valid:true};
-  return {name:'Compuesto',formula:elems.map(x=>x.sym).join(''),atk:bA,def:bD,combo:false,hasU,valid:false};
-}
-
-/* ════════════════════════════════
-   CARD BUILDERS
-════════════════════════════════ */
-function imgH(src,alt){
-  return `<div class="ec-img"><img src="${src}" alt="${alt}" onerror="this.parentNode.innerHTML='<b style=&quot;font-size:1.3rem;color:var(--txt)&quot;>${alt}</b>'"/></div>`;
-}
-
-function makeElemCard(card,p,inBuild,dimmed){
-  const isSpell=card.type==='spell'||card.type==='noble';
-  const fc=isSpell?'cf-gold':'';
-  const cc=isSpell?'trao':'tnm';
-  const cl=isSpell?'Efecto':card.name;
-  const w=document.createElement('div');
-  w.className='card clickable'+(inBuild?' sel':'')+(dimmed?' dimmed':'');
-  w.innerHTML=`<div class="card-flip"><div class="card-inner">
-    <div class="card-face card-front ${fc}">
-      <div class="ec-tl">${card.num}</div>
-      <div class="ec-tr">${isSpell?'':`<span class="ec-a">🗡${card.atk}</span><span class="ec-d">🛡${card.def}</span>`}</div>
-      <div class="ec-sym">${imgH(card.img,card.sym)}</div>
-      <div class="ec-body">
-        <div class="ec-chip ${cc}">${cl}</div>
-        <div class="ec-eff">${card.eff}</div>
-        <div class="ec-info">${card.info}</div>
-      </div>
-    </div>
-    <div class="card-face card-back"></div>
-  </div></div>`;
-  if(!isSpell) w.onclick=()=>toggleSelect(card,p);
-  addLongPress(w,()=>showZoom(card));
-  return w;
-}
-
-function makeAnalystCard(p,idx,alive){
-  const w=document.createElement('div');
-  w.className='card';
-  const opacity=alive?'1':'.55';
-  const filter=alive?'none':'grayscale(.7) brightness(.75)';
-  w.innerHTML=`<div style="width:100%;height:100%;border-radius:var(--cr);overflow:hidden;opacity:${opacity};filter:${filter};transition:opacity .4s,filter .4s">
-    <img src="img/analista.png" style="width:100%;height:100%;object-fit:cover" onerror="this.parentNode.innerHTML='<div style=&quot;width:100%;height:100%;background:${alive?(p===0?'#c5cde8':'#fcc'):'#e5e7eb'};border-radius:var(--cr);display:flex;align-items:center;justify-content:center;font-size:1.4rem&quot;>${alive?'🧪':'💀'}</div>'">
-  </div>`;
-  return w;
-}
-
-function makePDeck(p){
-  const d=document.createElement('div');
-  d.className='pdeck';
-  d.title='Ver mazo';
-  d.onclick=()=>onDeckClick(p);
-  d.innerHTML=`<div class="pdeck-cnt" id="pcnt${p}">${G.hands[p].length}</div>
-    <div class="pdeck-lbl">Mazo</div>`;
-  return d;
-}
-
-/* ════════════════════════════════
-   RENDER
-════════════════════════════════ */
-function renderStrip(p){
-  const n=p+1;
-  const row=document.getElementById('astrip'+n);
-  row.innerHTML='';
-  const lbl=document.createElement('div');
-  lbl.className='pname-lbl c'+n;
-  lbl.textContent=G.names[p];
-  row.appendChild(lbl);
-  const anWrap=document.createElement('div');anWrap.className='analysts';
-  for(let i=0;i<MAX_AN;i++) anWrap.appendChild(makeAnalystCard(p,i,i<G.an[p]));
-  row.appendChild(anWrap);
-  row.appendChild(makePDeck(p));
-}
-
-function renderDecks(){
-  for(let p=0;p<2;p++){
-    G.deckSize[p]=G.hands[p].length+G.spells[p].length;
-    const el=document.getElementById('pcnt'+p);
-    if(el)el.textContent=G.deckSize[p];
-  }
-  document.getElementById('disc-cnt').textContent=G.discardSize;
-  document.getElementById('shared-cnt').textContent=G.sharedDeck;
-  const discImg=document.querySelector('.cpile.disc img');
-  if(discImg)discImg.style.display=G.discardSize>0?'':'none';
-}
-
-/* Render element cards in arena.
-   cards  = array of card objects (empty = show placeholder).
-   revealed = true after flipZone (show card fronts + mol badge). */
-function renderStack(p,cards,revealed){
-  revealed=!!revealed;
-  const n=p+1;
-  const empty=document.getElementById('zempty'+n);
-  const stack=document.getElementById('stack'+n);
-  if(!cards||!cards.length){
-    empty.style.display='';
-    stack.style.display='none';
-    stack.innerHTML='';
-    return;
-  }
-  empty.style.display='none';
-  stack.style.display='';
-  stack.innerHTML='';
-  stack.style.cssText='display:flex;gap:.3rem;align-items:flex-end;justify-content:center;flex-wrap:wrap;padding:.3rem .4rem .1rem;height:auto;';
-
-  cards.forEach((card,i)=>{
-    const w=makeElemCard(card,p,false,false);
-    w.onclick=null; /* clear toggleSelect from makeElemCard */
-    if(!revealed){
-      w.classList.remove('clickable');
-      const flip=w.querySelector('.card-flip');
-      if(flip)flip.classList.add('flipped');
-    } else {
-      w.classList.add('clickable');
-      w.onclick=()=>showZoom(card);
-    }
-    addMarco(w);
-    addLongPress(w,()=>showZoom(card));
-    stack.appendChild(w);
-  });
-
-  /* Molecule formula badge shown after reveal */
-  if(revealed && G.mols[p]){
-    const badge=document.createElement('div');
-    badge.className='mol-badge';
-    badge.textContent=`${G.mols[p].formula} 🗡${G.mols[p].atk} 🛡${G.mols[p].def}`;
-    stack.appendChild(badge);
-  }
-}
-
-function flipZone(p){
-  const cards=G.molCards[p];
-  if(!cards||!cards.length) return;
-  /* Render all face-down first, then flip one by one L→R */
-  renderStack(p,cards,false);
-  const stack=document.getElementById('stack'+(p+1));
-  if(!stack) return;
-  const flips=stack.querySelectorAll('.card-flip');
-  flips.forEach((flip,i)=>{
-    setTimeout(()=>flip.classList.remove('flipped'), i*480);
-  });
-  /* Enable click after all flips complete */
-  setTimeout(()=>{
-    stack.querySelectorAll('.card').forEach((w,i)=>{
-      w.classList.add('clickable');
-      w.onclick=()=>showZoom(cards[i]);
-    });
-  }, flips.length*480+300);
-}
-
-/* ── Hand pagination ── */
-let handPage=0;
-const HAND_PAGE=6;
-
-function scrollHand(dir){
-  handPage+=dir;
-  const p=G.phase==='build_p1'?0:1;
-  renderHand(p);
-}
-
-function renderHand(p){
-  const selectedIds=G.build.map(e=>e.id);
-  const handIds=G.hands[p].map(e=>e.id);
-  const useful=usableIds(selectedIds,handIds);
-  const handUseful=handUsableIds(G.hands[p]);
-  const canForm=canFormAnyMol(G.hands[p]);
-  const hasSpellSel=!!G.selBuildSpell;
-  const hasElemSel=G.build.length>0;
-
-  document.getElementById('no-mol-msg').style.display='none';
-
-  /* Build ordered list: elements first, then spells */
-  const allCards=[...G.hands[p],...G.spells[p]];
-  const needsPaging=allCards.length>HAND_PAGE;
-  const maxPage=Math.max(0,Math.ceil(allCards.length/HAND_PAGE)-1);
-  handPage=Math.min(Math.max(0,handPage),maxPage);
-  const start=handPage*HAND_PAGE;
-  const pageCards=needsPaging?allCards.slice(start,start+HAND_PAGE):allCards;
-
-  const prevBtn=document.getElementById('hand-prev');
-  const nextBtn=document.getElementById('hand-next');
-  if(prevBtn)prevBtn.style.visibility=(needsPaging&&handPage>0)?'visible':'hidden';
-  if(nextBtn)nextBtn.style.visibility=(needsPaging&&handPage<maxPage)?'visible':'hidden';
-
-  const hc=document.getElementById('hand-cards');hc.innerHTML='';
-
-  pageCards.forEach(card=>{
-    const isSpell=card.type==='spell'||card.type==='noble';
-    if(isSpell){
-      /* spells only selectable in spell phase — dimmed/disabled during build */
-      const el=makeElemCard(card,p,false,true);
-      addMarco(el);
-      hc.appendChild(el);
-    } else {
-      const inBuild=G.build.includes(card);
-      let dimmed;
-      if(hasSpellSel) dimmed=true;
-      else if(hasElemSel) dimmed=!inBuild&&!useful.has(card.id);
-      else dimmed=!handUseful.has(card.id);
-      const el=makeElemCard(card,p,inBuild,dimmed);
-      addMarco(el);
-      hc.appendChild(el);
-    }
-  });
-
-  /* Update Reaccionar button — based on full selection, not just visible page */
-  const confirmBtn=document.getElementById('btn-confirm');
-  const prev=document.getElementById('mprev');
-  const stats=document.getElementById('build-stats');
-  if(hasSpellSel){
-    confirmBtn.disabled=false;confirmBtn.style.opacity='1';
-    prev.className='mprev valid';
-    prev.textContent=`✨ ${G.selBuildSpell.name} → pasar turno`;
-    if(stats)stats.innerHTML='';
-  } else if(!hasElemSel){
-    confirmBtn.disabled=true;confirmBtn.style.opacity='.45';
-    prev.textContent='';prev.className='mprev';
-    if(stats)stats.innerHTML='';
-  } else {
-    const pv=buildMol(G.build);
-    /* Always show ATK/DEF stats next to X (🗡 green, 🛡 red) */
-    if(stats)stats.innerHTML=
-      `<span style="color:var(--ok);font-weight:900;font-size:.8rem">🗡${pv.atk}</span>`+
-      `<span style="color:var(--red);font-weight:900;font-size:.8rem">🛡${pv.def}</span>`;
-    if(pv.valid){
-      confirmBtn.disabled=false;confirmBtn.style.opacity='1';
-      prev.className='mprev valid';
-      prev.textContent=`✅ ${pv.formula}`;
-    } else {
-      confirmBtn.disabled=true;confirmBtn.style.opacity='.45';
-      prev.className='mprev';
-      prev.textContent=''; /* No "Combinación no válida" */
-    }
-  }
-}
-
-function toggleSelect(card,p){
-  G.selBuildSpell=null;
-  const idx=G.build.indexOf(card);
-  if(idx>-1) G.build.splice(idx); /* remove this card and all after it to keep prefix valid */
-  else G.build.push(card);
-  renderStack(p,G.build,false);
-  renderHand(p);
-}
-
-function toggleSelectSpell(card,p){
-  if(G.selBuildSpell===card)G.selBuildSpell=null;
-  else{G.selBuildSpell=card;G.build=[];renderStack(p,[],false);}
-  renderHand(p);
-}
-
-/* ════════════════════════════════
-   BUILD PANEL
-════════════════════════════════ */
-function openBuildPanel(p){
-  handPage=0;
-  renderHand(p);
-  document.getElementById('build-panel').classList.add('open');
-}
-function closeBuildPanel(){document.getElementById('build-panel').classList.remove('open');}
-
-function onDeckClick(p){
-  if(G.phase==='spells'&&p===G.spellTurn){
-    document.getElementById('spell-panel').classList.add('open');
-    return;
-  }
-  if(G.phase==='build_p1'&&p!==0)return;
-  if(G.phase==='build_p2'&&p!==1)return;
-  if(!G.phase.startsWith('build'))return;
-  openBuildPanel(p);
-}
-
-function onSharedDeckClick(){
-  const p=G.phase==='build_p1'?0:(G.phase==='build_p2'?1:-1);
-  if(p===-1)return;
-  G._drawP=p;
-  document.getElementById('ov-draw').classList.add('open');
-}
-
-function confirmDraw(){
-  document.getElementById('ov-draw').classList.remove('open');
-  const p=G._drawP;
-  const drawn=[{...weightedRandom(ELEMENTS)},{...weightedRandom(ELEMENTS)}];
-  G.hands[p]=[...G.hands[p],...drawn].slice(0,8);
-  G.sharedDeck=Math.max(0,G.sharedDeck-2);
-  G.mols[p]=null;
-  G.molCards[p]=[];
-  renderStack(p,[],false);
-  renderDecks();
-
-  G.acted[p]=true;
-  const other=1-p;
-  if(!G.acted[other]){
-    G.phase=other===0?'build_p1':'build_p2';
-    showPassScreen(other);
-  } else {
-    rotateTable(false);
-    if(G.mols[0]||G.mols[1]){ G.phase='reveal'; setTimeout(showReveal,400); }
-    else nextRound();
-  }
-}
-
-function cancelBuild(){
-  const p=G.phase==='build_p1'?0:1;
-  G.build=[];G.selBuildSpell=null;
-  renderStack(p,[],false);
-  closeBuildPanel();
-}
-
-/* ════════════════════════════════
-   TABLE SWAP
-════════════════════════════════ */
-function rotateTable(toP2){
-  const table=document.getElementById('game-table');
-  const arena=document.querySelector('.arena');
-  if(toP2){
-    table.insertBefore(document.getElementById('astrip1'),table.firstElementChild);
-    table.appendChild(document.getElementById('astrip2'));
-    arena.insertBefore(document.getElementById('pzone1'),arena.firstElementChild);
-    arena.appendChild(document.getElementById('pzone2'));
-  } else {
-    table.insertBefore(document.getElementById('astrip2'),table.firstElementChild);
-    table.appendChild(document.getElementById('astrip1'));
-    arena.insertBefore(document.getElementById('pzone2'),arena.firstElementChild);
-    arena.appendChild(document.getElementById('pzone1'));
-  }
-}
-
-/* ════════════════════════════════
-   GAME FLOW
-════════════════════════════════ */
-function showPassScreen(toP){
-  G.passFor=toP;
-  const color=toP===0?'var(--acc)':'var(--red)';
-  const nameEl=document.getElementById('pass-name');
-  nameEl.textContent=G.names[toP];
-  document.getElementById('pass-h').textContent='Pasa el dispositivo';
-  rotateTable(toP===1);
-  setTimeout(()=>showScreen('pass'),200);
-}
-
-function startGame(){
-  const n1=document.getElementById('inp-p1').value.trim();
-  const n2=document.getElementById('inp-p2').value.trim();
-  const err=document.getElementById('names-error');
-  if(!n1||!n2){err.textContent='Ambos laboratorios deben tener nombre.';return;}
-  if(n1.toLowerCase()===n2.toLowerCase()){err.textContent='Los nombres de los laboratorios no pueden ser iguales.';return;}
-  err.textContent='';
-  initState(n1,n2);
-  showScreen('game');
-  rotateTable(false);
-  renderStrip(0);renderStrip(1);renderDecks();
-  renderStack(0,[],false);renderStack(1,[],false);
-  G.phase='build_p1';
-  showPassScreen(0);
-}
-
-function confirmBuild(){
-  if(!G.phase.startsWith('build'))return;
-  const p=G.phase==='build_p1'?0:1;
-
-  if(G.selBuildSpell){
-    G.selBuildSpell=null;G.mols[p]=null;
-    closeBuildPanel();
-    /* Jump straight to spell phase — current player goes first */
-    G.phase='spells';G.helioCast=[false,false];G.spellPassed=[false,false];
-    G.spellsInArena=[[],[]];G.dmg=[0,0];G.attacker=p;G.spellTurn=p;
-    openSpellPanel(p);
-    return;
-  }
-
-  if(!G.build.length)return;
-  const mol=buildMol(G.build);
-  if(!mol.valid)return;
-
-  /* Show confirmation modal before committing */
-  G._pendingBuild={mol,p};
-  document.getElementById('mc-formula').textContent=mol.formula;
-  document.getElementById('mc-name').textContent=mol.name;
-  document.getElementById('mc-atk').textContent=`🗡 ${mol.atk}`;
-  document.getElementById('mc-def').textContent=`🛡 ${mol.def}`;
-  document.getElementById('ov-mol-confirm').classList.add('open');
-}
-
-function executeBuild(){
-  document.getElementById('ov-mol-confirm').classList.remove('open');
-  const {mol,p}=G._pendingBuild;
-  G.mols[p]=mol;
-  G.molCards[p]=[...G.build];
-  G.build.forEach(e=>{const i=G.hands[p].indexOf(e);if(i>-1)G.hands[p].splice(i,1);});
-  G.discardSize+=G.molCards[p].length;
-  G.build=[];
-  closeBuildPanel();
-  renderStack(p,G.molCards[p],false);
-  renderDecks();
-  _finishTurn(p);
-}
-
-function _finishTurn(p){
-  const w=document.getElementById('defender-pass-wrap');
-  if(w) w.style.display='none';
-  G.acted[p]=true;
-  const other=1-p;
-  if(!G.acted[other]){
-    G.phase=other===0?'build_p1':'build_p2';
-    showPassScreen(other);
-  } else {
-    rotateTable(false);
-    if(G.mols[0]||G.mols[1]){ G.phase='reveal'; setTimeout(showReveal,600); }
-    else nextRound();
-  }
-}
-
-function resumePass(){
-  showScreen('game');
-  updateDefenderPass();
-}
-
-function updateDefenderPass(){
-  const w=document.getElementById('defender-pass-wrap');
-  if(w) w.style.display=G.phase==='build_p2'?'':'none';
-}
-
-function defenderPass(){
-  document.getElementById('defender-pass-wrap').style.display='none';
-  G.build=[];G.selBuildSpell=null;
-  closeBuildPanel();
-  G.mols[1]=null;G.molCards[1]=[];
-  renderStack(1,[],false);
-  _finishTurn(1);
-}
-
-function showReveal(){
-  const m0=G.mols[0]||{formula:'(robó)',atk:0,def:0,name:'Robó cartas',combo:false,hasU:false,valid:false};
-  const m1=G.mols[1]||{formula:'(robó)',atk:0,def:0,name:'Robó cartas',combo:false,hasU:false,valid:false};
-  /* Calculate damage */
-  if(G.mols[0]&&G.mols[1]){
-    G.attacker=m0.atk>=m1.atk?0:1;
-    const def=1-G.attacker;
-    let atkV=G.mols[G.attacker].atk,defV=G.mols[def].def;
-    if(G.mols[G.attacker].hasU)defV=Math.floor(defV/2);
-    G.dmg[def]=Math.max(0,atkV-defV);
-    G.dmg[G.attacker]=Math.max(0,G.mols[def].atk-G.mols[G.attacker].def);
-  } else if(G.mols[0]){
-    G.attacker=0;G.dmg[1]=Math.max(0,G.mols[0].atk);G.dmg[0]=0;
-  } else if(G.mols[1]){
-    G.attacker=1;G.dmg[0]=Math.max(0,G.mols[1].atk);G.dmg[1]=0;
-  }
-  const def=1-G.attacker;
-  const atMol=G.mols[G.attacker]||m0, dfMol=G.mols[def]||m1;
-  const atColor=G.attacker===0?'var(--acc)':'var(--red)';
-  const dfColor=def===0?'var(--acc)':'var(--red)';
-  document.getElementById('rev-header').innerHTML=
-    `<span style="color:${atColor};font-weight:900">🗡${atMol.atk}</span>`+
-    `<span style="color:var(--mut);font-size:.9rem;margin:0 1.1rem">vs</span>`+
-    `<span style="color:${dfColor};font-weight:900">🛡${dfMol.def}</span>`;
-  /* Flip attacker first, then defender, 2s between, 2s before modal */
-  const at=G.attacker, df=1-G.attacker;
-  const flipAt = G.mols[at] ? ()=>flipZone(at) : null;
-  const flipDf = G.mols[df] ? ()=>flipZone(df) : null;
-  const waitAt = flipAt ? 2000 : 0;
-  const waitDf = flipDf ? 2000 : 0;
-  if(flipAt) flipAt();
-  setTimeout(()=>{
-    if(flipDf) flipDf();
-    setTimeout(()=>{
-      document.getElementById('ov-reveal').classList.add('open');
-    }, waitDf + 200);
-  }, waitAt);
-}
-
-function addMarco(el){
-  const m=document.createElement('img');
-  m.src='img/marco.png';
-  m.style.cssText='position:absolute;inset:-4px;width:calc(100% + 8px);height:calc(100% + 8px);object-fit:fill;pointer-events:none;z-index:30;';
-  m.onerror=()=>m.remove();
-  el.appendChild(m);
-}
-
-function renderZoneSpells(p){
-  const zs=document.getElementById('zspells'+(p+1));
-  if(!zs)return;
-  zs.innerHTML='';
-  (G.spellsInArena[p]||[]).forEach(sp=>{
-    const el=makeElemCard(sp,p,false,false);
-    el.classList.remove('clickable','dimmed');
-    addMarco(el);
-    addLongPress(el,()=>showZoom(sp));
-    zs.appendChild(el);
-  });
-}
-
-function startSpellPhase(){
-  document.getElementById('ov-reveal').classList.remove('open');
-  G.phase='spells';
-  G.helioCast=[false,false];
-  G.spellPassed=[false,false];
-  G.spellsInArena=[[],[]];
-  const atMol=G.mols[G.attacker],dfMol=G.mols[1-G.attacker];
-  /* attacker starts if their ATK <= defender DEF (tie → attacker); else defender starts */
-  G.spellTurn=(atMol&&dfMol&&atMol.atk<=dfMol.def)?G.attacker:(1-G.attacker);
-  openSpellPanel(G.spellTurn);
-}
-
-function openSpellPanel(p){
-  const hint=document.getElementById('spell-phase-hint');
-  if(hint){hint.style.display='';hint.textContent='⚡ Ronda de Efectos — '+G.names[p];}
-  if(p===1) rotateTable(true); else rotateTable(false);
-  G.selSpell=null;
-  const castBtn=document.getElementById('btn-cast-panel');
-  castBtn.disabled=true;castBtn.style.opacity='.45';
-  const _nameColor=p===0?'var(--acc)':'var(--red)';
-  document.getElementById('sp-panel-title').innerHTML=
-    `<span style="color:${_nameColor};font-weight:800;font-size:.9rem">${G.names[p]}</span>`;
-  const hand=document.getElementById('sp-hand');hand.innerHTML='';
-  const rival=1-p;
-  const avail=G.spells[p].filter(sp=>!(G.helioCast[rival]&&sp.id==='He'));
-  if(!avail.length){
-    hand.innerHTML='<div class="no-mol-msg">Sin efectos disponibles.</div>';
-  } else {
-    avail.forEach(sp=>{
-      const el=makeElemCard(sp,p,false,false);
-      el.onclick=()=>{
-        G.selSpell=sp.id;
-        hand.querySelectorAll('.card').forEach(c=>c.classList.remove('sel'));
-        el.classList.add('sel');
-        castBtn.disabled=false;castBtn.style.opacity='1';
-      };
-      addMarco(el);
-      hand.appendChild(el);
-    });
-  }
-  document.getElementById('spell-panel').classList.add('open');
-}
-
-function closeSpellPanelOnly(){
-  document.getElementById('spell-panel').classList.remove('open');
-}
-
-function castSpell(){
-  const id=G.selSpell;if(!id)return;
-  const p=G.spellTurn,sp=G.spells[p].find(s=>s.id===id);if(!sp)return;
-  G.spells[p]=G.spells[p].filter(s=>s.id!==id);
-  G.discardSize++;G.stats.spells++;
-  const rival=1-p;
-  if(sp.id==='Pb')G.dmg[p]=Math.max(0,G.dmg[p]-4);
-  else if(sp.id==='He'){G.dmg[rival]+=3;G.helioCast[p]=true;}
-  G.spellPassed[p]=false;
-  G.spellsInArena[p].push(sp);
-  renderZoneSpells(p);
-  renderDecks();
-  document.getElementById('spell-panel').classList.remove('open');
-  G.spellTurn=rival;
-  if(G.spellPassed[rival]||!G.spells[rival].length||G.helioCast[p]){
-    setTimeout(resolveCombat,600);
-  } else {
-    setTimeout(()=>openSpellPanel(rival),500);
-  }
-}
-
-function passSpell(){
-  document.getElementById('spell-panel').classList.remove('open');
-  resolveCombat();
-}
-
-function animateFireball(winnerP, loserP, cb){
-  const targetIdx = G.an[loserP] - 1; /* last alive analyst = the one being eliminated */
-  const strip = document.getElementById('astrip'+(loserP+1));
-  const cards = strip ? strip.querySelectorAll('.card') : [];
-  const targetCard = cards[targetIdx];
-
-  /* Source: center of winner's pzone */
-  const srcZone = document.getElementById('pzone'+(winnerP+1));
-  if(!srcZone||!targetCard){ cb&&cb(); return; }
-  const sr = srcZone.getBoundingClientRect();
-  const tr = targetCard.getBoundingClientRect();
-  const sx = sr.left+sr.width/2, sy = sr.top+sr.height/2;
-  const tx = tr.left+tr.width/2, ty = tr.top+tr.height/2;
-
-  const color = winnerP===0 ? 'rgba(91,106,240,.8)' : 'rgba(239,68,68,.8)';
-  const glow  = winnerP===0 ? '#8af' : '#f87';
-
-  const fb = document.createElement('div');
-  const sz = 28;
-  fb.style.cssText = `position:fixed;width:${sz}px;height:${sz}px;border-radius:50%;
-    background:radial-gradient(circle,#fff 0%,${glow} 55%,transparent 100%);
-    --fb-c:${color};animation:fb-pulse .35s ease-in-out infinite;
-    pointer-events:none;z-index:600;
-    left:${sx-sz/2}px;top:${sy-sz/2}px;`;
-  document.body.appendChild(fb);
-
-  const dur = 3000; /* 3 seconds travel */
-  fb.getBoundingClientRect(); /* force reflow so transition fires */
-  fb.style.transition = `left ${dur}ms ease-in, top ${dur}ms ease-in, transform ${dur}ms ease-in`;
-  fb.style.left = (tx-sz/2)+'px';
-  fb.style.top  = (ty-sz/2)+'px';
-  fb.style.transform = 'scale(2)';
-
-  setTimeout(()=>{
-    fb.remove();
-    /* Flash: fade card to dead-analyst style, matching renderStrip dead state */
-    targetCard.style.transition = 'opacity .25s, filter .25s';
-    targetCard.style.opacity = '.55';
-    targetCard.style.filter = 'grayscale(.7) brightness(.75)';
-    setTimeout(()=>{ cb&&cb(); }, 2000);
-  }, dur+50);
-}
-
-function resolveCombat(){
-  document.getElementById('spell-panel').classList.remove('open');
-
-  /* Queue fireballs for each player that takes damage */
-  const losers = [0,1].filter(p=>G.dmg[p]>0);
-  function applyAndContinue(){
-    for(let p=0;p<2;p++){if(G.dmg[p]>0){G.an[p]=Math.max(0,G.an[p]-1);G.stats.anLost[p]+=1;}}
-    G.stats.rounds++;
-    renderStrip(0);renderStrip(1);
-    if(G.an[0]<=0||G.an[1]<=0){endGame();return;}
-    nextRound();
-  }
-  if(!losers.length){ applyAndContinue(); return; }
-  let i=0;
-  function next(){
-    if(i>=losers.length){ applyAndContinue(); return; }
-    const lp=losers[i++];
-    animateFireball(1-lp, lp, next);
-  }
-  next();
-}
-
-function nextRound(){
-  const hint=document.getElementById('spell-phase-hint');if(hint)hint.style.display='none';
-  G.round++;G.mols=[null,null];G.molCards=[[],[]];G.dmg=[0,0];G.spellsInArena=[[],[]];
-  G.acted=[false,false];
-  document.getElementById('zspells1').innerHTML='';
-  document.getElementById('zspells2').innerHTML='';
-  for(let p=0;p<2;p++){
-    for(let i=0;i<3;i++) G.hands[p].push({...weightedRandom(ELEMENTS)});
-    if(G.hands[p].length>8) G.hands[p]=G.hands[p].slice(G.hands[p].length-8);
-    if(!G.spells[p].length) G.spells[p]=[{...weightedRandom(SPELLS)}];
-    G.deckSize[p]=G.hands[p].length+G.spells[p].length;
-  }
-  renderDecks();
-  renderStack(0,[],false);renderStack(1,[],false);
-  const firstP=1-G.attacker; /* defender goes first next round */
-  G.phase=firstP===0?'build_p1':'build_p2';
-  showPassScreen(firstP);
-}
-
-function endGame(){
-  const w=G.an[0]>0?0:(G.an[1]>0?1:-1);
-  if(w===-1){document.getElementById('rtitle').textContent='🤝 ¡Empate!';document.getElementById('rsub').textContent='Ambos equipos de analistas han caído.';}
-  else{document.getElementById('rtitle').textContent=`🏆 ¡${G.names[w]} gana!`;document.getElementById('rsub').textContent=`Los analistas de ${G.names[1-w]} han sido eliminados del laboratorio.`;}
-  document.getElementById('rstats').innerHTML=`
-    <div class="crow"><span>Rondas</span><span class="cv">${G.stats.rounds}</span></div>
-    <div class="crow"><span>Analistas perdidos ${G.names[0]}</span><span class="cv bad">${G.stats.anLost[0]}</span></div>
-    <div class="crow"><span>Analistas perdidos ${G.names[1]}</span><span class="cv bad">${G.stats.anLost[1]}</span></div>
-    <div class="crow"><span>Efectos</span><span class="cv">${G.stats.spells}</span></div>
-    <div class="crow"><span>Analistas restantes ${G.names[0]}</span><span class="cv ${G.an[0]>0?'':'bad'}">${G.an[0]}</span></div>
-    <div class="crow"><span>Analistas restantes ${G.names[1]}</span><span class="cv ${G.an[1]>0?'':'bad'}">${G.an[1]}</span></div>`;
-  showScreen('result');
-}
-
-/* ════════════════════════════════
-   LONG PRESS + ZOOM
-════════════════════════════════ */
-let _zoomJustOpened=false;
-
-function addLongPress(el,fn){
-  let timer=null;
-  let fired=false;
-
-  function startTimer(){
-    if(timer)clearTimeout(timer);
-    fired=false;
-    timer=setTimeout(()=>{fired=true;timer=null;fn();},1000);
-  }
-  function cancelTimer(){
-    if(timer){clearTimeout(timer);timer=null;}
-  }
-
-  /* Touch (mobile): use preventDefault on touchend to block the synthetic click */
-  el.addEventListener('touchstart',startTimer,{passive:true});
-  el.addEventListener('touchend',(e)=>{
-    cancelTimer();
-    if(fired){
-      e.preventDefault(); /* stops the synthetic click that would close the zoom */
-      fired=false;
-    }
-  });
-  el.addEventListener('touchmove',cancelTimer,{passive:true});
-  el.addEventListener('touchcancel',cancelTimer);
-  el.addEventListener('contextmenu',(e)=>{e.preventDefault();});
-
-  /* Mouse (desktop) */
-  el.addEventListener('mousedown',startTimer);
-  el.addEventListener('mouseup',cancelTimer);
-  el.addEventListener('mouseleave',cancelTimer);
-}
-
-function showZoom(card){
-  const wrap=document.getElementById('zoom-card-inner');
-  wrap.innerHTML='';
-  const el=makeElemCard(card,0,false,false);
-  el.classList.remove('clickable');
-  el.onclick=null;
-  addMarco(el);
-  wrap.appendChild(el);
-  _zoomJustOpened=true;
-  document.getElementById('ov-zoom').classList.add('open');
-  /* Safety window for desktop (mouse): block accidental immediate close */
-  setTimeout(()=>{_zoomJustOpened=false;},600);
-}
-
-function closeZoom(){
-  if(_zoomJustOpened)return;
-  document.getElementById('ov-zoom').classList.remove('open');
-}
-
-function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById('screen-'+id).classList.add('active');}
-function openRules(){document.getElementById('ov-rules').classList.add('open');}
-</script>
 </body>
 </html>
