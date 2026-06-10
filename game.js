@@ -701,7 +701,7 @@ function aiSpellTurn(){
     const id=AI.chooseSpell(G);
     if(id){
       const sp=G.spells[1].find(s=>s.id===id);
-      showAIBanner(`${G.aiAvatar} ${G.names[1]} usa ${sp?sp.name:id} ${id==='Pb'?'🛡':'🎈'}`,1700);
+      showAIBanner(`${G.aiAvatar} ${G.names[1]} usa ${sp?sp.name:id} ✨`,1700);
       doCastSpell(1,id);
     } else {
       showAIBanner(`${G.aiAvatar} ${G.names[1]} pasa`,1400);
@@ -829,20 +829,21 @@ function closeSpellPanelOnly(){
   document.getElementById('spell-panel').classList.remove('open');
 }
 
+/* ⚠️ Los efectos de los hechizos están pendientes de diseño: jugar la
+   carta la muestra en la arena y la descarta, pero NO altera el daño
+   ni el combate. Cuando se definan los efectos, implementarlos aquí. */
 function doCastSpell(p,id){
   const sp=G.spells[p].find(s=>s.id===id);if(!sp)return;
   G.spells[p]=G.spells[p].filter(s=>s.id!==id);
   G.discardSize++;G.stats.spells++;
   const rival=1-p;
-  if(sp.id==='Pb')G.dmg[p]=Math.max(0,G.dmg[p]-4);
-  else if(sp.id==='He'){G.dmg[rival]+=3;G.helioCast[p]=true;}
   G.spellPassed[p]=false;
   G.spellsInArena[p].push(sp);
   sfx.spell();
   renderZoneSpells(p);
   renderDecks();
   document.getElementById('spell-panel').classList.remove('open');
-  if(G.spellPassed[rival]||!G.spells[rival].length||G.helioCast[p]){
+  if(G.spellPassed[rival]||!G.spells[rival].length){
     setTimeout(resolveCombat,700);
   } else {
     setTimeout(()=>spellTurnStart(rival),600);

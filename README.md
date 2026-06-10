@@ -9,7 +9,7 @@ Juego de cartas por turnos donde cada carta es un elemento químico. Construye m
 - **🤖 Contra la Máquina** — juega contra un científico artificial con 3 niveles:
   - 🥼 **Becario** — juega relajado y comete errores. Ideal para aprender.
   - 🔬 **Doctora** — juega sólido, siempre la mejor molécula.
-  - 🧠 **Nobel** — optimiza ataque, economía de cartas y uso de efectos.
+  - 🧠 **Nobel** — optimiza ataque y economía de cartas.
 - **👥 2 Jugadores** — duelo local pasando el dispositivo.
 
 ## 📲 Instalar en el móvil
@@ -28,7 +28,7 @@ Para probar en local: `python3 -m http.server` y abre `http://localhost:8000`.
 - Cada laboratorio tiene **5 analistas**: son su vida.
 - En tu turno: construye una **molécula válida** (H₂O, CO₂, NH₃…) con los elementos de tu mano, o roba 2 cartas del mazo central.
 - **Combate:** ATK del atacante − DEF del defensor = daño. Quien recibe daño pierde un analista. El **Uranio** ☢ ignora la mitad de la DEF rival.
-- **Ronda de efectos:** **Plomo** 🛡 reduce 4 el daño recibido; **Helio** 🎈 suma +3 de daño al rival y bloquea sus efectos.
+- **Ronda de efectos:** las cartas de hechizo (**Plomo** y **Helio**) se pueden jugar, pero sus efectos están pendientes de diseño — de momento no alteran el combate.
 
 ## 🗂 Estructura
 

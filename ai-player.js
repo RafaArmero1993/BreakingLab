@@ -70,24 +70,10 @@ const AI = {
   },
 
   /* Decisión en la ronda de efectos. Devuelve el id del hechizo o null (pasar).
-     Pb → reduce 4 el daño que recibe quien lo lanza.
-     He → +3 daño al rival y cierra la ronda de efectos. */
+     ⚠️ Los efectos de los hechizos están pendientes de diseño: de momento
+     las cartas no hacen nada, así que la IA siempre pasa. Cuando se
+     definan los efectos, implementar aquí la heurística por nivel. */
   chooseSpell(G){
-    const lvl  = G.aiLevel || 'normal';
-    const hand = G.spells[1];
-    if(!hand.length) return null;
-    const has = id => hand.some(s => s.id === id);
-    const incoming = G.dmg[1]; /* daño que va a recibir la IA */
-    const outgoing = G.dmg[0]; /* daño que va a recibir el jugador */
-
-    if(lvl === 'easy'){
-      return Math.random() < .5 ? hand[Math.floor(Math.random()*hand.length)].id : null;
-    }
-
-    if(incoming > 0 && has('Pb')) return 'Pb';
-    if(outgoing > 0 && has('He') && !G.helioCast[0]) return 'He';
-    /* El Nobel usa Helio también para asegurar daño y bloquear el Plomo rival */
-    if(lvl === 'hard' && has('He') && !G.helioCast[0]) return 'He';
     return null;
   },
 };
