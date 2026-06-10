@@ -37,7 +37,7 @@
   <div class="logo">Breaking<span>Lab</span></div>
   <div class="logo-sub">⚗️ El Duelo Molecular</div>
   <div class="intro-credits">by Rafa Armero &amp; Tomás Aznar</div>
-  <div class="intro-ver">v1.0</div>
+  <div class="intro-ver">v1.1</div>
   <div class="intro-btns">
     <button class="btn gold" onclick="showScreen('mode')">🎮 Jugar</button>
     <button class="btn sec" onclick="openRules()">📖 Ver Reglas</button>
@@ -121,7 +121,7 @@
 
       <!-- Center: shared draw deck + shared discard -->
       <div class="center-row">
-        <div class="cpile draw" title="Robar 2 cartas" style="cursor:pointer" onclick="onSharedDeckClick()">
+        <div class="cpile draw" title="Robar 2 cartas" style="cursor:pointer" onclick="actionDraw()">
           <div class="cpile-cnt" id="shared-cnt" style="position:relative;z-index:1">32</div>
           <div class="cpile-lbl" style="position:relative;z-index:1">Robar</div>
         </div>
@@ -135,8 +135,7 @@
       <!-- P1 zone (bottom) -->
       <div class="pzone" id="pzone1">
         <div class="pzone-lbl" id="pzlbl1">Tu zona</div>
-        <div class="zone-empty" id="zempty1">pulsa tu mazo para reaccionar o roba 2 cartas</div>
-        <div id="spell-phase-hint" style="display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;font-size:clamp(.58rem,1.5vw,.75rem);font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:var(--gold);text-shadow:0 1px 6px rgba(251,191,36,.5);pointer-events:none;animation:pulse-hint 2s ease-in-out infinite;white-space:nowrap;z-index:5"></div>
+        <div class="zone-empty" id="zempty1">⚔️ tu turno — elige una acción</div>
         <div class="pzone-cards">
           <div class="card-stack" id="stack1" style="display:none"></div>
           <div class="zone-spells" id="zspells1"></div>
@@ -145,11 +144,22 @@
 
     </div><!-- .arena -->
 
+    <!-- Action bar -->
+    <div class="action-bar" id="action-bar">
+      <button class="abtn" id="ab-battle" onclick="actionBattle()">⚔️ Batallar</button>
+      <button class="abtn" id="ab-spell" onclick="actionSpell()">✨ Hechizo</button>
+      <button class="abtn" id="ab-draw" onclick="actionDraw()">🃏 Robar 2</button>
+      <button class="abtn icon" id="btn-sound-game" onclick="toggleSound()" title="Sonido">🔊</button>
+    </div>
+
     <!-- P1 analyst strip -->
     <div class="astrip" id="astrip1"></div>
 
   </div>
 </div>
+
+<!-- flash de impacto -->
+<div id="flash"></div>
 
 <!-- ═══ RESULT ═══ -->
 <div id="screen-result" class="screen">
@@ -167,29 +177,10 @@
 <div id="ai-banner"></div>
 <canvas id="confetti"></canvas>
 
-<!-- DRAW CONFIRM -->
-<div class="ov" id="ov-draw">
-  <div class="modal ai" style="max-width:310px">
-    <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.8rem">
-      <button class="btn sec" onclick="document.getElementById('ov-draw').classList.remove('open')" style="padding:.25rem .6rem;font-size:.85rem;line-height:1;border-radius:8px;min-width:unset;flex-shrink:0">✕</button>
-      <h2 style="margin:0;font-size:1.05rem">Robar cartas</h2>
-    </div>
-    <p>¿Seguro que quieres robar 2 cartas del mazo central y pasar el turno?</p>
-    <div class="mbtns">
-      <button class="btn gold" onclick="confirmDraw()">Robar</button>
-    </div>
-  </div>
-</div>
-
-<!-- DEFENDER PASS BUTTON -->
-<div id="defender-pass-wrap" style="display:none;position:fixed;bottom:6rem;left:50%;transform:translateX(-50%);z-index:80">
-  <button class="btn sec" style="font-size:.75rem;padding:.35rem .9rem;opacity:.9" onclick="defenderPass()">Pasar turno</button>
-</div>
-
 <!-- BUILD PANEL -->
 <div class="build-panel" id="build-panel">
   <div class="bp-react-row">
-    <button class="btn" id="btn-confirm" onclick="confirmBuild()" disabled style="opacity:.45">⚡ Reaccionar</button>
+    <button class="btn" id="btn-confirm" onclick="confirmBuild()" disabled style="opacity:.45">⚔️ ¡Atacar!</button>
     <div class="mprev" id="mprev"></div>
     <div id="build-stats" style="display:flex;gap:.5rem;align-items:center"></div>
     <button class="btn sec" style="padding:.4rem .7rem" onclick="cancelBuild()" title="Cancelar">✕</button>
@@ -202,22 +193,11 @@
   </div>
 </div>
 
-<!-- REVEAL MODAL -->
-<div class="ov" id="ov-reveal">
-  <div class="modal ai">
-    <div id="rev-header" style="margin-bottom:1.2rem;font-size:1.5rem"></div>
-    <div class="mbtns">
-      <button class="btn gold" onclick="startSpellPhase()">Segunda ronda →</button>
-    </div>
-  </div>
-</div>
-
 <!-- SPELL PANEL -->
 <div class="build-panel" id="spell-panel">
   <div class="bp-react-row">
     <span id="sp-panel-title" style="font-weight:700;font-size:.82rem"></span>
-    <button class="btn gold" id="btn-cast-panel" disabled style="opacity:.45;margin-left:auto" onclick="castSpell()">¡Reaccionar!</button>
-    <button class="btn sec" onclick="passSpell()">Pasar</button>
+    <button class="btn gold" id="btn-cast-panel" disabled style="opacity:.45;margin-left:auto" onclick="castSpell()">✨ Jugar</button>
     <button class="btn sec" style="padding:.4rem .7rem" onclick="closeSpellPanelOnly()">✕</button>
   </div>
   <div class="hand-row" id="sp-hand"></div>
@@ -251,9 +231,9 @@
     <div style="font-size:.8rem;line-height:1.8;color:var(--mut)">
       <p><strong style="color:var(--txt)">Analistas</strong><br>Cada laboratorio tiene 5 cartas de analista. Son su única vida.</p><br>
       <p><strong style="color:var(--txt)">Moléculas válidas</strong><br>H₂O · H₂O₂ · O₂ · H₂ · H₃ · CO · CO₂ · N₂ · NOP · NO₂ · NH₃ · H₂S · SO₂ · S₂ · PH₃ · PO. Las cartas que no pueden combinarse se oscurecen automáticamente.</p><br>
-      <p><strong style="color:var(--txt)">Construcción</strong><br>Pulsa tu mazo para robar. Selecciona elementos — aparecen boca abajo en tu zona. Pulsa «Reaccionar» para fijar tu molécula.</p><br>
-      <p><strong style="color:var(--txt)">Combate</strong><br>ATK atacante − DEF defensor = daño. Quien recibe daño pierde un analista. Uranio ignora la mitad de la DEF rival.</p><br>
-      <p><strong style="color:var(--txt)">Efectos</strong><br>Las cartas de efecto (Plomo y Helio) se juegan en la segunda ronda. Sus efectos están en desarrollo: de momento no alteran el combate.</p><br>
+      <p><strong style="color:var(--txt)">Turnos</strong><br>El primer turno es tuyo y luego se alterna. En tu turno eliges UNA acción: ⚔️ <strong style="color:var(--txt)">Batallar</strong>, ✨ <strong style="color:var(--txt)">Hechizo</strong> o 🃏 <strong style="color:var(--txt)">Robar 2 cartas</strong>. Al empezar cada turno robas además 1 carta automática.</p><br>
+      <p><strong style="color:var(--txt)">Batalla</strong><br>Construyes una molécula y ataca al instante: ATK − DEF de la molécula rival. Si haces daño, su molécula se destruye y pierde 1 analista; si no, el ataque queda 🛡 bloqueado. Sin molécula rival el golpe es 💥 directo. Tu molécula se queda en tu zona defendiéndote. Uranio ☢ ignora la mitad de la DEF rival.</p><br>
+      <p><strong style="color:var(--txt)">Efectos</strong><br>Las cartas de efecto (Plomo y Helio) se juegan con la acción ✨ Hechizo. Sus efectos están en desarrollo: de momento no alteran el combate.</p><br>
       <p><strong style="color:var(--txt)">Contra la Máquina</strong><br>Juega contra un científico artificial con tres niveles: Becario 🥼, Doctora 🔬 y Nobel 🧠.</p>
     </div>
     <div style="text-align:center;margin-top:1.2rem">

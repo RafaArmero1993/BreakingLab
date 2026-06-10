@@ -3,7 +3,7 @@
    Precachea la app completa para que funcione 100% offline una
    vez instalada. Sube CACHE_VERSION al publicar cambios.
 ════════════════════════════════════════════════════════════════ */
-const CACHE_VERSION = 'breakinglab-v1.0.1';
+const CACHE_VERSION = 'breakinglab-v1.1.0';
 
 const PRECACHE = [
   './',
