@@ -41,39 +41,53 @@ const AI = {
     return res;
   },
 
-  /* Decisión de turno de construcción.
-     Devuelve {action:'draw'} o {action:'build', cards:[...]}. */
-  chooseBuild(G){
-    const hand = G.hands[1];
-    const lvl  = G.aiLevel || 'normal';
-    const opts = this.findBuilds(hand);
+  /* Decisión del turno. Devuelve:
+       {action:'battle', cards:[...]}  construir molécula y atacar
+       {action:'spell',  id:'Pb'}      jugar un hechizo (sin efecto aún)
+       {action:'draw'}                 robar 2 cartas
+     Reglas de combate que evalúa: dmg = ATK − DEF rival (U ignora
+     media DEF); dmg > 0 destruye la molécula rival y elimina 1
+     analista; sin molécula rival el golpe es directo. */
+  chooseAction(G){
+    const hand   = G.hands[1];
+    const lvl    = G.aiLevel || 'normal';
+    const opts   = this.findBuilds(hand);
+    const target = G.mols[0]; /* molécula defensiva del jugador */
 
-    if(!opts.length) return {action:'draw'};
+    const breaks = o => {
+      if(!target) return o.atk > 0; /* golpe directo */
+      const defV = o.hasU ? Math.floor(target.def/2) : target.def;
+      return o.atk - defV > 0;
+    };
+    const killers = opts.filter(breaks);
 
     if(lvl === 'easy'){
-      /* A veces roba aunque pueda construir, y elige una jugada al azar */
-      if(Math.random() < .35 && hand.length < 8) return {action:'draw'};
-      return {action:'build', cards: opts[Math.floor(Math.random()*opts.length)].cards};
+      /* ⚠️ Hechizos sin efecto: el Becario juega uno de vez en cuando
+         solo por diversión. Quitar cuando los efectos se definan. */
+      if(G.spells[1].length && Math.random() < .15)
+        return {action:'spell', id: G.spells[1][Math.floor(Math.random()*G.spells[1].length)].id};
+      if(!opts.length || Math.random() < .3) return {action:'draw'};
+      const o = opts[Math.floor(Math.random()*opts.length)];
+      return {action:'battle', cards:o.cards};
     }
 
-    const wAtk = lvl === 'hard' ? 1.8 : 1.5;
-    const score = o => o.atk*wAtk + o.def + (o.hasU ? 1.5 : 0)
-                     - (lvl === 'hard' ? o.n*0.35 : 0); /* economía de cartas */
-    opts.sort((a,b) => score(b) - score(a));
-    const best = opts[0];
+    if(killers.length){
+      /* Nobel: el rompedor más barato en cartas (desempate: más ATK).
+         Doctora: simplemente el de más ATK. */
+      killers.sort(lvl === 'hard'
+        ? (a,b)=>(a.n-b.n)||(b.atk-a.atk)
+        : (a,b)=>b.atk-a.atk);
+      return {action:'battle', cards:killers[0].cards};
+    }
 
-    /* El Nobel prefiere pescar mejores cartas antes que lanzar una molécula floja */
-    if(lvl === 'hard' && best.atk <= 3 && hand.length <= 5 && G.sharedDeck > 0)
-      return {action:'draw'};
-
-    return {action:'build', cards: best.cards};
-  },
-
-  /* Decisión en la ronda de efectos. Devuelve el id del hechizo o null (pasar).
-     ⚠️ Los efectos de los hechizos están pendientes de diseño: de momento
-     las cartas no hacen nada, así que la IA siempre pasa. Cuando se
-     definan los efectos, implementar aquí la heurística por nivel. */
-  chooseSpell(G){
-    return null;
+    /* No puede romper la defensa rival. Si está expuesta (sin molécula
+       propia) o tiene la mano llena, levanta un muro defensivo: el
+       ataque rebotará pero la molécula queda protegiendo su zona.
+       Si no, roba para pescar mejores cartas. */
+    if(opts.length && (!G.mols[1] || hand.length >= 7)){
+      opts.sort((a,b)=>(b.def-a.def)||(b.atk-a.atk));
+      return {action:'battle', cards:opts[0].cards};
+    }
+    return {action:'draw'};
   },
 };

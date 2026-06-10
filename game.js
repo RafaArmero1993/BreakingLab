@@ -3,6 +3,18 @@
    VALID_MOLECULES, ELEMENTS, SPELLS  → game-data.js
    CARD_WEIGHTS                       → card-config.js
    AI, AI_LEVELS                      → ai-player.js
+
+   SISTEMA DE TURNOS (v1.1)
+   ────────────────────────
+   Turnos alternos, empieza el jugador. En tu turno eliges UNA acción:
+     ⚔️ Batallar — construyes una molécula y ataca inmediatamente.
+     ✨ Hechizo  — juegas una carta de efecto (efectos por definir).
+     🃏 Robar    — robas 2 cartas del mazo central.
+   Tu molécula queda en tu zona como defensa. Al atacar:
+     dmg = ATK atacante − DEF de la molécula rival (U ignora media DEF).
+     dmg > 0  → la molécula rival se destruye y pierde 1 analista.
+     dmg ≤ 0  → ataque bloqueado.
+     Sin molécula rival → golpe directo: pierde 1 analista.
 ════════════════════════════════════════════════════════════════ */
 
 /* ════════════════════════════════
@@ -44,6 +56,7 @@ const sfx = (() => {
     spell(){ tone(980,.25,'sine',.1,0,1960); tone(490,.2,'triangle',.07,.05); },
     fire(){ tone(180,.5,'sawtooth',.09,0,60); },
     hit(){ tone(110,.3,'sawtooth',.16,0,40); tone(70,.35,'square',.1,.03,30); },
+    block(){ tone(340,.18,'square',.1,0,220); tone(170,.22,'triangle',.08,.06); },
     win(){ [523,659,784,1047].forEach((f,i)=>tone(f,.22,'triangle',.13,i*.13)); },
     lose(){ [392,330,262,196].forEach((f,i)=>tone(f,.3,'triangle',.12,i*.16)); },
   };
@@ -133,23 +146,22 @@ function weightedRandom(pool){
    STATE
 ════════════════════════════════ */
 const MAX_AN=5;
+const HAND_MAX=8;
 let G={};
 let _mode={vsAI:true, level:'normal'};
 
 function initState(n1,n2){
-  G={round:1,names:[n1||'J1',n2||'J2'],an:[MAX_AN,MAX_AN],
+  G={names:[n1||'J1',n2||'J2'],an:[MAX_AN,MAX_AN],
      hands:[[],[]],spells:[[],[]],deckSize:[6,6],sharedDeck:32,discardSize:0,
-     build:[],selBuildSpell:null,mols:[null,null],molCards:[[],[]],
-     phase:'build_p1',spellsInArena:[[],[]],
-     attacker:0,spellTurn:0,spellPassed:[false,false],helioCast:[false,false],
-     dmg:[0,0],selSpell:null,acted:[false,false],passFor:0,
+     build:[],mols:[null,null],molCards:[[],[]],
+     spellsInArena:[[],[]],selSpell:null,
+     turn:0,turnCount:0,busy:false,phase:'turn_p1',
      vsAI:false,aiLevel:'normal',aiAvatar:'🤖',
-     stats:{rounds:0,anLost:[0,0],spells:0}};
+     stats:{turns:0,anLost:[0,0],spells:0}};
   dealHand(0);dealHand(1);
 }
 
 function rand(a){return a[Math.floor(Math.random()*a.length)];}
-function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
 
 /* 5 elementos + 1 hechizo = 6 cartas (con pesos, duplicados permitidos) */
 function dealHand(p){
@@ -157,6 +169,19 @@ function dealHand(p){
   for(let i=0;i<5;i++) G.hands[p].push({...weightedRandom(ELEMENTS)});
   G.spells[p]=[{...weightedRandom(SPELLS)}];
   G.deckSize[p]=G.hands[p].length+G.spells[p].length;
+}
+
+/* Roba n cartas del mazo central. Si se agota, se rebaraja el descarte. */
+function sharedDeckTake(p,n){
+  for(let i=0;i<n;i++){
+    if(G.hands[p].length>=HAND_MAX) break;
+    if(G.sharedDeck<=0){
+      G.sharedDeck=Math.max(12,G.discardSize);
+      G.discardSize=0;
+    }
+    G.sharedDeck--;
+    G.hands[p].push({...weightedRandom(ELEMENTS)});
+  }
 }
 
 /* ════════════════════════════════
@@ -256,21 +281,36 @@ function renderDecks(){
   if(discImg)discImg.style.display=G.discardSize>0?'':'none';
 }
 
+/* El placeholder de zona solo se ve si no hay NI molécula NI hechizos */
+function updateZoneEmpty(p){
+  const empty=document.getElementById('zempty'+(p+1));
+  if(!empty)return;
+  const occupied=(G.molCards[p]&&G.molCards[p].length)||(G.spellsInArena[p]&&G.spellsInArena[p].length);
+  empty.style.display=occupied?'none':'';
+}
+
+function setZoneHints(){
+  const z1=document.getElementById('zempty1');
+  const z2=document.getElementById('zempty2');
+  const t=G.turn;
+  if(z1)z1.textContent=t===0?'⚔️ tu turno — elige una acción':'esperando…';
+  if(z2)z2.textContent=t===1?(G.vsAI?'🤖 turno del rival':'⚔️ turno de '+G.names[1]):'esperando…';
+  updateZoneEmpty(0);updateZoneEmpty(1);
+}
+
 /* Cartas-elemento en la arena.
    cards    = array de cartas (vacío = placeholder).
-   revealed = true tras flipZone (caras visibles + badge de molécula). */
+   revealed = true → caras visibles + badge de molécula. */
 function renderStack(p,cards,revealed){
   revealed=!!revealed;
   const n=p+1;
-  const empty=document.getElementById('zempty'+n);
   const stack=document.getElementById('stack'+n);
   if(!cards||!cards.length){
-    empty.style.display='';
     stack.style.display='none';
     stack.innerHTML='';
+    updateZoneEmpty(p);
     return;
   }
-  empty.style.display='none';
   stack.style.display='';
   stack.innerHTML='';
   stack.style.cssText='display:flex;gap:.3rem;align-items:flex-end;justify-content:center;flex-wrap:wrap;padding:.3rem .4rem .1rem;height:auto;';
@@ -297,24 +337,38 @@ function renderStack(p,cards,revealed){
     badge.textContent=`${G.mols[p].formula} 🗡${G.mols[p].atk} 🛡${G.mols[p].def}`;
     stack.appendChild(badge);
   }
+  updateZoneEmpty(p);
 }
 
-function flipZone(p){
+/* Voltea las cartas de la zona una a una y llama a cb al terminar */
+function flipZone(p,cb){
   const cards=G.molCards[p];
-  if(!cards||!cards.length) return;
+  if(!cards||!cards.length){cb&&cb();return;}
   renderStack(p,cards,false);
   const stack=document.getElementById('stack'+(p+1));
-  if(!stack) return;
+  if(!stack){cb&&cb();return;}
   const flips=stack.querySelectorAll('.card-flip');
   flips.forEach((flip,i)=>{
-    setTimeout(()=>{flip.classList.remove('flipped');sfx.flip();}, i*480);
+    setTimeout(()=>{flip.classList.remove('flipped');sfx.flip();}, i*420);
   });
   setTimeout(()=>{
-    stack.querySelectorAll('.card').forEach((w,i)=>{
-      w.classList.add('clickable');
-      w.onclick=()=>showZoom(cards[i]);
-    });
-  }, flips.length*480+300);
+    renderStack(p,cards,true);
+    cb&&cb();
+  }, flips.length*420+450);
+}
+
+function renderZoneSpells(p){
+  const zs=document.getElementById('zspells'+(p+1));
+  if(!zs)return;
+  zs.innerHTML='';
+  (G.spellsInArena[p]||[]).forEach(sp=>{
+    const el=makeElemCard(sp,p,false,false);
+    el.classList.remove('clickable','dimmed');
+    addMarco(el);
+    addLongPress(el,()=>showZoom(sp));
+    zs.appendChild(el);
+  });
+  updateZoneEmpty(p);
 }
 
 /* ── Paginación de la mano ── */
@@ -323,8 +377,7 @@ const HAND_PAGE=6;
 
 function scrollHand(dir){
   handPage+=dir;
-  const p=G.phase==='build_p1'?0:1;
-  renderHand(p);
+  renderHand(G.turn);
 }
 
 function renderHand(p){
@@ -332,10 +385,10 @@ function renderHand(p){
   const handIds=G.hands[p].map(e=>e.id);
   const useful=usableIds(selectedIds,handIds);
   const handUseful=handUsableIds(G.hands[p]);
-  const hasSpellSel=!!G.selBuildSpell;
   const hasElemSel=G.build.length>0;
+  const canForm=canFormAnyMol(G.hands[p]);
 
-  document.getElementById('no-mol-msg').style.display='none';
+  document.getElementById('no-mol-msg').style.display=canForm?'none':'';
 
   const allCards=[...G.hands[p],...G.spells[p]];
   const needsPaging=allCards.length>HAND_PAGE;
@@ -354,15 +407,14 @@ function renderHand(p){
   pageCards.forEach(card=>{
     const isSpell=card.type==='spell'||card.type==='noble';
     if(isSpell){
-      /* hechizos solo en ronda de efectos — atenuados durante construcción */
+      /* hechizos se juegan con la acción ✨ Hechizo — atenuados aquí */
       const el=makeElemCard(card,p,false,true);
       addMarco(el);
       hc.appendChild(el);
     } else {
       const inBuild=G.build.includes(card);
       let dimmed;
-      if(hasSpellSel) dimmed=true;
-      else if(hasElemSel) dimmed=!inBuild&&!useful.has(card.id);
+      if(hasElemSel) dimmed=!inBuild&&!useful.has(card.id);
       else dimmed=!handUseful.has(card.id);
       const el=makeElemCard(card,p,inBuild,dimmed);
       addMarco(el);
@@ -373,12 +425,7 @@ function renderHand(p){
   const confirmBtn=document.getElementById('btn-confirm');
   const prev=document.getElementById('mprev');
   const stats=document.getElementById('build-stats');
-  if(hasSpellSel){
-    confirmBtn.disabled=false;confirmBtn.style.opacity='1';
-    prev.className='mprev valid';
-    prev.textContent=`✨ ${G.selBuildSpell.name} → pasar turno`;
-    if(stats)stats.innerHTML='';
-  } else if(!hasElemSel){
+  if(!hasElemSel){
     confirmBtn.disabled=true;confirmBtn.style.opacity='.45';
     prev.textContent='';prev.className='mprev';
     if(stats)stats.innerHTML='';
@@ -400,68 +447,331 @@ function renderHand(p){
 }
 
 function toggleSelect(card,p){
-  G.selBuildSpell=null;
   const idx=G.build.indexOf(card);
   if(idx>-1) G.build.splice(idx); /* quita esta carta y las posteriores (prefijo válido) */
   else G.build.push(card);
   sfx.select();
-  renderStack(p,G.build,false);
   renderHand(p);
 }
 
 /* ════════════════════════════════
-   BUILD PANEL
+   ACCIONES DEL TURNO
 ════════════════════════════════ */
-function openBuildPanel(p){
+function isHumanTurn(){
+  if(G.busy)return false;
+  if(G.vsAI&&G.turn===1)return false;
+  return true;
+}
+
+function updateActionBar(){
+  const enabled=isHumanTurn()&&!G.busy;
+  const b1=document.getElementById('ab-battle');
+  const b2=document.getElementById('ab-spell');
+  const b3=document.getElementById('ab-draw');
+  if(!b1)return;
+  b1.disabled=!enabled;
+  b2.disabled=!enabled||!G.spells[G.turn]||!G.spells[G.turn].length;
+  b3.disabled=!enabled;
+  setZoneHints();
+}
+
+function actionBattle(){
+  if(!isHumanTurn())return;
+  G.build=[];
   handPage=0;
-  renderHand(p);
+  renderHand(G.turn);
   document.getElementById('build-panel').classList.add('open');
 }
-function closeBuildPanel(){document.getElementById('build-panel').classList.remove('open');}
+
+function actionSpell(){
+  if(!isHumanTurn())return;
+  const p=G.turn;
+  if(!G.spells[p].length){toast('No tienes cartas de efecto');return;}
+  openSpellPanel(p);
+}
+
+function actionDraw(){
+  if(!isHumanTurn())return;
+  const p=G.turn;
+  G.busy=true;
+  sharedDeckTake(p,2);
+  sfx.draw();
+  renderDecks();
+  toast('🃏 Robas 2 cartas');
+  setTimeout(()=>{endTurn();},700);
+}
 
 function onDeckClick(p){
   if(G.vsAI&&p===1)return;
-  if(G.phase==='spells'&&p===G.spellTurn){
-    document.getElementById('spell-panel').classList.add('open');
-    return;
-  }
-  if(G.phase==='build_p1'&&p!==0)return;
-  if(G.phase==='build_p2'&&p!==1)return;
-  if(!G.phase.startsWith('build'))return;
-  openBuildPanel(p);
-}
-
-function onSharedDeckClick(){
-  const p=G.phase==='build_p1'?0:(G.phase==='build_p2'?1:-1);
-  if(p===-1)return;
-  if(G.vsAI&&p===1)return;
-  G._drawP=p;
-  document.getElementById('ov-draw').classList.add('open');
-}
-
-function applyDraw(p){
-  const drawn=[{...weightedRandom(ELEMENTS)},{...weightedRandom(ELEMENTS)}];
-  G.hands[p]=[...G.hands[p],...drawn].slice(0,8);
-  G.sharedDeck=Math.max(0,G.sharedDeck-2);
-  G.mols[p]=null;
-  G.molCards[p]=[];
-  renderStack(p,[],false);
-  renderDecks();
-}
-
-function confirmDraw(){
-  document.getElementById('ov-draw').classList.remove('open');
-  const p=G._drawP;
-  applyDraw(p);
-  sfx.draw();
-  _finishTurn(p);
+  if(p!==G.turn||!isHumanTurn())return;
+  actionBattle();
 }
 
 function cancelBuild(){
-  const p=G.phase==='build_p1'?0:1;
-  G.build=[];G.selBuildSpell=null;
-  renderStack(p,[],false);
-  closeBuildPanel();
+  G.build=[];
+  document.getElementById('build-panel').classList.remove('open');
+}
+
+/* ── Batallar ── */
+function confirmBuild(){
+  if(!isHumanTurn())return;
+  if(!G.build.length)return;
+  const mol=buildMol(G.build);
+  if(!mol.valid)return;
+  G._pendingBuild={mol,p:G.turn};
+  document.getElementById('mc-formula').textContent=mol.formula;
+  document.getElementById('mc-name').textContent=mol.name;
+  document.getElementById('mc-atk').textContent=`🗡 ${mol.atk}`;
+  document.getElementById('mc-def').textContent=`🛡 ${mol.def}`;
+  document.getElementById('ov-mol-confirm').classList.add('open');
+}
+
+function executeBuild(){
+  document.getElementById('ov-mol-confirm').classList.remove('open');
+  const {mol,p}=G._pendingBuild;
+  placeMolecule(p,mol,[...G.build]);
+  G.build=[];
+  document.getElementById('build-panel').classList.remove('open');
+  sfx.build();
+  G.busy=true;
+  updateActionBar();
+  /* voltea las cartas y lanza la batalla */
+  flipZone(p,()=>setTimeout(()=>battle(p),350));
+}
+
+/* Coloca una molécula en la zona de p (la anterior va al descarte) */
+function placeMolecule(p,mol,cards){
+  if(G.molCards[p].length) G.discardSize+=G.molCards[p].length;
+  G.mols[p]=mol;
+  G.molCards[p]=cards;
+  cards.forEach(c=>{const i=G.hands[p].indexOf(c);if(i>-1)G.hands[p].splice(i,1);});
+  renderStack(p,cards,false);
+  renderDecks();
+}
+
+/* ── Hechizo ── */
+function openSpellPanel(p){
+  G.selSpell=null;
+  const castBtn=document.getElementById('btn-cast-panel');
+  castBtn.disabled=true;castBtn.style.opacity='.45';
+  const _nameColor=p===0?'var(--acc)':'var(--red)';
+  document.getElementById('sp-panel-title').innerHTML=
+    `<span style="color:${_nameColor};font-weight:800;font-size:.9rem">✨ ${G.names[p]}</span>`;
+  const hand=document.getElementById('sp-hand');hand.innerHTML='';
+  G.spells[p].forEach(sp=>{
+    const el=makeElemCard(sp,p,false,false);
+    el.onclick=()=>{
+      G.selSpell=sp.id;
+      sfx.select();
+      hand.querySelectorAll('.card').forEach(c=>c.classList.remove('sel'));
+      el.classList.add('sel');
+      castBtn.disabled=false;castBtn.style.opacity='1';
+    };
+    addMarco(el);
+    hand.appendChild(el);
+  });
+  document.getElementById('spell-panel').classList.add('open');
+}
+
+function closeSpellPanelOnly(){
+  document.getElementById('spell-panel').classList.remove('open');
+}
+
+/* ⚠️ Los efectos de los hechizos están pendientes de diseño: jugar la
+   carta la muestra en la arena y la descarta, pero NO altera el combate.
+   Cuando se definan los efectos, implementarlos aquí. */
+function doCastSpell(p,id){
+  const sp=G.spells[p].find(s=>s.id===id);if(!sp)return false;
+  G.spells[p]=G.spells[p].filter(s=>s.id!==id);
+  G.discardSize++;G.stats.spells++;
+  G.spellsInArena[p].push(sp);
+  sfx.spell();
+  renderZoneSpells(p);
+  renderDecks();
+  return true;
+}
+
+function castSpell(){
+  if(!G.selSpell)return;
+  const p=G.turn;
+  document.getElementById('spell-panel').classList.remove('open');
+  if(!doCastSpell(p,G.selSpell))return;
+  G.selSpell=null;
+  G.busy=true;
+  updateActionBar();
+  setTimeout(()=>endTurn(),800);
+}
+
+/* ════════════════════════════════
+   BATALLA
+════════════════════════════════ */
+function battle(p){
+  const e=1-p;
+  const mol=G.mols[p];
+  if(!mol){endTurn();return;}
+  if(G.mols[e]){
+    const defV=mol.hasU?Math.floor(G.mols[e].def/2):G.mols[e].def;
+    const dmg=mol.atk-defV;
+    if(dmg>0){
+      animateBattle(p,e,'break',()=>{
+        destroyStack(e,()=>{
+          loseAnalyst(e);
+          afterBattle();
+        });
+      });
+    } else {
+      animateBattle(p,e,'blocked',()=>afterBattle());
+    }
+  } else {
+    animateBattle(p,e,'direct',()=>{
+      loseAnalyst(e);
+      afterBattle();
+    });
+  }
+}
+
+function loseAnalyst(p){
+  G.an[p]=Math.max(0,G.an[p]-1);
+  G.stats.anLost[p]++;
+  renderStrip(p);
+}
+
+function afterBattle(){
+  if(G.an[0]<=0||G.an[1]<=0){setTimeout(endGame,900);return;}
+  setTimeout(()=>endTurn(),500);
+}
+
+function endTurn(){
+  G.busy=false;
+  G.stats.turns++;
+  beginTurn(1-G.turn);
+}
+
+/* ── VFX de batalla: las cartas luchan ── */
+function _analystTarget(p){
+  const strip=document.getElementById('astrip'+(p+1));
+  if(!strip)return null;
+  const cards=strip.querySelectorAll('.analysts .card');
+  return cards[Math.max(0,G.an[p]-1)]||cards[cards.length-1]||null;
+}
+
+function screenFlash(){
+  const f=document.getElementById('flash');
+  if(!f)return;
+  f.style.opacity='.55';
+  setTimeout(()=>{f.style.opacity='0';},120);
+}
+
+function shakeTable(){
+  const table=document.getElementById('game-table');
+  if(!table)return;
+  table.classList.remove('shake');void table.offsetWidth;table.classList.add('shake');
+}
+
+function spawnSparks(x,y,color){
+  for(let i=0;i<18;i++){
+    const s=document.createElement('div');
+    s.className='spark';
+    const sz=4+Math.random()*7;
+    s.style.cssText=`width:${sz}px;height:${sz}px;left:${x-sz/2}px;top:${y-sz/2}px;
+      background:radial-gradient(circle,#fff 0%,${color} 60%,transparent 100%);
+      box-shadow:0 0 8px ${color};`;
+    document.body.appendChild(s);
+    const ang=Math.random()*Math.PI*2;
+    const dist=40+Math.random()*110;
+    s.getBoundingClientRect();
+    s.style.transition=`transform ${.45+Math.random()*.35}s ease-out, opacity .6s ease-out`;
+    s.style.transform=`translate(${Math.cos(ang)*dist}px,${Math.sin(ang)*dist}px) scale(.2)`;
+    s.style.opacity='0';
+    setTimeout(()=>s.remove(),900);
+  }
+}
+
+function shieldRing(x,y){
+  const r=document.createElement('div');
+  r.className='shield-ring';
+  r.style.left=x+'px';r.style.top=y+'px';
+  document.body.appendChild(r);
+  setTimeout(()=>r.remove(),700);
+}
+
+function dmgPop(x,y,txt,color){
+  const d=document.createElement('div');
+  d.className='dmg-pop';
+  d.textContent=txt;
+  d.style.left=x+'px';d.style.top=y+'px';
+  d.style.color=color;
+  d.style.textShadow=`0 0 18px ${color}`;
+  document.body.appendChild(d);
+  setTimeout(()=>d.remove(),1400);
+}
+
+/* La pila atacante embiste contra el objetivo, impacto con chispas,
+   flash, temblor y popup de daño. kind: 'break'|'blocked'|'direct'. */
+function animateBattle(atkP,defP,kind,done){
+  const atkStack=document.getElementById('stack'+(atkP+1));
+  const target=kind==='direct'?_analystTarget(defP):document.getElementById('stack'+(defP+1));
+  if(!atkStack||!target){finishImpact();return;}
+
+  const a=atkStack.getBoundingClientRect();
+  const t=target.getBoundingClientRect();
+  const dx=(t.left+t.width/2)-(a.left+a.width/2);
+  const dy=(t.top+t.height/2)-(a.top+a.height/2);
+  const ix=t.left+t.width/2, iy=t.top+t.height/2;
+  const color=atkP===0?'#22d3ee':'#fb7185';
+
+  sfx.fire();
+  atkStack.style.position='relative';
+  atkStack.style.zIndex='540';
+  atkStack.style.transition='transform .55s cubic-bezier(.5,-.25,.75,1)';
+  atkStack.style.transform=`translate(${dx*.9}px,${dy*.9}px) scale(1.08) rotate(${atkP===0?-5:5}deg)`;
+
+  setTimeout(()=>{
+    /* impacto */
+    screenFlash();
+    shakeTable();
+    spawnSparks(ix,iy,color);
+    if(kind==='blocked'){
+      sfx.block();
+      shieldRing(ix,iy);
+      dmgPop(ix,iy-30,'🛡 ¡BLOQUEADO!','#7dd3fc');
+    } else if(kind==='direct'){
+      sfx.hit();
+      dmgPop(ix,iy-30,'💥 ¡GOLPE DIRECTO!','#fb7185');
+    } else {
+      sfx.hit();
+      dmgPop(ix,iy-30,'💥 −1 ANALISTA','#fb7185');
+    }
+    /* vuelta a casa */
+    setTimeout(()=>{
+      atkStack.style.transition='transform .4s ease';
+      atkStack.style.transform='';
+      setTimeout(()=>{
+        atkStack.style.zIndex='';
+        finishImpact();
+      },430);
+    },600);
+  },560);
+
+  function finishImpact(){done&&done();}
+}
+
+/* Explosión de la molécula destruida */
+function destroyStack(p,cb){
+  const stack=document.getElementById('stack'+(p+1));
+  if(stack){
+    const r=stack.getBoundingClientRect();
+    spawnSparks(r.left+r.width/2,r.top+r.height/2,'#fbbf24');
+    stack.querySelectorAll('.card').forEach(c=>c.classList.add('blasted'));
+  }
+  setTimeout(()=>{
+    G.discardSize+=G.molCards[p].length;
+    G.mols[p]=null;
+    G.molCards[p]=[];
+    renderStack(p,[],false);
+    renderDecks();
+    cb&&cb();
+  },620);
 }
 
 /* ════════════════════════════════
@@ -513,7 +823,6 @@ function hideAIBanner(){
    GAME FLOW
 ════════════════════════════════ */
 function showPassScreen(toP){
-  G.passFor=toP;
   const nameEl=document.getElementById('pass-name');
   nameEl.textContent=G.names[toP];
   document.getElementById('pass-h').textContent='Pasa el dispositivo';
@@ -522,15 +831,32 @@ function showPassScreen(toP){
 }
 
 function beginTurn(p){
-  G.phase=p===0?'build_p1':'build_p2';
+  G.turn=p;
+  G.phase='turn_p'+(p+1);
+  G.turnCount++;
+
+  /* mantenimiento: roba 1 carta automática (salvo los 2 primeros turnos),
+     repone hechizo si no queda ninguno y limpia hechizos de la arena */
+  if(G.turnCount>2) sharedDeckTake(p,1);
+  if(!G.spells[p].length) G.spells[p]=[{...weightedRandom(SPELLS)}];
+  if(G.spellsInArena[p].length){G.spellsInArena[p]=[];renderZoneSpells(p);}
+  renderDecks();
+
   if(G.vsAI){
     showScreen('game');
-    updateDefenderPass();
-    if(p===1) setTimeout(aiBuildTurn,500);
-    else toast('🧪 Tu turno');
+    updateActionBar();
+    if(p===1) setTimeout(aiTakeTurn,600);
+    else { hideAIBanner(); toast('🧪 Tu turno'); }
   } else {
+    updateActionBar();
     showPassScreen(p);
   }
+}
+
+function resumePass(){
+  showScreen('game');
+  updateActionBar();
+  toast('⚔️ Turno de '+G.names[G.turn]);
 }
 
 function chooseMode(vsAI){
@@ -568,384 +894,56 @@ function startGame(){
     G.aiLevel=_mode.level;
     G.aiAvatar=AI_LEVELS[_mode.level].emoji;
   }
-  showScreen('game');
-  rotateTable(false);
-  renderStrip(0);renderStrip(1);renderDecks();
-  renderStack(0,[],false);renderStack(1,[],false);
-  document.getElementById('zspells1').innerHTML='';
-  document.getElementById('zspells2').innerHTML='';
-  beginTurn(0);
+  _bootTable();
+  beginTurn(0); /* el primer turno es siempre del jugador */
 }
 
 function rematch(){
   const cfg={vsAI:G.vsAI,aiLevel:G.aiLevel,aiAvatar:G.aiAvatar,names:[...G.names]};
   initState(cfg.names[0],cfg.names[1]);
   G.vsAI=cfg.vsAI;G.aiLevel=cfg.aiLevel;G.aiAvatar=cfg.aiAvatar;
+  _bootTable();
+  beginTurn(0);
+}
+
+function _bootTable(){
   showScreen('game');
   rotateTable(false);
   renderStrip(0);renderStrip(1);renderDecks();
   renderStack(0,[],false);renderStack(1,[],false);
   document.getElementById('zspells1').innerHTML='';
   document.getElementById('zspells2').innerHTML='';
-  beginTurn(0);
-}
-
-function confirmBuild(){
-  if(!G.phase.startsWith('build'))return;
-  const p=G.phase==='build_p1'?0:1;
-
-  if(G.selBuildSpell){
-    G.selBuildSpell=null;G.mols[p]=null;
-    closeBuildPanel();
-    G.phase='spells';G.helioCast=[false,false];G.spellPassed=[false,false];
-    G.spellsInArena=[[],[]];G.dmg=[0,0];G.attacker=p;
-    spellTurnStart(p);
-    return;
-  }
-
-  if(!G.build.length)return;
-  const mol=buildMol(G.build);
-  if(!mol.valid)return;
-
-  G._pendingBuild={mol,p};
-  document.getElementById('mc-formula').textContent=mol.formula;
-  document.getElementById('mc-name').textContent=mol.name;
-  document.getElementById('mc-atk').textContent=`🗡 ${mol.atk}`;
-  document.getElementById('mc-def').textContent=`🛡 ${mol.def}`;
-  document.getElementById('ov-mol-confirm').classList.add('open');
-}
-
-function executeBuild(){
-  document.getElementById('ov-mol-confirm').classList.remove('open');
-  const {mol,p}=G._pendingBuild;
-  G.mols[p]=mol;
-  G.molCards[p]=[...G.build];
-  G.build.forEach(e=>{const i=G.hands[p].indexOf(e);if(i>-1)G.hands[p].splice(i,1);});
-  G.discardSize+=G.molCards[p].length;
-  G.build=[];
-  closeBuildPanel();
-  sfx.build();
-  renderStack(p,G.molCards[p],false);
-  renderDecks();
-  _finishTurn(p);
-}
-
-function _finishTurn(p){
-  const w=document.getElementById('defender-pass-wrap');
-  if(w) w.style.display='none';
-  G.acted[p]=true;
-  const other=1-p;
-  if(!G.acted[other]){
-    beginTurn(other);
-  } else {
-    rotateTable(false);
-    if(G.mols[0]||G.mols[1]){ G.phase='reveal'; setTimeout(showReveal,600); }
-    else nextRound();
-  }
-}
-
-function resumePass(){
-  showScreen('game');
-  updateDefenderPass();
-}
-
-function updateDefenderPass(){
-  const w=document.getElementById('defender-pass-wrap');
-  if(!w)return;
-  const p=G.phase==='build_p1'?0:(G.phase==='build_p2'?1:-1);
-  /* el jugador humano que actúa en segundo lugar puede pasar sin construir */
-  const show=p>-1 && G.acted[1-p] && !(G.vsAI&&p===1);
-  w.style.display=show?'':'none';
-}
-
-function defenderPass(){
-  document.getElementById('defender-pass-wrap').style.display='none';
-  const p=G.phase==='build_p1'?0:1;
-  G.build=[];G.selBuildSpell=null;
-  closeBuildPanel();
-  G.mols[p]=null;G.molCards[p]=[];
-  renderStack(p,[],false);
-  _finishTurn(p);
+  setZoneHints();
 }
 
 /* ════════════════════════════════
-   AI TURNS
+   AI TURN
 ════════════════════════════════ */
-function aiBuildTurn(){
+function aiTakeTurn(){
   showAIBanner(`${G.aiAvatar} ${G.names[1]} está pensando`);
   const delay=900+Math.random()*1100;
   setTimeout(()=>{
-    const choice=AI.chooseBuild(G);
-    if(choice.action==='build'){
+    const choice=AI.chooseAction(G);
+    G.busy=true;
+    if(choice.action==='battle'){
       const mol=buildMol(choice.cards);
-      G.mols[1]=mol;
-      G.molCards[1]=[...choice.cards];
-      choice.cards.forEach(c=>{const i=G.hands[1].indexOf(c);if(i>-1)G.hands[1].splice(i,1);});
-      G.discardSize+=G.molCards[1].length;
-      renderStack(1,G.molCards[1],false);
-      renderDecks();
+      placeMolecule(1,mol,[...choice.cards]);
       sfx.build();
-      showAIBanner(`${G.aiAvatar} ${G.names[1]} ha reaccionado ⚗️`,1500);
+      showAIBanner(`${G.aiAvatar} ${G.names[1]} ataca con ${mol.formula} ⚔️`,2200);
+      flipZone(1,()=>setTimeout(()=>battle(1),350));
+    } else if(choice.action==='spell'){
+      const sp=G.spells[1].find(s=>s.id===choice.id);
+      showAIBanner(`${G.aiAvatar} ${G.names[1]} juega ${sp?sp.name:choice.id} ✨`,1700);
+      doCastSpell(1,choice.id);
+      setTimeout(()=>endTurn(),1000);
     } else {
-      applyDraw(1);
+      sharedDeckTake(1,2);
       sfx.draw();
+      renderDecks();
       showAIBanner(`${G.aiAvatar} ${G.names[1]} roba 2 cartas 🃏`,1500);
+      setTimeout(()=>endTurn(),1000);
     }
-    setTimeout(()=>_finishTurn(1),1000);
   },delay);
-}
-
-function aiSpellTurn(){
-  showAIBanner(`${G.aiAvatar} ${G.names[1]} medita un efecto`);
-  setTimeout(()=>{
-    const id=AI.chooseSpell(G);
-    if(id){
-      const sp=G.spells[1].find(s=>s.id===id);
-      showAIBanner(`${G.aiAvatar} ${G.names[1]} usa ${sp?sp.name:id} ✨`,1700);
-      doCastSpell(1,id);
-    } else {
-      showAIBanner(`${G.aiAvatar} ${G.names[1]} pasa`,1400);
-      setTimeout(resolveCombat,900);
-    }
-  },900+Math.random()*900);
-}
-
-/* ════════════════════════════════
-   REVEAL
-════════════════════════════════ */
-function showReveal(){
-  const m0=G.mols[0]||{formula:'(robó)',atk:0,def:0,name:'Robó cartas',combo:false,hasU:false,valid:false};
-  const m1=G.mols[1]||{formula:'(robó)',atk:0,def:0,name:'Robó cartas',combo:false,hasU:false,valid:false};
-  if(G.mols[0]&&G.mols[1]){
-    G.attacker=m0.atk>=m1.atk?0:1;
-    const def=1-G.attacker;
-    let atkV=G.mols[G.attacker].atk,defV=G.mols[def].def;
-    if(G.mols[G.attacker].hasU)defV=Math.floor(defV/2);
-    G.dmg[def]=Math.max(0,atkV-defV);
-    G.dmg[G.attacker]=Math.max(0,G.mols[def].atk-G.mols[G.attacker].def);
-  } else if(G.mols[0]){
-    G.attacker=0;G.dmg[1]=Math.max(0,G.mols[0].atk);G.dmg[0]=0;
-  } else if(G.mols[1]){
-    G.attacker=1;G.dmg[0]=Math.max(0,G.mols[1].atk);G.dmg[1]=0;
-  }
-  const def=1-G.attacker;
-  const atMol=G.mols[G.attacker]||m0, dfMol=G.mols[def]||m1;
-  const atColor=G.attacker===0?'var(--acc)':'var(--red)';
-  const dfColor=def===0?'var(--acc)':'var(--red)';
-  document.getElementById('rev-header').innerHTML=
-    `<span style="color:${atColor};font-weight:900">🗡${atMol.atk}</span>`+
-    `<span style="color:var(--mut);font-size:.9rem;margin:0 1.1rem">vs</span>`+
-    `<span style="color:${dfColor};font-weight:900">🛡${dfMol.def}</span>`;
-  /* Voltea atacante, luego defensor */
-  const at=G.attacker, df=1-G.attacker;
-  const flipAt = G.mols[at] ? ()=>flipZone(at) : null;
-  const flipDf = G.mols[df] ? ()=>flipZone(df) : null;
-  const waitAt = flipAt ? 2000 : 0;
-  const waitDf = flipDf ? 2000 : 0;
-  if(flipAt) flipAt();
-  setTimeout(()=>{
-    if(flipDf) flipDf();
-    setTimeout(()=>{
-      document.getElementById('ov-reveal').classList.add('open');
-    }, waitDf + 200);
-  }, waitAt);
-}
-
-function addMarco(el){
-  const m=document.createElement('img');
-  m.src='img/marco.png';
-  m.style.cssText='position:absolute;inset:-4px;width:calc(100% + 8px);height:calc(100% + 8px);object-fit:fill;pointer-events:none;z-index:30;';
-  m.onerror=()=>m.remove();
-  el.appendChild(m);
-}
-
-function renderZoneSpells(p){
-  const zs=document.getElementById('zspells'+(p+1));
-  if(!zs)return;
-  zs.innerHTML='';
-  (G.spellsInArena[p]||[]).forEach(sp=>{
-    const el=makeElemCard(sp,p,false,false);
-    el.classList.remove('clickable','dimmed');
-    addMarco(el);
-    addLongPress(el,()=>showZoom(sp));
-    zs.appendChild(el);
-  });
-}
-
-/* ════════════════════════════════
-   SPELL PHASE
-════════════════════════════════ */
-function startSpellPhase(){
-  document.getElementById('ov-reveal').classList.remove('open');
-  G.phase='spells';
-  G.helioCast=[false,false];
-  G.spellPassed=[false,false];
-  G.spellsInArena=[[],[]];
-  const atMol=G.mols[G.attacker],dfMol=G.mols[1-G.attacker];
-  /* empieza el atacante si su ATK <= DEF del defensor; si no, el defensor */
-  const starter=(atMol&&dfMol&&atMol.atk<=dfMol.def)?G.attacker:(1-G.attacker);
-  spellTurnStart(starter);
-}
-
-function spellTurnStart(p){
-  G.spellTurn=p;
-  if(G.vsAI&&p===1) aiSpellTurn();
-  else openSpellPanel(p);
-}
-
-function openSpellPanel(p){
-  const hint=document.getElementById('spell-phase-hint');
-  if(hint){hint.style.display='';hint.textContent='⚡ Ronda de Efectos — '+G.names[p];}
-  rotateTable(p===1);
-  G.selSpell=null;
-  const castBtn=document.getElementById('btn-cast-panel');
-  castBtn.disabled=true;castBtn.style.opacity='.45';
-  const _nameColor=p===0?'var(--acc)':'var(--red)';
-  document.getElementById('sp-panel-title').innerHTML=
-    `<span style="color:${_nameColor};font-weight:800;font-size:.9rem">${G.names[p]}</span>`;
-  const hand=document.getElementById('sp-hand');hand.innerHTML='';
-  const rival=1-p;
-  const avail=G.spells[p].filter(sp=>!(G.helioCast[rival]&&sp.id==='He'));
-  if(!avail.length){
-    hand.innerHTML='<div class="no-mol-msg">Sin efectos disponibles.</div>';
-  } else {
-    avail.forEach(sp=>{
-      const el=makeElemCard(sp,p,false,false);
-      el.onclick=()=>{
-        G.selSpell=sp.id;
-        sfx.select();
-        hand.querySelectorAll('.card').forEach(c=>c.classList.remove('sel'));
-        el.classList.add('sel');
-        castBtn.disabled=false;castBtn.style.opacity='1';
-      };
-      addMarco(el);
-      hand.appendChild(el);
-    });
-  }
-  document.getElementById('spell-panel').classList.add('open');
-}
-
-function closeSpellPanelOnly(){
-  document.getElementById('spell-panel').classList.remove('open');
-}
-
-/* ⚠️ Los efectos de los hechizos están pendientes de diseño: jugar la
-   carta la muestra en la arena y la descarta, pero NO altera el daño
-   ni el combate. Cuando se definan los efectos, implementarlos aquí. */
-function doCastSpell(p,id){
-  const sp=G.spells[p].find(s=>s.id===id);if(!sp)return;
-  G.spells[p]=G.spells[p].filter(s=>s.id!==id);
-  G.discardSize++;G.stats.spells++;
-  const rival=1-p;
-  G.spellPassed[p]=false;
-  G.spellsInArena[p].push(sp);
-  sfx.spell();
-  renderZoneSpells(p);
-  renderDecks();
-  document.getElementById('spell-panel').classList.remove('open');
-  if(G.spellPassed[rival]||!G.spells[rival].length){
-    setTimeout(resolveCombat,700);
-  } else {
-    setTimeout(()=>spellTurnStart(rival),600);
-  }
-}
-
-function castSpell(){
-  if(!G.selSpell)return;
-  doCastSpell(G.spellTurn,G.selSpell);
-}
-
-function passSpell(){
-  document.getElementById('spell-panel').classList.remove('open');
-  resolveCombat();
-}
-
-/* ════════════════════════════════
-   COMBAT
-════════════════════════════════ */
-function animateFireball(winnerP, loserP, cb){
-  const targetIdx = G.an[loserP] - 1; /* último analista vivo = el eliminado */
-  const strip = document.getElementById('astrip'+(loserP+1));
-  const cards = strip ? strip.querySelectorAll('.card') : [];
-  const targetCard = cards[targetIdx];
-
-  const srcZone = document.getElementById('pzone'+(winnerP+1));
-  if(!srcZone||!targetCard){ cb&&cb(); return; }
-  const sr = srcZone.getBoundingClientRect();
-  const tr = targetCard.getBoundingClientRect();
-  const sx = sr.left+sr.width/2, sy = sr.top+sr.height/2;
-  const tx = tr.left+tr.width/2, ty = tr.top+tr.height/2;
-
-  const color = winnerP===0 ? 'rgba(34,211,238,.8)' : 'rgba(251,113,133,.8)';
-  const glow  = winnerP===0 ? '#7df' : '#f87';
-
-  const fb = document.createElement('div');
-  const sz = 28;
-  fb.style.cssText = `position:fixed;width:${sz}px;height:${sz}px;border-radius:50%;
-    background:radial-gradient(circle,#fff 0%,${glow} 55%,transparent 100%);
-    --fb-c:${color};animation:fb-pulse .35s ease-in-out infinite;
-    pointer-events:none;z-index:600;
-    left:${sx-sz/2}px;top:${sy-sz/2}px;`;
-  document.body.appendChild(fb);
-  sfx.fire();
-
-  const dur = 2200;
-  fb.getBoundingClientRect(); /* fuerza reflow para que arranque la transición */
-  fb.style.transition = `left ${dur}ms ease-in, top ${dur}ms ease-in, transform ${dur}ms ease-in`;
-  fb.style.left = (tx-sz/2)+'px';
-  fb.style.top  = (ty-sz/2)+'px';
-  fb.style.transform = 'scale(2)';
-
-  setTimeout(()=>{
-    fb.remove();
-    sfx.hit();
-    const table=document.getElementById('game-table');
-    if(table){table.classList.remove('shake');void table.offsetWidth;table.classList.add('shake');}
-    targetCard.style.transition = 'opacity .25s, filter .25s';
-    targetCard.style.opacity = '.45';
-    targetCard.style.filter = 'grayscale(.85) brightness(.6)';
-    setTimeout(()=>{ cb&&cb(); }, 1400);
-  }, dur+50);
-}
-
-function resolveCombat(){
-  document.getElementById('spell-panel').classList.remove('open');
-  hideAIBanner();
-
-  const losers = [0,1].filter(p=>G.dmg[p]>0);
-  function applyAndContinue(){
-    for(let p=0;p<2;p++){if(G.dmg[p]>0){G.an[p]=Math.max(0,G.an[p]-1);G.stats.anLost[p]+=1;}}
-    G.stats.rounds++;
-    renderStrip(0);renderStrip(1);
-    if(G.an[0]<=0||G.an[1]<=0){endGame();return;}
-    nextRound();
-  }
-  if(!losers.length){ applyAndContinue(); return; }
-  let i=0;
-  function next(){
-    if(i>=losers.length){ applyAndContinue(); return; }
-    const lp=losers[i++];
-    animateFireball(1-lp, lp, next);
-  }
-  next();
-}
-
-function nextRound(){
-  const hint=document.getElementById('spell-phase-hint');if(hint)hint.style.display='none';
-  G.round++;G.mols=[null,null];G.molCards=[[],[]];G.dmg=[0,0];G.spellsInArena=[[],[]];
-  G.acted=[false,false];
-  document.getElementById('zspells1').innerHTML='';
-  document.getElementById('zspells2').innerHTML='';
-  for(let p=0;p<2;p++){
-    for(let i=0;i<3;i++) G.hands[p].push({...weightedRandom(ELEMENTS)});
-    if(G.hands[p].length>8) G.hands[p]=G.hands[p].slice(G.hands[p].length-8);
-    if(!G.spells[p].length) G.spells[p]=[{...weightedRandom(SPELLS)}];
-    G.deckSize[p]=G.hands[p].length+G.spells[p].length;
-  }
-  renderDecks();
-  renderStack(0,[],false);renderStack(1,[],false);
-  const firstP=1-G.attacker; /* el defensor empieza la siguiente ronda */
-  beginTurn(firstP);
 }
 
 /* ════════════════════════════════
@@ -974,10 +972,10 @@ function endGame(){
     sub.textContent=`Los analistas de ${G.names[1-w]} han sido eliminados del laboratorio.`;
   }
   document.getElementById('rstats').innerHTML=`
-    <div class="crow"><span>Rondas</span><span class="cv">${G.stats.rounds}</span></div>
+    <div class="crow"><span>Turnos jugados</span><span class="cv">${G.stats.turns}</span></div>
     <div class="crow"><span>Analistas perdidos ${G.names[0]}</span><span class="cv bad">${G.stats.anLost[0]}</span></div>
     <div class="crow"><span>Analistas perdidos ${G.names[1]}</span><span class="cv bad">${G.stats.anLost[1]}</span></div>
-    <div class="crow"><span>Efectos</span><span class="cv">${G.stats.spells}</span></div>
+    <div class="crow"><span>Efectos jugados</span><span class="cv">${G.stats.spells}</span></div>
     <div class="crow"><span>Analistas restantes ${G.names[0]}</span><span class="cv ${G.an[0]>0?'':'bad'}">${G.an[0]}</span></div>
     <div class="crow"><span>Analistas restantes ${G.names[1]}</span><span class="cv ${G.an[1]>0?'':'bad'}">${G.an[1]}</span></div>`;
   showScreen('result');
@@ -1018,39 +1016,61 @@ function launchConfetti(){
   requestAnimationFrame(step);
 }
 
+function addMarco(el){
+  const m=document.createElement('img');
+  m.src='img/marco.png';
+  m.className='marco';
+  m.onerror=()=>m.remove();
+  el.appendChild(m);
+}
+
 /* ════════════════════════════════
    LONG PRESS + ZOOM
+   Mantén pulsada una carta ~0.5s para verla en grande.
+   Usa Pointer Events con umbral de movimiento: el temporizador solo
+   se cancela si el dedo se desplaza >12px (antes cualquier jitter
+   táctil lo cancelaba y el zoom nunca se abría en móvil).
 ════════════════════════════════ */
 let _zoomJustOpened=false;
+const LP_MS=500;
+const LP_MOVE=12;
 
 function addLongPress(el,fn){
-  let timer=null;
-  let fired=false;
+  let timer=null, fired=false, sx=0, sy=0;
 
-  function startTimer(){
+  function start(x,y){
+    sx=x;sy=y;fired=false;
     if(timer)clearTimeout(timer);
-    fired=false;
-    timer=setTimeout(()=>{fired=true;timer=null;fn();},1000);
+    timer=setTimeout(()=>{fired=true;timer=null;fn();},LP_MS);
   }
-  function cancelTimer(){
+  function moved(x,y){
+    if(timer&&Math.hypot(x-sx,y-sy)>LP_MOVE){clearTimeout(timer);timer=null;}
+  }
+  function cancel(){
     if(timer){clearTimeout(timer);timer=null;}
   }
 
-  el.addEventListener('touchstart',startTimer,{passive:true});
-  el.addEventListener('touchend',(e)=>{
-    cancelTimer();
-    if(fired){
-      e.preventDefault(); /* bloquea el click sintético que cerraría el zoom */
-      fired=false;
-    }
-  });
-  el.addEventListener('touchmove',cancelTimer,{passive:true});
-  el.addEventListener('touchcancel',cancelTimer);
+  if(window.PointerEvent){
+    el.addEventListener('pointerdown',e=>start(e.clientX,e.clientY));
+    el.addEventListener('pointermove',e=>moved(e.clientX,e.clientY));
+    el.addEventListener('pointerup',cancel);
+    el.addEventListener('pointerleave',cancel);
+    el.addEventListener('pointercancel',cancel);
+  } else {
+    el.addEventListener('touchstart',e=>{const t=e.touches[0];start(t.clientX,t.clientY);},{passive:true});
+    el.addEventListener('touchmove',e=>{const t=e.touches[0];moved(t.clientX,t.clientY);},{passive:true});
+    el.addEventListener('touchend',cancel);
+    el.addEventListener('touchcancel',cancel);
+    el.addEventListener('mousedown',e=>start(e.clientX,e.clientY));
+    el.addEventListener('mouseup',cancel);
+    el.addEventListener('mouseleave',cancel);
+  }
+  /* tras un long press, traga el click/tap sintético para que no
+     seleccione la carta ni cierre el zoom recién abierto */
+  el.addEventListener('click',(e)=>{
+    if(fired){e.preventDefault();e.stopPropagation();fired=false;}
+  },true);
   el.addEventListener('contextmenu',(e)=>{e.preventDefault();});
-
-  el.addEventListener('mousedown',startTimer);
-  el.addEventListener('mouseup',cancelTimer);
-  el.addEventListener('mouseleave',cancelTimer);
 }
 
 function showZoom(card){
@@ -1074,12 +1094,20 @@ function closeZoom(){
 /* ════════════════════════════════
    SCREENS & SHELL
 ════════════════════════════════ */
-function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById('screen-'+id).classList.add('active');}
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+  document.body.classList.toggle('in-game',id==='game');
+}
 function openRules(){document.getElementById('ov-rules').classList.add('open');}
 
 function toggleSound(){
   const m=sfx.toggle();
-  document.getElementById('btn-sound').textContent=m?'🔇':'🔊';
+  const icon=m?'🔇':'🔊';
+  const b1=document.getElementById('btn-sound');
+  const b2=document.getElementById('btn-sound-game');
+  if(b1)b1.textContent=icon;
+  if(b2)b2.textContent=icon;
   if(!m)sfx.click();
 }
 
@@ -1127,13 +1155,15 @@ window.addEventListener('appinstalled',()=>{
 
 document.addEventListener('DOMContentLoaded',()=>{
   spawnBubbles();
-  document.getElementById('btn-sound').textContent=sfx.muted?'🔇':'🔊';
-  /* desbloquea el audio y reproduce click en interacciones */
+  const icon=sfx.muted?'🔇':'🔊';
+  const b1=document.getElementById('btn-sound');
+  const b2=document.getElementById('btn-sound-game');
+  if(b1)b1.textContent=icon;
+  if(b2)b2.textContent=icon;
   document.addEventListener('pointerdown',()=>sfx.unlock(),{once:true});
   document.addEventListener('click',(e)=>{
-    if(e.target.closest('.btn,.mode-card,.diff-chip,.hand-arrow,.pdeck,.cpile.draw'))sfx.click();
+    if(e.target.closest('.btn,.mode-card,.diff-chip,.hand-arrow,.pdeck,.cpile.draw,.abtn'))sfx.click();
   });
-  /* pista de instalación en iOS (sin beforeinstallprompt) */
   const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
   const standalone=matchMedia('(display-mode: standalone)').matches||navigator.standalone;
   if(isIOS&&!standalone){

@@ -26,9 +26,9 @@ Para probar en local: `python3 -m http.server` y abre `http://localhost:8000`.
 ## 🧪 Reglas rápidas
 
 - Cada laboratorio tiene **5 analistas**: son su vida.
-- En tu turno: construye una **molécula válida** (H₂O, CO₂, NH₃…) con los elementos de tu mano, o roba 2 cartas del mazo central.
-- **Combate:** ATK del atacante − DEF del defensor = daño. Quien recibe daño pierde un analista. El **Uranio** ☢ ignora la mitad de la DEF rival.
-- **Ronda de efectos:** las cartas de hechizo (**Plomo** y **Helio**) se pueden jugar, pero sus efectos están pendientes de diseño — de momento no alteran el combate.
+- **Turnos alternos** (empiezas tú). En tu turno eliges UNA acción: ⚔️ **Batallar**, ✨ **Hechizo** o 🃏 **Robar 2 cartas**. Al empezar cada turno robas además 1 carta automática.
+- **Batalla:** construyes una **molécula válida** (H₂O, CO₂, NH₃…) y ataca al instante: ATK − DEF de la molécula rival. Si haces daño, su molécula se destruye y pierde 1 analista; si no, queda 🛡 bloqueado. Sin molécula rival, 💥 golpe directo. Tu molécula se queda en tu zona defendiéndote. El **Uranio** ☢ ignora la mitad de la DEF rival.
+- **Hechizos:** las cartas de efecto (**Plomo** y **Helio**) se pueden jugar, pero sus efectos están pendientes de diseño — de momento no alteran el combate.
 
 ## 🗂 Estructura
 
