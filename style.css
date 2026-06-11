@@ -358,6 +358,9 @@ body.in-game #btn-sound{display:none;}
 
 /* ── Action bar ── */
 .action-bar{display:flex;gap:.45rem;align-items:stretch;justify-content:center;flex-shrink:0;padding:.12rem 0;}
+.ab-group{display:flex;gap:.45rem;flex:1;justify-content:center;}
+.abtn.def{background:linear-gradient(135deg,rgba(34,211,238,.3),rgba(52,211,153,.2)),var(--felt);border-color:rgba(34,211,238,.55);animation:defPulse 1.4s ease-in-out infinite;}
+@keyframes defPulse{0%,100%{box-shadow:0 0 8px rgba(34,211,238,.3);}50%{box-shadow:0 0 22px rgba(34,211,238,.6);}}
 .abtn{
   flex:1;max-width:170px;
   background:linear-gradient(135deg,rgba(34,211,238,.16),rgba(167,139,250,.12)),var(--felt);
@@ -370,6 +373,27 @@ body.in-game #btn-sound{display:none;}
 .abtn:active:not(:disabled){transform:translateY(1px) scale(.97);}
 .abtn:disabled{opacity:.32;cursor:default;}
 .abtn.icon{flex:0 0 auto;width:44px;max-width:44px;border-radius:50%;padding:.4rem 0;}
+
+/* ── Zona activa: brillo en quien debe actuar ── */
+@keyframes zoneGlow{0%,100%{box-shadow:inset 0 0 30px rgba(34,211,238,.08),0 0 10px rgba(255,255,255,.08);}50%{box-shadow:inset 0 0 30px rgba(34,211,238,.14),0 0 24px rgba(255,255,255,.22);}}
+.pzone.active-glow{animation:zoneGlow 1.6s ease-in-out infinite;}
+
+/* ── Anuncio de fase ── */
+#phase-banner{
+  position:fixed;top:40%;left:50%;z-index:580;pointer-events:none;
+  transform:translate(-50%,-50%) scale(.6);opacity:0;
+  font-family:'Orbitron','Exo 2',sans-serif;font-weight:900;
+  font-size:clamp(1rem,5.4vw,1.9rem);letter-spacing:1.5px;color:#fff;
+  white-space:nowrap;max-width:96vw;overflow:hidden;text-overflow:ellipsis;
+  text-align:center;
+}
+#phase-banner.show{animation:phaseSlam 1.45s cubic-bezier(.2,.9,.3,1) forwards;}
+@keyframes phaseSlam{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(2.4);}
+  16%{opacity:1;transform:translate(-50%,-50%) scale(1);}
+  78%{opacity:1;transform:translate(-50%,-50%) scale(1);}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(.92);}
+}
 
 /* ── Battle FX ── */
 #flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:550;transition:opacity .14s ease;}

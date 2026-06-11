@@ -41,25 +41,16 @@ const AI = {
     return res;
   },
 
-  /* Decisión del turno. Devuelve:
-       {action:'battle', cards:[...]}  construir molécula y atacar
+  /* Decisión del turno como ATACANTE. Devuelve:
+       {action:'attack', cards:[...]}  atacar con una molécula
        {action:'spell',  id:'Pb'}      jugar un hechizo (sin efecto aún)
        {action:'draw'}                 robar 2 cartas
-     Reglas de combate que evalúa: dmg = ATK − DEF rival (U ignora
-     media DEF); dmg > 0 destruye la molécula rival y elimina 1
-     analista; sin molécula rival el golpe es directo. */
+     El defensor responderá después, así que se elige a ciegas:
+     maximizar ATK (el daño es ATK − DEF de la defensa rival). */
   chooseAction(G){
-    const hand   = G.hands[1];
-    const lvl    = G.aiLevel || 'normal';
-    const opts   = this.findBuilds(hand);
-    const target = G.mols[0]; /* molécula defensiva del jugador */
-
-    const breaks = o => {
-      if(!target) return o.atk > 0; /* golpe directo */
-      const defV = o.hasU ? Math.floor(target.def/2) : target.def;
-      return o.atk - defV > 0;
-    };
-    const killers = opts.filter(breaks);
+    const hand = G.hands[1];
+    const lvl  = G.aiLevel || 'normal';
+    const opts = this.findBuilds(hand);
 
     if(lvl === 'easy'){
       /* ⚠️ Hechizos sin efecto: el Becario juega uno de vez en cuando
@@ -68,26 +59,56 @@ const AI = {
         return {action:'spell', id: G.spells[1][Math.floor(Math.random()*G.spells[1].length)].id};
       if(!opts.length || Math.random() < .3) return {action:'draw'};
       const o = opts[Math.floor(Math.random()*opts.length)];
-      return {action:'battle', cards:o.cards};
+      return {action:'attack', cards:o.cards};
     }
 
-    if(killers.length){
-      /* Nobel: el rompedor más barato en cartas (desempate: más ATK).
-         Doctora: simplemente el de más ATK. */
-      killers.sort(lvl === 'hard'
-        ? (a,b)=>(a.n-b.n)||(b.atk-a.atk)
-        : (a,b)=>b.atk-a.atk);
-      return {action:'battle', cards:killers[0].cards};
+    if(!opts.length) return {action:'draw'};
+    /* Nobel: más ATK con desempate por menos cartas y U primero;
+       Doctora: simplemente el de más ATK. */
+    opts.sort(lvl === 'hard'
+      ? (a,b)=>(b.atk-a.atk)||(a.n-b.n)||((b.hasU?1:0)-(a.hasU?1:0))
+      : (a,b)=>b.atk-a.atk);
+    const best = opts[0];
+    /* ataque flojo y mano corta → mejor pescar cartas */
+    const minAtk = lvl === 'hard' ? 4 : 3;
+    if(best.atk < minAtk && hand.length <= 6) return {action:'draw'};
+    return {action:'attack', cards:best.cards};
+  },
+
+  /* Decisión como DEFENSOR ante atkMol. Devuelve {cards:[...]} o null
+     (pasar). Solo cuenta el bloqueo total: cualquier daño > 0 cuesta
+     1 analista igualmente, así que defender sin bloquear es tirar
+     cartas (el Becario a veces lo hace de todos modos). */
+  chooseDefense(G, atkMol){
+    const hand = G.hands[1];
+    const lvl  = G.aiLevel || 'normal';
+    const opts = this.findBuilds(hand);
+    if(!opts.length) return null;
+
+    const blocks = o => atkMol.atk - (atkMol.hasU ? Math.floor(o.def/2) : o.def) <= 0;
+    const blockers = opts.filter(blocks);
+
+    if(lvl === 'easy'){
+      if(blockers.length && Math.random() < .7)
+        return {cards: blockers[Math.floor(Math.random()*blockers.length)].cards};
+      if(Math.random() < .35)
+        return {cards: opts[Math.floor(Math.random()*opts.length)].cards};
+      return null;
     }
 
-    /* No puede romper la defensa rival. Si está expuesta (sin molécula
-       propia) o tiene la mano llena, levanta un muro defensivo: el
-       ataque rebotará pero la molécula queda protegiendo su zona.
-       Si no, roba para pescar mejores cartas. */
-    if(opts.length && (!G.mols[1] || hand.length >= 7)){
-      opts.sort((a,b)=>(b.def-a.def)||(b.atk-a.atk));
-      return {action:'battle', cards:opts[0].cards};
-    }
-    return {action:'draw'};
+    if(!blockers.length) return null;
+    /* el bloqueo más barato en cartas (desempate: menos DEF sobrante) */
+    blockers.sort((a,b)=>(a.n-b.n)||(a.def-b.def));
+    return {cards: blockers[0].cards};
+  },
+
+  /* Paso de la ronda de hechizos: id del hechizo a jugar o null (pasar).
+     ⚠️ Efectos pendientes de diseño → casi siempre pasa. Implementar
+     aquí la heurística real cuando se definan los efectos. */
+  chooseRoundSpell(G){
+    const hand = G.spells[1];
+    if(!hand.length) return null;
+    const pr = {easy:.4, normal:.2, hard:.1}[G.aiLevel || 'normal'] ?? .2;
+    return Math.random() < pr ? hand[Math.floor(Math.random()*hand.length)].id : null;
   },
 };

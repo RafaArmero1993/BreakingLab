@@ -37,7 +37,7 @@
   <div class="logo">Breaking<span>Lab</span></div>
   <div class="logo-sub">⚗️ El Duelo Molecular</div>
   <div class="intro-credits">by Rafa Armero &amp; Tomás Aznar</div>
-  <div class="intro-ver">v1.2</div>
+  <div class="intro-ver">v1.3</div>
   <div class="intro-btns">
     <button class="btn gold" onclick="showScreen('mode')">🎮 Jugar</button>
     <button class="btn sec" onclick="openRules()">📖 Ver Reglas</button>
@@ -146,9 +146,15 @@
 
     <!-- Action bar -->
     <div class="action-bar" id="action-bar">
-      <button class="abtn" id="ab-battle" onclick="actionBattle()">⚔️ Batallar</button>
-      <button class="abtn" id="ab-spell" onclick="actionSpell()">✨ Hechizo</button>
-      <button class="abtn" id="ab-draw" onclick="actionDraw()">🃏 Robar 2</button>
+      <div class="ab-group" id="ab-attack-group">
+        <button class="abtn" id="ab-battle" onclick="actionAttack()">⚔️ Atacar</button>
+        <button class="abtn" id="ab-spell" onclick="actionSpell()">✨ Hechizo</button>
+        <button class="abtn" id="ab-draw" onclick="actionDraw()">🃏 Robar 2</button>
+      </div>
+      <div class="ab-group" id="ab-defense-group" style="display:none">
+        <button class="abtn def" id="ab-defend" onclick="abDefend()">🛡 ¡Defenderse!</button>
+        <button class="abtn" id="ab-nodefend" onclick="abNoDefend()">😨 No defender</button>
+      </div>
       <button class="abtn icon" id="btn-sound-game" onclick="toggleSound()" title="Sonido">🔊</button>
     </div>
 
@@ -158,8 +164,9 @@
   </div>
 </div>
 
-<!-- flash de impacto -->
+<!-- flash de impacto + anuncios de fase -->
 <div id="flash"></div>
+<div id="phase-banner"></div>
 
 <!-- ═══ RESULT ═══ -->
 <div id="screen-result" class="screen">
@@ -179,6 +186,7 @@
 
 <!-- BUILD PANEL -->
 <div class="build-panel" id="build-panel">
+  <div id="bp-title" style="font-size:.72rem;font-weight:800;color:var(--mut);margin-bottom:.45rem;letter-spacing:.3px"></div>
   <div class="bp-react-row">
     <button class="btn" id="btn-confirm" onclick="confirmBuild()" disabled style="opacity:.45">⚔️ ¡Atacar!</button>
     <div class="mprev" id="mprev"></div>
@@ -198,7 +206,8 @@
   <div class="bp-react-row">
     <span id="sp-panel-title" style="font-weight:700;font-size:.82rem"></span>
     <button class="btn gold" id="btn-cast-panel" disabled style="opacity:.45;margin-left:auto" onclick="castSpell()">✨ Jugar</button>
-    <button class="btn sec" style="padding:.4rem .7rem" onclick="closeSpellPanelOnly()">✕</button>
+    <button class="btn sec" id="btn-pass-spell" onclick="passRoundSpell()">Pasar</button>
+    <button class="btn sec" id="btn-close-spell" style="padding:.4rem .7rem" onclick="closeSpellPanelOnly()">✕</button>
   </div>
   <div class="hand-row" id="sp-hand"></div>
 </div>
@@ -214,7 +223,7 @@
       <span id="mc-def" style="color:var(--ok);font-weight:900;font-size:1.3rem"></span>
     </div>
     <div class="mbtns">
-      <button class="btn" onclick="executeBuild()">⚡ Confirmar</button>
+      <button class="btn" id="mc-confirm-btn" onclick="executeBuild()">⚔️ ¡Atacar!</button>
     </div>
   </div>
 </div>
@@ -231,9 +240,9 @@
     <div style="font-size:.8rem;line-height:1.8;color:var(--mut)">
       <p><strong style="color:var(--txt)">Analistas</strong><br>Cada laboratorio tiene 5 cartas de analista. Son su única vida.</p><br>
       <p><strong style="color:var(--txt)">Moléculas válidas</strong><br>H₂O · H₂O₂ · O₂ · H₂ · H₃ · CO · CO₂ · N₂ · NOP · NO₂ · NH₃ · H₂S · SO₂ · S₂ · PH₃ · PO. Las cartas que no pueden combinarse se oscurecen automáticamente.</p><br>
-      <p><strong style="color:var(--txt)">Turnos</strong><br>El primer turno es tuyo y luego se alterna. En tu turno eliges UNA acción: ⚔️ <strong style="color:var(--txt)">Batallar</strong>, ✨ <strong style="color:var(--txt)">Hechizo</strong> o 🃏 <strong style="color:var(--txt)">Robar 2 cartas</strong>. Al empezar cada turno robas además 1 carta automática.</p><br>
-      <p><strong style="color:var(--txt)">Batalla</strong><br>Construyes una molécula y ataca al instante: ATK − DEF de la molécula rival. Si haces daño, su molécula se destruye y pierde 1 analista; si no, el ataque queda 🛡 bloqueado. Sin molécula rival el golpe es 💥 directo. Tu molécula se queda en tu zona defendiéndote. Uranio ☢ ignora la mitad de la DEF rival.</p><br>
-      <p><strong style="color:var(--txt)">Efectos</strong><br>Las cartas de efecto (Plomo y Helio) se juegan con la acción ✨ Hechizo. Sus efectos están en desarrollo: de momento no alteran el combate.</p><br>
+      <p><strong style="color:var(--txt)">Turnos</strong><br>El primer turno es tuyo y luego se alterna. En tu turno eliges UNA acción: ⚔️ <strong style="color:var(--txt)">Atacar</strong>, ✨ <strong style="color:var(--txt)">Hechizo</strong> o 🃏 <strong style="color:var(--txt)">Robar 2 cartas</strong>. Al empezar cada turno robas además 1 carta automática.</p><br>
+      <p><strong style="color:var(--txt)">Ataque y defensa</strong><br>Selecciona los elementos <strong style="color:var(--txt)">en el orden de la fórmula</strong> (H·H·O para H₂O). Tras tu ataque, el rival puede 🛡 defenderse formando otra molécula o pasar. Después viene la ✨ ronda de hechizos y por último la 💥 resolución: ATK − DEF de la defensa. Si hay daño, el defensor pierde 1 analista; si no, queda bloqueado. Ambas moléculas se descartan. Uranio ☢ ignora la mitad de la DEF rival.</p><br>
+      <p><strong style="color:var(--txt)">Hechizos</strong><br>Puedes jugarlos como acción de turno o durante la ronda de hechizos. Sus efectos están en desarrollo: de momento no alteran el combate.</p><br>
       <p><strong style="color:var(--txt)">Contra la Máquina</strong><br>Juega contra un científico artificial con tres niveles: Becario 🥼, Doctora 🔬 y Nobel 🧠.</p>
     </div>
     <div style="text-align:center;margin-top:1.2rem">
