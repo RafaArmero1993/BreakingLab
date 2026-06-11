@@ -24,7 +24,7 @@
 
 /* Versión única de la app: se muestra en portada y reglas, y debe ir
    a la par con CACHE_VERSION en sw.js */
-const APP_VERSION='v1.3.1';
+const APP_VERSION='v1.4';
 
 /* ════════════════════════════════
    SFX (WebAudio, sin assets)
@@ -275,7 +275,7 @@ function renderStrip(p){
   row.innerHTML='';
   const lbl=document.createElement('div');
   lbl.className='pname-lbl c'+n+((!G.vsAI&&p===1)?' flipped-lbl':'');
-  lbl.textContent=(G.vsAI&&p===1?G.aiAvatar+' ':'')+G.names[p];
+  lbl.textContent=(p===0?'⚗️ ':(G.vsAI?G.aiAvatar+' ':'🧬 '))+G.names[p];
   row.appendChild(lbl);
   const anWrap=document.createElement('div');anWrap.className='analysts';
   for(let i=0;i<MAX_AN;i++) anWrap.appendChild(makeAnalystCard(p,i,i<G.an[p]));
@@ -1099,7 +1099,7 @@ function startGame(){
     G.aiAvatar=AI_LEVELS[_mode.level].emoji;
   }
   _bootTable();
-  beginTurn(0); /* el primer turno es siempre del jugador */
+  showVersus(()=>beginTurn(0)); /* el primer turno es siempre del jugador */
 }
 
 function rematch(){
@@ -1107,7 +1107,22 @@ function rematch(){
   initState(cfg.names[0],cfg.names[1]);
   G.vsAI=cfg.vsAI;G.aiLevel=cfg.aiLevel;G.aiAvatar=cfg.aiAvatar;
   _bootTable();
-  beginTurn(0);
+  showVersus(()=>beginTurn(0));
+}
+
+/* Pantalla VS: los dos laboratorios frente a frente antes del duelo */
+function showVersus(cb){
+  const ov=document.getElementById('ov-versus');
+  if(!ov){cb&&cb();return;}
+  const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  document.getElementById('vs-name1').innerHTML='⚗️ '+esc(G.names[0]);
+  document.getElementById('vs-name2').innerHTML=
+    (G.vsAI?G.aiAvatar+' ':'🧬 ')+esc(G.names[1])+
+    (G.vsAI&&AI_LEVELS[G.aiLevel]?`<small>${AI_LEVELS[G.aiLevel].corp}</small>`:'');
+  ov.classList.remove('show');void ov.offsetWidth;ov.classList.add('show');
+  sfx.announce();
+  setTimeout(()=>sfx.fire(),700);
+  setTimeout(()=>{ov.classList.remove('show');cb&&cb();},2400);
 }
 
 function _bootTable(){
@@ -1159,21 +1174,22 @@ function endGame(){
   const title=document.getElementById('rtitle');
   const sub=document.getElementById('rsub');
   title.classList.remove('lose');
+  const corp=G.vsAI&&AI_LEVELS[G.aiLevel]?AI_LEVELS[G.aiLevel].corp:'';
   if(w===-1){
-    title.textContent='🤝 ¡Empate!';
-    sub.textContent='Ambos equipos de analistas han caído.';
+    title.textContent='🤝 La molécula se pierde';
+    sub.textContent='Ambos laboratorios caen. La Molécula Maestra sigue siendo un misterio.';
   } else if(G.vsAI){
     if(w===0){
-      title.textContent='🏆 ¡Victoria!';
-      sub.textContent=`Has derrotado a ${G.names[1]}. ¡El Nobel es tuyo!`;
+      title.textContent='🏆 ¡Patente conseguida!';
+      sub.textContent=`Tu laboratorio sintetiza la Molécula Maestra antes que ${corp}. ¡El Nobel y la gloria son tuyos!`;
     } else {
-      title.textContent='💀 Derrota';
+      title.textContent='💀 Laboratorio clausurado';
       title.classList.add('lose');
-      sub.textContent=`${G.names[1]} ha desmantelado tu laboratorio. ¡Revancha!`;
+      sub.textContent=`${G.names[1]} registra la patente para ${corp}. Tu laboratorio cierra sus puertas… ¡Exige la revancha!`;
     }
   } else {
-    title.textContent=`🏆 ¡${G.names[w]} gana!`;
-    sub.textContent=`Los analistas de ${G.names[1-w]} han sido eliminados del laboratorio.`;
+    title.textContent=`🏆 ¡${G.names[w]} consigue la patente!`;
+    sub.textContent=`La Molécula Maestra ya tiene dueño. El laboratorio de ${G.names[1-w]} cierra sus puertas.`;
   }
   document.getElementById('rstats').innerHTML=`
     <div class="crow"><span>Turnos jugados</span><span class="cv">${G.stats.turns}</span></div>
@@ -1302,6 +1318,7 @@ function showScreen(id){
   document.body.classList.toggle('in-game',id==='game');
 }
 function openRules(){document.getElementById('ov-rules').classList.add('open');}
+function openStory(){document.getElementById('ov-story').classList.add('open');}
 
 function toggleSound(){
   const m=sfx.toggle();
