@@ -24,7 +24,7 @@
 
 /* Versión única de la app: se muestra en portada y reglas, y debe ir
    a la par con CACHE_VERSION en sw.js */
-const APP_VERSION='v1.4';
+const APP_VERSION='v1.5';
 
 /* ════════════════════════════════
    SFX (WebAudio, sin assets)
@@ -347,18 +347,20 @@ function renderStack(p,cards,revealed){
   stack.style.cssText='display:flex;gap:.3rem;align-items:flex-end;justify-content:center;flex-wrap:wrap;padding:.3rem .4rem .1rem;height:auto;';
 
   cards.forEach((card,i)=>{
-    const w=makeElemCard(card,p,false,false);
+    let w=makeElemCard(card,p,false,false);
     w.onclick=null; /* quita el toggleSelect de makeElemCard */
     if(!revealed){
+      /* boca abajo: se clona el nodo para ELIMINAR todos los listeners
+         (zoom por long-press incluido) — nadie puede espiar la jugada */
       w.classList.remove('clickable');
       const flip=w.querySelector('.card-flip');
       if(flip)flip.classList.add('flipped');
+      w=w.cloneNode(true);
     } else {
       w.classList.add('clickable');
       w.onclick=()=>showZoom(card);
     }
     addMarco(w);
-    addLongPress(w,()=>showZoom(card));
     stack.appendChild(w);
   });
 
@@ -663,14 +665,12 @@ function executeBuild(){
   placeMolecule(p,mol,cards);
   sfx.build();
   updateActionBar('off');
+  /* las cartas quedan BOCA ABAJO: nadie ve la jugada rival hasta la
+     resolución de la batalla */
   if(G._buildRole==='attack'){
-    flipZone(p,()=>{
-      announce(`⚔️ ${G.names[p]} ataca con ${mol.formula}`,'#fb7185',()=>startDefense());
-    });
+    announce(`⚔️ ${G.names[p]} lanza un ataque secreto`,'#fb7185',()=>startDefense());
   } else {
-    flipZone(p,()=>{
-      announce(`🛡 ${G.names[p]} se defiende con ${mol.formula}`,'#22d3ee',()=>startSpellRound());
-    });
+    announce(`🛡 ${G.names[p]} presenta su defensa`,'#22d3ee',()=>startSpellRound());
   }
 }
 
@@ -695,13 +695,14 @@ function startDefense(){
   if(G.vsAI&&defP===1){
     showAIBanner(`${G.aiAvatar} ${G.names[1]} decide su defensa`);
     setTimeout(()=>{
-      const d=AI.chooseDefense(G,G.mols[G.turn]);
+      /* la IA defiende A CIEGAS: el ataque está boca abajo también para ella */
+      const d=AI.chooseDefense(G);
       if(d){
         const mol=buildMol(d.cards);
         placeMolecule(1,mol,[...d.cards]);
         sfx.build();
-        showAIBanner(`${G.aiAvatar} ${G.names[1]} se defiende con ${mol.formula} 🛡`,2000);
-        flipZone(1,()=>setTimeout(startSpellRound,400));
+        showAIBanner(`${G.aiAvatar} ${G.names[1]} presenta su defensa 🛡`,2000);
+        setTimeout(startSpellRound,1100);
       } else {
         showAIBanner(`${G.aiAvatar} ${G.names[1]} no se defiende 😨`,1800);
         setTimeout(startSpellRound,1000);
@@ -709,8 +710,7 @@ function startDefense(){
     },900+Math.random()*900);
   } else {
     handOff(defP,()=>{
-      const a=G.mols[G.turn];
-      announce(`🛡 ¡DEFIÉNDETE! (${a.formula} 🗡${a.atk})`,'#22d3ee');
+      announce('🛡 ¡DEFIÉNDETE! El ataque es secreto','#22d3ee');
       updateActionBar('defense');
     });
   }
@@ -723,8 +723,7 @@ function abDefend(){
   G._buildFor=defP;
   G.build=[];
   handPage=0;
-  const a=G.mols[G.turn];
-  document.getElementById('bp-title').textContent=`🛡 Forma tu defensa — ataque entrante: ${a.formula} 🗡${a.atk}`;
+  document.getElementById('bp-title').textContent='🛡 Forma tu defensa — el ataque rival es secreto';
   renderHand(defP);
   document.getElementById('build-panel').classList.add('open');
 }
@@ -882,7 +881,19 @@ function resolveBattle(){
   const blocked=!!def&&dmg<=0;
   G.stats.battles++;
 
-  announce(`💥 ${atk.formula} 🗡${atk.atk}  VS  ${def?def.formula+' 🛡'+def.def:'SIN DEFENSA'}`,'#a78bfa',()=>{
+  /* GRAN REVELACIÓN: las jugadas estaban boca abajo — se voltea
+     primero el ataque, luego la defensa, y entonces chocan */
+  announce('💥 RESOLUCIÓN','#a78bfa',()=>{
+    flipZone(atkP,()=>{
+      const showVS=()=>announce(
+        `${atk.formula} 🗡${atk.atk}  VS  ${def?def.formula+' 🛡'+def.def:'SIN DEFENSA'}`,
+        '#a78bfa',doClash,1400);
+      if(def)flipZone(defP,showVS);
+      else showVS();
+    });
+  },1000);
+
+  function doClash(){
     clashAnimation(atkP,defP,blocked,!def,()=>{
       if(!blocked)loseAnalyst(defP);
       /* ambas moléculas van al descarte */
@@ -897,7 +908,7 @@ function resolveBattle(){
       if(G.an[defP]<=0){setTimeout(endGame,900);return;}
       setTimeout(endTurn,650);
     });
-  },1400);
+  }
 }
 
 function loseAnalyst(p){
@@ -1147,9 +1158,8 @@ function aiTakeTurn(){
       placeMolecule(1,mol,[...choice.cards]);
       sfx.build();
       hideAIBanner();
-      flipZone(1,()=>{
-        announce(`⚔️ ${G.names[1]} ataca con ${mol.formula}`,'#fb7185',()=>startDefense());
-      });
+      /* boca abajo: la fórmula no se revela hasta la resolución */
+      announce(`⚔️ ${G.names[1]} lanza un ataque secreto`,'#fb7185',()=>startDefense());
     } else if(choice.action==='spell'){
       const sp=G.spells[1].find(s=>s.id===choice.id);
       showAIBanner(`${G.aiAvatar} ${G.names[1]} juega ${sp?sp.name:choice.id} ✨`,1600);
@@ -1291,7 +1301,10 @@ function addLongPress(el,fn){
   el.addEventListener('contextmenu',(e)=>{e.preventDefault();});
 }
 
+let _zoomCard=null;
+
 function showZoom(card){
+  _zoomCard=card;
   const wrap=document.getElementById('zoom-card-inner');
   wrap.innerHTML='';
   const el=makeElemCard(card,0,false,false);
@@ -1299,9 +1312,37 @@ function showZoom(card){
   el.onclick=null;
   addMarco(el);
   wrap.appendChild(el);
+  /* reinicia a vista de carta */
+  _setZoomHist(false);
   _zoomJustOpened=true;
   document.getElementById('ov-zoom').classList.add('open');
   setTimeout(()=>{_zoomJustOpened=false;},600);
+}
+
+/* Panel de historia del elemento dentro del zoom */
+function _setZoomHist(open){
+  const hist=document.getElementById('zoom-hist');
+  const wrap=document.getElementById('zoom-card-inner');
+  const btn=document.getElementById('zoom-hist-btn');
+  if(!hist||!wrap||!btn)return;
+  if(open&&_zoomCard){
+    hist.innerHTML=`<h3>${_zoomCard.name} <span>(${_zoomCard.sym} · nº ${_zoomCard.num})</span></h3>
+      <p>${_zoomCard.hist||_zoomCard.info||'Sin datos históricos.'}</p>`;
+    hist.style.display='';
+    wrap.style.display='none';
+    btn.textContent='🃏 Ver carta';
+  } else {
+    hist.style.display='none';
+    wrap.style.display='';
+    btn.textContent='📚 Historia del elemento';
+  }
+}
+
+function toggleZoomHist(e){
+  if(e){e.stopPropagation();e.preventDefault();}
+  const open=document.getElementById('zoom-hist').style.display==='none';
+  sfx.select();
+  _setZoomHist(open);
 }
 
 function closeZoom(){
