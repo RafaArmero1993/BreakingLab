@@ -37,16 +37,14 @@ const AI = {
         if(i === -1){ ok = false; break; }
         cards.push(avail[i]); avail.splice(i,1);
       }
-      if(ok) res.push({cards, atk:mol.atk, def:mol.def, hasU:false, n:cards.length});
+      if(ok) res.push({cards, atk:mol.atk, def:mol.def, n:cards.length});
     }
-    const u = hand.find(c => c.id === 'U');
-    if(u) res.push({cards:[u], atk:u.atk, def:u.def, hasU:true, n:1});
     return res;
   },
 
   /* Decisión del turno como ATACANTE. Devuelve:
        {action:'attack', cards:[...]}  atacar con una molécula
-       {action:'spell',  id:'Pb'}      jugar un hechizo (sin efecto aún)
+       {action:'spell',  id:'Au'}      jugar un hechizo como acción
        {action:'draw'}                 robar 2 cartas
      El defensor responderá después, así que se elige a ciegas:
      maximizar ATK (el daño es ATK − DEF de la defensa rival). */
@@ -56,8 +54,6 @@ const AI = {
     const opts = this.findBuilds(hand);
 
     if(lvl === 'easy'){
-      /* ⚠️ Hechizos sin efecto: el Becario juega uno de vez en cuando
-         solo por diversión. Quitar cuando los efectos se definan. */
       if(G.spells[1].length && Math.random() < .15)
         return {action:'spell', id: G.spells[1][Math.floor(Math.random()*G.spells[1].length)].id};
       if(!opts.length || Math.random() < .3) return {action:'draw'};
@@ -65,15 +61,19 @@ const AI = {
       return {action:'attack', cards:o.cards};
     }
 
+    /* Oro = financiación: con la mano corta es la mejor jugada */
+    if(G.spells[1].some(s=>s.id==='Au') && hand.length <= 4)
+      return {action:'spell', id:'Au'};
+
     if(!opts.length) return {action:'draw'};
-    /* Nobel: más ATK con desempate por menos cartas y U primero;
+    /* Nobel: más ATK con desempate por menos cartas;
        Doctora: simplemente el de más ATK. */
     opts.sort(lvl === 'hard'
-      ? (a,b)=>(b.atk-a.atk)||(a.n-b.n)||((b.hasU?1:0)-(a.hasU?1:0))
+      ? (a,b)=>(b.atk-a.atk)||(a.n-b.n)
       : (a,b)=>b.atk-a.atk);
     const best = opts[0];
     /* ataque flojo y mano corta → mejor pescar cartas */
-    const minAtk = lvl === 'hard' ? 4 : 3;
+    const minAtk = lvl === 'hard' ? 5 : 4;
     if(best.atk < minAtk && hand.length <= 6) return {action:'draw'};
     return {action:'attack', cards:best.cards};
   },
@@ -98,20 +98,57 @@ const AI = {
     opts.sort((a,b)=>(b.def-a.def)||(a.n-b.n));
     const best = opts[0];
     const desperate = G.an[1] <= 2; /* con la vida al límite arriesga más */
-    const minDef = lvl === 'hard' ? (desperate ? 3 : 4) : (desperate ? 3 : 4);
+    const minDef = desperate ? 4 : 5;
     if(best.def >= minDef) return {cards: best.cards};
-    if(lvl === 'normal' && best.def >= 3 && Math.random() < .4)
+    if(lvl === 'normal' && best.def >= 4 && Math.random() < .4)
       return {cards: best.cards};
     return null;
   },
 
   /* Paso de la ronda de hechizos: id del hechizo a jugar o null (pasar).
-     ⚠️ Efectos pendientes de diseño → casi siempre pasa. Implementar
-     aquí la heurística real cuando se definan los efectos. */
+     Las jugadas YA están reveladas en esta fase, así que la IA puede
+     evaluar la batalla con los modificadores de los hechizos.
+     Pb blinda contra radiactivos · He/Pt refuerzan · Ne/Hg debilitan ·
+     Ar contra-anula · Au roba 3. */
   chooseRoundSpell(G){
     const hand = G.spells[1];
     if(!hand.length) return null;
-    const pr = {easy:.4, normal:.2, hard:.1}[G.aiLevel || 'normal'] ?? .2;
-    return Math.random() < pr ? hand[Math.floor(Math.random()*hand.length)].id : null;
+    const lvl = G.aiLevel || 'normal';
+    if(lvl === 'easy')
+      return Math.random() < .4 ? hand[Math.floor(Math.random()*hand.length)].id : null;
+
+    const has = id => hand.some(s=>s.id===id);
+    const iAmAtk = G.turn === 1;
+    const myMol = G.mols[1], rivalMol = G.mols[0];
+    const rivalCastSomething = (G.spellsInArena[0]||[]).length > 0;
+    const isRad = m => !!(m && m.rad);
+
+    /* contramagia: anula los hechizos que el rival ya ha jugado */
+    if(has('Ar') && rivalCastSomething) return 'Ar';
+    /* financiación siempre es valor */
+    if(has('Au')) return 'Au';
+
+    if(iAmAtk && myMol){
+      const defV = rivalMol ? rivalMol.def : 0;
+      const gap = defV - myMol.atk; /* >=0 → me bloquean */
+      if(rivalMol && gap >= 0){
+        if(has('Pb') && isRad(rivalMol)) return 'Pb';
+        if(has('Hg') && gap < 2) return 'Hg';
+        if(has('Pt') && gap < 1) return 'Pt';
+      }
+    } else if(!iAmAtk && rivalMol){
+      if(has('Pb') && isRad(rivalMol)) return 'Pb';
+      const margin = rivalMol.atk - (myMol ? myMol.def : 0); /* >0 → recibo daño */
+      if(margin > 0){
+        if(myMol && has('He') && margin <= 2) return 'He';
+        if(has('Ne') && margin <= 2) return 'Ne';
+        if(myMol && has('Pt') && margin <= 1) return 'Pt';
+        if(lvl === 'hard'){ /* a la desesperada, todo refuerzo suma */
+          if(myMol && has('He')) return 'He';
+          if(has('Ne')) return 'Ne';
+        }
+      }
+    }
+    return null;
   },
 };

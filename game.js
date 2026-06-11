@@ -24,7 +24,7 @@
 
 /* Versión única de la app: se muestra en portada y reglas, y debe ir
    a la par con CACHE_VERSION en sw.js */
-const APP_VERSION='v1.6';
+const APP_VERSION='v1.7';
 
 /* ════════════════════════════════
    SFX (WebAudio, sin assets)
@@ -84,9 +84,7 @@ function matchMol(elems){
 }
 
 function usableIds(selectedIds, handIds){
-  if(selectedIds.includes('U')) return new Set();
   const useful = new Set();
-  if(selectedIds.length === 0 && handIds && handIds.includes('U')) useful.add('U');
   const avail = handIds ? [...handIds] : [];
   for(const id of selectedIds){ const i=avail.indexOf(id); if(i>-1) avail.splice(i,1); }
   /* prefijo ordenado: selectedIds debe ser prefijo exacto de mol.ids,
@@ -108,7 +106,6 @@ function usableIds(selectedIds, handIds){
 function handUsableIds(hand){
   const useful=new Set();
   const handIds=hand.map(e=>e.id);
-  if(handIds.includes('U'))useful.add('U');
   for(const mol of VALID_MOLECULES){
     const needed=[...mol.ids],avail=[...handIds];
     let ok=true;
@@ -120,7 +117,6 @@ function handUsableIds(hand){
 
 function canFormAnyMol(hand){
   const handIds = hand.map(e=>e.id);
-  if(handIds.includes('U')) return true;
   for(const mol of VALID_MOLECULES){
     const needed=[...mol.ids], avail=[...handIds];
     let ok=true;
@@ -130,14 +126,15 @@ function canFormAnyMol(hand){
   return false;
 }
 
+function molIsRad(mol){ return !!(mol&&mol.rad); }
+
 function buildMol(elems){
   const m = matchMol(elems);
   const bA = elems.reduce((s,x)=>s+x.atk,0);
   const bD = elems.reduce((s,x)=>s+x.def,0);
-  const hasU = elems.some(x=>x.id==='U');
-  if(m) return {name:m.name,formula:m.formula,atk:m.atk,def:m.def,combo:true,hasU,valid:true};
-  if(elems.length===1 && hasU) return {name:'Uranio',formula:'U',atk:bA,def:bD,combo:false,hasU,valid:true};
-  return {name:'Compuesto',formula:elems.map(x=>x.sym).join(''),atk:bA,def:bD,combo:false,hasU,valid:false};
+  const rad = elems.some(x=>typeof RADIOACTIVE!=='undefined'&&RADIOACTIVE.includes(x.id));
+  if(m) return {name:m.name,formula:m.formula,atk:m.atk,def:m.def,combo:true,rad,valid:true};
+  return {name:'Compuesto',formula:elems.map(x=>x.sym).join(''),atk:bA,def:bD,combo:false,rad,valid:false};
 }
 
 /* ════════════════════════════════
@@ -164,7 +161,7 @@ let _mode={vsAI:true, level:'normal'};
 
 function initState(n1,n2){
   G={names:[n1||'J1',n2||'J2'],an:[MAX_AN,MAX_AN],
-     hands:[[],[]],spells:[[],[]],deckSize:[6,6],sharedDeck:32,discardSize:0,
+     hands:[[],[]],spells:[[],[]],deckSize:[6,6],sharedDeck:200,discardSize:0,
      build:[],mols:[null,null],molCards:[[],[]],
      spellsInArena:[[],[]],selSpell:null,
      turn:0,turnCount:0,busy:false,phase:'action',
@@ -202,11 +199,16 @@ function sharedDeckTake(p,n){
    CARD BUILDERS
 ════════════════════════════════ */
 /* Color neón por elemento (inspirado en CPK) */
+/* Color neón por carta: CARD_COLORS llega de game-data.js (generado);
+   este mapa queda como respaldo */
 const ELEMENT_COLORS={
   H:'#7dd3fc', O:'#fb7185', N:'#60a5fa', C:'#e2e8f0',
-  S:'#facc15', P:'#fb923c', U:'#4ade80', Pb:'#94a3b8', He:'#fbbf24',
+  S:'#facc15', P:'#fb923c', U:'#a3e635', Pb:'#94a3b8', He:'#fbbf24',
 };
-function elColor(id){ return ELEMENT_COLORS[id] || '#7c8cff'; }
+function elColor(id){
+  if(typeof CARD_COLORS!=='undefined'&&CARD_COLORS[id])return CARD_COLORS[id];
+  return ELEMENT_COLORS[id] || '#7c8cff';
+}
 
 function imgH(src,alt){
   return `<div class="ec-img"><img src="${src}" alt="${alt}" onerror="this.parentNode.innerHTML='<b style=&quot;font-size:1.3rem;color:var(--txt)&quot;>${alt}</b>'"/></div>`;
@@ -884,13 +886,18 @@ function closeSpellPanelOnly(){
   document.getElementById('spell-panel').classList.remove('open');
 }
 
-/* ⚠️ Efectos pendientes de diseño: implementar aquí cuando se definan */
+/* Efectos de los hechizos: Au actúa al instante; el resto se registran
+   en spellsInArena y los aplica battleMods() en la resolución */
 function doCastSpell(p,id){
   const sp=G.spells[p].find(s=>s.id===id);if(!sp)return false;
   G.spells[p]=G.spells[p].filter(s=>s.id!==id);
   G.discardSize++;G.stats.spells++;
   G.spellsInArena[p].push(sp);
   sfx.spell();
+  if(sp.id==='Au'){
+    sharedDeckTake(p,3);
+    if(isHuman(p))toast('💰 Financiación: robas 3 cartas');
+  }
   renderZoneSpells(p);
   renderDecks();
   return true;
@@ -924,6 +931,29 @@ function passRoundSpell(){
 /* ════════════════════════════════
    RESOLUCIÓN DE LA BATALLA
 ════════════════════════════════ */
+/* Modificadores de los hechizos jugados este turno (efectos reales):
+   Ar anula los hechizos del rival · Pb reduce 50% ATK/DEF a las jugadas
+   radiactivas rivales · He +2 DEF propia · Pt +1/+1 propia ·
+   Ne −2 ATK rival · Hg −2 DEF rival · (Au actúa al jugarse: roba 3) */
+function battleMods(atkP,defP){
+  const cast=p=>(G.spellsInArena[p]||[]).map(s=>s.id);
+  const arCancel=[cast(0).includes('Ar'),cast(1).includes('Ar')];
+  const active=p=>arCancel[1-p]?[]:cast(p).filter(id=>id!=='Ar');
+  let atkMod=0, defMod=0, atkMul=1, defMul=1;
+  for(const id of active(atkP)){
+    if(id==='Pt')atkMod+=1;
+    if(id==='Hg')defMod-=2;
+    if(id==='Pb'&&molIsRad(G.mols[defP]))defMul=.5;
+  }
+  for(const id of active(defP)){
+    if(id==='He')defMod+=2;
+    if(id==='Pt')defMod+=1;
+    if(id==='Ne')atkMod-=2;
+    if(id==='Pb'&&molIsRad(G.mols[atkP]))atkMul=.5;
+  }
+  return {atkMod,defMod,atkMul,defMul};
+}
+
 function resolveBattle(){
   G.phase='resolve';
   G.busy=true;
@@ -931,15 +961,18 @@ function resolveBattle(){
   hideAIBanner();
   const atkP=G.turn, defP=1-atkP;
   const atk=G.mols[atkP], def=G.mols[defP];
-  const defV=def?(atk.hasU?Math.floor(def.def/2):def.def):0;
-  const dmg=atk.atk-defV;
+  const mods=battleMods(atkP,defP);
+  const atkV=Math.max(0,Math.round(atk.atk*mods.atkMul)+mods.atkMod);
+  const defV=def?Math.max(0,Math.round(def.def*mods.defMul)+mods.defMod):0;
+  const dmg=atkV-defV;
   const blocked=!!def&&dmg<=0;
   G.stats.battles++;
 
   /* las jugadas ya se revelaron al empezar la ronda de hechizos:
-     directo al veredicto y al choque */
+     directo al veredicto (con los hechizos ya aplicados ✨) y al choque */
+  const fx=(atkV!==atk.atk||(def&&defV!==def.def))?' ✨':'';
   announce(
-    `${atk.formula} 🗡${atk.atk}  VS  ${def?def.formula+' 🛡'+def.def:'SIN DEFENSA'}`,
+    `${atk.formula} 🗡${atkV}  VS  ${def?def.formula+' 🛡'+defV:'SIN DEFENSA'}${fx}`,
     '#a78bfa',doClash,1400);
 
   function doClash(){
