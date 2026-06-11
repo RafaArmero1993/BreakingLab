@@ -36,10 +36,12 @@
 <div id="screen-intro" class="screen active">
   <div class="logo">Breaking<span>Lab</span></div>
   <div class="logo-sub">⚗️ El Duelo Molecular</div>
+  <div class="intro-story">Dos laboratorios rivales.<br>Una molécula que cambiará el mundo.<br><span>Solo uno conseguirá la patente.</span></div>
   <div class="intro-credits">by Rafa Armero &amp; Tomás Aznar</div>
   <div class="intro-ver" id="app-ver">v—</div>
   <div class="intro-btns">
     <button class="btn gold" onclick="showScreen('mode')">🎮 Jugar</button>
+    <button class="btn sec" onclick="openStory()">📜 La Historia</button>
     <button class="btn sec" onclick="openRules()">📖 Ver Reglas</button>
     <button class="btn sec" id="btn-install" style="display:none" onclick="installApp()">📲 Instalar en tu móvil</button>
   </div>
@@ -73,10 +75,10 @@
   <div class="setup-box ai">
     <button class="close-x" onclick="showScreen('mode')">✕</button>
     <h2 id="setup-title">Tu Laboratorio</h2>
-    <div class="nf"><label class="c1">Laboratorio 1</label><input id="inp-p1" type="text" placeholder="Tu nombre" maxlength="20"/></div>
-    <div class="nf" id="wrap-p2" style="display:none"><label class="c2">Laboratorio 2</label><input id="inp-p2" type="text" placeholder="Nombre del rival" maxlength="20"/></div>
+    <div class="nf"><label class="c1">Nombre de tu laboratorio</label><input id="inp-p1" type="text" placeholder="Tu nombre" maxlength="20"/></div>
+    <div class="nf" id="wrap-p2" style="display:none"><label class="c2">Laboratorio rival</label><input id="inp-p2" type="text" placeholder="Nombre del rival" maxlength="20"/></div>
     <div id="diff-wrap">
-      <div class="nf"><label>Dificultad</label></div>
+      <div class="nf"><label>Elige a tu rival</label></div>
       <div class="diff-row">
         <button class="diff-chip" data-level="easy" onclick="setLevel('easy')"><span class="dc-e">🥼</span><span class="dc-l">Becario</span></button>
         <button class="diff-chip sel" data-level="normal" onclick="setLevel('normal')"><span class="dc-e">🔬</span><span class="dc-l">Doctora</span></button>
@@ -167,6 +169,31 @@
 <!-- flash de impacto + anuncios de fase -->
 <div id="flash"></div>
 <div id="phase-banner"></div>
+
+<!-- VERSUS splash al empezar el duelo -->
+<div id="ov-versus">
+  <div class="vs-side vs-left" id="vs-name1">⚗️ Tú</div>
+  <div class="vs-mid">VS</div>
+  <div class="vs-side vs-right" id="vs-name2">🧬 Rival</div>
+  <div class="vs-tag">La Molécula Maestra espera…</div>
+</div>
+
+<!-- HISTORIA -->
+<div class="ov" id="ov-story">
+  <div class="modal ai" style="max-width:480px;text-align:left">
+    <h2 style="text-align:center;margin-bottom:.9rem">📜 La Historia</h2>
+    <div class="story-text">
+      <p>Año 2042. La <strong>Molécula Maestra</strong> — la clave de la energía limpia infinita — está a un solo experimento de ser sintetizada.</p>
+      <p>Dos laboratorios rivales compiten por lograrla primero. Cada elemento cuenta. Cada reacción puede ser la definitiva. Y solo hay una patente.</p>
+      <p>Roba elementos, forma moléculas y lánzalas contra el equipo rival. Cuando un laboratorio se queda sin analistas… <strong>cierra para siempre</strong>.</p>
+      <p class="story-final">⚗️ Que gane la mejor química.</p>
+    </div>
+    <div style="text-align:center;margin-top:1.2rem">
+      <button class="btn gold" onclick="document.getElementById('ov-story').classList.remove('open');showScreen('mode')">🎮 ¡A jugar!</button>
+      <button class="btn sec" onclick="document.getElementById('ov-story').classList.remove('open')">Cerrar</button>
+    </div>
+  </div>
+</div>
 
 <!-- ═══ RESULT ═══ -->
 <div id="screen-result" class="screen">

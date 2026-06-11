@@ -13,11 +13,14 @@
 
 const AI_LEVELS = {
   easy:   {key:'easy',   label:'Becario', emoji:'🥼', name:'Becario Byte',
-           desc:'Juega relajado y se equivoca. Ideal para aprender.'},
+           corp:'GarajeLab™',
+           desc:'GarajeLab™ — un becario con ganas. Comete errores. Ideal para aprender.'},
   normal: {key:'normal', label:'Doctora', emoji:'🔬', name:'Dra. Curie 3000',
-           desc:'Juega sólido. Un reto justo.'},
+           corp:'Quantum Corp™',
+           desc:'Quantum Corp™ — juega sólido. Un reto justo.'},
   hard:   {key:'hard',   label:'Nobel',   emoji:'🧠', name:'Dr. Heisenberg IA',
-           desc:'Calcula cada átomo. Sin piedad.'},
+           corp:'Helix Industries™',
+           desc:'Helix Industries™ — calcula cada átomo. Sin piedad.'},
 };
 
 const AI = {

@@ -101,7 +101,17 @@ body.in-game #btn-sound{display:none;}
 }
 @keyframes logoPulse{0%,100%{filter:drop-shadow(0 0 16px rgba(34,211,238,.35));}50%{filter:drop-shadow(0 0 34px rgba(167,139,250,.6));}}
 .logo-sub{color:var(--mut);letter-spacing:6px;text-transform:uppercase;font-size:clamp(.62rem,2.4vw,.8rem);font-weight:700;}
-.intro-credits{color:rgba(238,242,255,.4);font-size:.6rem;letter-spacing:1px;margin-top:-.3rem;}
+.intro-story{
+  text-align:center;color:var(--mut);font-size:clamp(.72rem,2.8vw,.88rem);
+  line-height:1.75;font-weight:600;letter-spacing:.4px;margin-top:.4rem;
+  animation:fadeIn 1.2s ease;
+}
+.intro-story span{
+  background:linear-gradient(110deg,var(--gold),#fff,var(--gold));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  font-weight:800;
+}
+.intro-credits{color:rgba(238,242,255,.4);font-size:.6rem;letter-spacing:1px;margin-top:.2rem;}
 .intro-ver{color:rgba(238,242,255,.25);font-size:.55rem;letter-spacing:2.5px;}
 .intro-btns{display:flex;flex-direction:column;gap:.6rem;margin-top:1.3rem;align-items:center;}
 #ios-hint{display:none;color:var(--mut);font-size:.62rem;max-width:280px;text-align:center;line-height:1.5;margin-top:.4rem;}
@@ -373,6 +383,55 @@ body.in-game #btn-sound{display:none;}
 .abtn:active:not(:disabled){transform:translateY(1px) scale(.97);}
 .abtn:disabled{opacity:.32;cursor:default;}
 .abtn.icon{flex:0 0 auto;width:44px;max-width:44px;border-radius:50%;padding:.4rem 0;}
+
+/* ── Emblemas corporativos de cada laboratorio ── */
+#pzone1::after,#pzone2::after{
+  position:absolute;top:6px;right:10px;font-size:clamp(.9rem,3vw,1.3rem);
+  opacity:.22;pointer-events:none;z-index:1;
+}
+#pzone1::after{content:'⚗️';}
+#pzone2::after{content:'🧬';}
+
+/* ── VERSUS splash ── */
+#ov-versus{
+  position:fixed;inset:0;z-index:650;display:none;
+  flex-direction:column;align-items:center;justify-content:center;gap:1rem;
+  background:
+    radial-gradient(70vmax 50vmax at 50% 0%, rgba(34,211,238,.16), transparent 60%),
+    radial-gradient(70vmax 50vmax at 50% 100%, rgba(251,113,133,.16), transparent 60%),
+    rgba(4,6,16,.96);
+}
+#ov-versus.show{display:flex;animation:vsFade 2.4s ease forwards;}
+@keyframes vsFade{0%{opacity:0;}8%{opacity:1;}88%{opacity:1;}100%{opacity:0;}}
+.vs-side{
+  font-family:'Orbitron','Exo 2',sans-serif;font-weight:900;
+  font-size:clamp(1.05rem,5.5vw,1.8rem);letter-spacing:1px;white-space:nowrap;
+  max-width:94vw;overflow:hidden;text-overflow:ellipsis;text-align:center;
+}
+.vs-side small{
+  display:block;font-size:.45em;color:var(--mut);font-weight:700;
+  letter-spacing:2.5px;text-transform:uppercase;margin-top:.25rem;text-shadow:none;
+}
+.vs-left{color:var(--acc);text-shadow:0 0 22px rgba(34,211,238,.7);animation:vsInL .55s cubic-bezier(.2,.9,.3,1.2) both;}
+.vs-right{color:var(--red);text-shadow:0 0 22px rgba(251,113,133,.7);animation:vsInR .55s cubic-bezier(.2,.9,.3,1.2) .25s both;}
+@keyframes vsInL{from{transform:translateX(-70vw);opacity:0;}to{transform:none;opacity:1;}}
+@keyframes vsInR{from{transform:translateX(70vw);opacity:0;}to{transform:none;opacity:1;}}
+.vs-mid{
+  font-family:'Orbitron',sans-serif;font-weight:900;
+  font-size:clamp(2rem,10vw,3.4rem);letter-spacing:4px;
+  background:linear-gradient(110deg,var(--gold),#fff,var(--gold));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 26px rgba(251,191,36,.6));
+  animation:vsMid .5s cubic-bezier(.2,.9,.3,1.4) .55s both;
+}
+@keyframes vsMid{from{transform:scale(3);opacity:0;}to{transform:scale(1);opacity:1;}}
+.vs-tag{color:var(--mut);font-size:.7rem;letter-spacing:2.5px;text-transform:uppercase;animation:fadeIn .6s ease 1s both;}
+
+/* ── Historia ── */
+.story-text{font-size:.82rem;line-height:1.8;color:var(--mut);}
+.story-text p{margin-bottom:.8rem;}
+.story-text strong{color:var(--gold);}
+.story-final{text-align:center;color:var(--txt);font-weight:800;letter-spacing:.5px;}
 
 /* ── Zona activa: brillo en quien debe actuar ── */
 @keyframes zoneGlow{0%,100%{box-shadow:inset 0 0 30px rgba(34,211,238,.08),0 0 10px rgba(255,255,255,.08);}50%{box-shadow:inset 0 0 30px rgba(34,211,238,.14),0 0 24px rgba(255,255,255,.22);}}
