@@ -22,6 +22,10 @@
    Después el turno pasa al rival, que hace exactamente lo mismo.
 ════════════════════════════════════════════════════════════════ */
 
+/* Versión única de la app: se muestra en portada y reglas, y debe ir
+   a la par con CACHE_VERSION en sw.js */
+const APP_VERSION='v1.3.1';
+
 /* ════════════════════════════════
    SFX (WebAudio, sin assets)
 ════════════════════════════════ */
@@ -1353,6 +1357,10 @@ window.addEventListener('appinstalled',()=>{
 
 document.addEventListener('DOMContentLoaded',()=>{
   spawnBubbles();
+  const v1=document.getElementById('app-ver');
+  const v2=document.getElementById('app-ver-rules');
+  if(v1)v1.textContent=APP_VERSION;
+  if(v2)v2.textContent='BreakingLab '+APP_VERSION;
   const icon=sfx.muted?'🔇':'🔊';
   const b1=document.getElementById('btn-sound');
   const b2=document.getElementById('btn-sound-game');
@@ -1378,6 +1386,6 @@ document.addEventListener('DOMContentLoaded',()=>{
       _swReloaded=true;
       window.location.reload();
     });
-    navigator.serviceWorker.register('sw.js').catch(()=>{});
+    navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).catch(()=>{});
   }
 });
