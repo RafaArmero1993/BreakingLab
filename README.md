@@ -27,8 +27,8 @@ Para probar en local: `python3 -m http.server` y abre `http://localhost:8000`.
 
 - Cada laboratorio tiene **5 analistas**: son su vida.
 - **Turnos alternos** (empiezas tú). En tu turno eliges UNA acción: ⚔️ **Atacar**, ✨ **Hechizo** o 🃏 **Robar 2 cartas**. Al empezar cada turno robas además 1 carta automática.
-- **Ataque:** selecciona los elementos **en el orden de la fórmula** (H·H·O para H₂O). El rival entonces puede 🛡 **defenderse** con otra molécula o pasar; después viene la ✨ **ronda de hechizos** (defensor primero, alternando) y por último la 💥 **resolución**: ATK − DEF de la defensa. Con daño, el defensor pierde 1 analista; sin daño, bloqueado. Ambas moléculas se descartan. El **Uranio** ☢ ignora la mitad de la DEF rival.
-- **Hechizos:** se juegan como acción de turno o en la ronda de hechizos. Sus efectos están pendientes de diseño — de momento no alteran el combate.
+- **Ataque:** selecciona los elementos **en el orden de la fórmula** (H·H·O para H₂O). El rival entonces puede 🛡 **defenderse** con otra molécula o pasar; después viene la ✨ **ronda de hechizos** (defensor primero, alternando) y por último la 💥 **resolución**: ATK − DEF de la defensa. Con daño, el defensor pierde 1 analista; sin daño, bloqueado. Ambas moléculas se descartan.
+- **Hechizos (7):** cada uno actúa según sus propiedades reales — **Plomo** blinda contra radiactivos (U·Ra·Po pierden 50%), **Helio** +2 DEF propia, **Neón** −2 ATK rival, **Argón** anula los hechizos rivales, **Oro** roba 3 cartas, **Platino** +1/+1, **Mercurio** −2 DEF rival.
 
 ## 🗂 Estructura
 
@@ -38,8 +38,8 @@ Para probar en local: `python3 -m http.server` y abre `http://localhost:8000`.
 | `style.css` | Tema visual (neón de laboratorio) |
 | `game.js` | Motor del juego, sonidos y PWA |
 | `ai-player.js` | IA del modo Contra la Máquina |
-| `game-data.js` | Elementos, hechizos y moléculas (editable) |
-| `card-config.js` | Probabilidad de aparición de cada carta (editable) |
+| `game-data.js` | 43 elementos + 7 hechizos + 290 moléculas reales (generado) |
+| `card-config.js` | Pesos de aparición ∝ presencia en las moléculas (generado) |
 | `sw.js` / `manifest.webmanifest` | Soporte offline e instalación |
 
-> Para balancear el juego solo necesitas tocar `game-data.js` y `card-config.js`.
+> `game-data.js` y `card-config.js` se generan con `python3 tools/generate_data.py`: edita ahí elementos, moléculas y balance.
