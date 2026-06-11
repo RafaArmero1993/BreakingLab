@@ -1,9 +1,14 @@
 /* ════════════════════════════════════════════════════════════════
    SERVICE WORKER — BreakingLab PWA
-   Precachea la app completa para que funcione 100% offline una
-   vez instalada. Sube CACHE_VERSION al publicar cambios.
+   Estrategias:
+   - Navegaciones (HTML): red primero, caché de respaldo → las
+     versiones nuevas se ven en cuanto hay conexión.
+   - Assets propios: stale-while-revalidate → respuesta instantánea
+     desde caché y actualización en segundo plano.
+   - Fuentes de Google: stale-while-revalidate en caché aparte.
+   Sube CACHE_VERSION al publicar cambios.
 ════════════════════════════════════════════════════════════════ */
-const CACHE_VERSION = 'breakinglab-v1.1.1';
+const CACHE_VERSION = 'breakinglab-v1.2.0';
 
 const PRECACHE = [
   './',
@@ -50,8 +55,9 @@ self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
 
-  /* Fuentes de Google: stale-while-revalidate en caché aparte */
   const url = new URL(req.url);
+
+  /* Fuentes de Google: stale-while-revalidate en caché aparte */
   if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
     e.respondWith(
       caches.open(CACHE_VERSION + '-fonts').then(async (c) => {
@@ -63,17 +69,31 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  /* App shell: cache-first con fallback a red */
-  e.respondWith(
-    caches.match(req).then((cached) =>
-      cached ||
+  /* Navegaciones (HTML): red primero para ver versiones nuevas al instante */
+  if (req.mode === 'navigate' || req.destination === 'document') {
+    e.respondWith(
       fetch(req).then((res) => {
-        if (res.ok && url.origin === location.origin) {
+        if (res.ok) {
           const copy = res.clone();
           caches.open(CACHE_VERSION).then((c) => c.put(req, copy));
         }
         return res;
-      }).catch(() => caches.match('./index.html'))
-    )
+      }).catch(() =>
+        caches.match(req).then((cached) => cached || caches.match('./index.html'))
+      )
+    );
+    return;
+  }
+
+  /* Assets propios: stale-while-revalidate */
+  e.respondWith(
+    caches.open(CACHE_VERSION).then(async (c) => {
+      const cached = await c.match(req);
+      const fresh = fetch(req).then((res) => {
+        if (res.ok && url.origin === location.origin) c.put(req, res.clone());
+        return res;
+      }).catch(() => cached);
+      return cached || fresh;
+    })
   );
 });
