@@ -24,7 +24,7 @@
 
 /* Versión única de la app: se muestra en portada y reglas, y debe ir
    a la par con CACHE_VERSION en sw.js */
-const APP_VERSION='v1.5';
+const APP_VERSION='v1.6';
 
 /* ════════════════════════════════
    SFX (WebAudio, sin assets)
@@ -437,17 +437,29 @@ function renderHand(p){
 
   const hc=document.getElementById('hand-cards');hc.innerHTML='';
 
+  const isAttackMode=G._buildRole!=='defense';
+  const hasSpellSel=!!G.selHandSpell;
+
   pageCards.forEach(card=>{
     const isSpell=card.type==='spell'||card.type==='noble';
     if(isSpell){
-      /* hechizos se juegan con la acción ✨ Hechizo — atenuados aquí */
-      const el=makeElemCard(card,p,false,true);
-      addMarco(el);
-      hc.appendChild(el);
+      /* en ataque los hechizos son jugables desde la mano;
+         en defensa quedan atenuados */
+      if(isAttackMode){
+        const el=makeElemCard(card,p,G.selHandSpell===card,hasElemSel);
+        el.onclick=()=>toggleSelectSpell(card,p);
+        addMarco(el);
+        hc.appendChild(el);
+      } else {
+        const el=makeElemCard(card,p,false,true);
+        addMarco(el);
+        hc.appendChild(el);
+      }
     } else {
       const inBuild=G.build.includes(card);
       let dimmed;
-      if(hasElemSel) dimmed=!inBuild&&!useful.has(card.id);
+      if(hasSpellSel) dimmed=true;
+      else if(hasElemSel) dimmed=!inBuild&&!useful.has(card.id);
       else dimmed=!handUseful.has(card.id);
       const el=makeElemCard(card,p,inBuild,dimmed);
       addMarco(el);
@@ -458,6 +470,14 @@ function renderHand(p){
   const confirmBtn=document.getElementById('btn-confirm');
   const prev=document.getElementById('mprev');
   const stats=document.getElementById('build-stats');
+  if(hasSpellSel){
+    confirmBtn.textContent='✨ Jugar hechizo';
+    confirmBtn.disabled=false;confirmBtn.style.opacity='1';
+    prev.className='mprev valid';
+    prev.textContent=G.selHandSpell.name;
+    if(stats)stats.innerHTML='';
+    return;
+  }
   confirmBtn.textContent=G._buildRole==='defense'?'🛡 ¡Defender!':'⚔️ ¡Atacar!';
   if(!hasElemSel){
     confirmBtn.disabled=true;confirmBtn.style.opacity='.45';
@@ -482,9 +502,17 @@ function renderHand(p){
 }
 
 function toggleSelect(card,p){
+  G.selHandSpell=null;
   const idx=G.build.indexOf(card);
   if(idx>-1) G.build.splice(idx); /* quita esta carta y las posteriores (prefijo válido) */
   else G.build.push(card);
+  sfx.select();
+  renderHand(p);
+}
+
+function toggleSelectSpell(card,p){
+  if(G.selHandSpell===card)G.selHandSpell=null;
+  else{G.selHandSpell=card;G.build=[];}
   sfx.select();
   renderHand(p);
 }
@@ -526,22 +554,17 @@ function announce(txt,color,cb,dur){
 }
 
 /* ════════════════════════════════
-   ACTION BAR
+   INTERACCIÓN SIN BOTONES
+   Todo se juega tocando los mazos: el tuyo abre tu mano (elementos
+   para atacar/defender o un hechizo), el central roba 2 y pasa.
 ════════════════════════════════ */
 function isHuman(p){ return !(G.vsAI&&p===1); }
 
-function updateActionBar(mode){
-  const ga=document.getElementById('ab-attack-group');
-  const gd=document.getElementById('ab-defense-group');
-  if(!ga)return;
-  ga.style.display=mode==='attack'?'':'none';
-  gd.style.display=mode==='defense'?'':'none';
-  if(mode==='attack'){
-    const p=G.turn;
-    document.getElementById('ab-spell').disabled=!G.spells[p]||!G.spells[p].length;
-  }
-  setZoneHints();
-}
+/* compat: la antigua barra de acciones ya no existe */
+function updateActionBar(){ setZoneHints(); }
+
+/* vibración háptica (móvil) */
+function vibe(p){ try{ if(navigator.vibrate) navigator.vibrate(p); }catch(e){} }
 
 /* En 2 jugadores: pasa el dispositivo antes de que actúe p */
 function handOff(p,fn){
@@ -582,14 +605,14 @@ function beginTurn(p){
 
   if(G.vsAI&&p===1){
     showScreen('game');
-    updateActionBar('off');
+    setZoneHints();
     setTimeout(aiTakeTurn,600);
   } else {
     handOff(p,()=>{
       showScreen('game');
-      updateActionBar('attack');
+      setZoneHints();
       hideAIBanner();
-      toast(G.vsAI?'🧪 Tu turno':'⚔️ Turno de '+G.names[p]);
+      toast(G.vsAI?'🧪 Tu turno — toca tu mazo o el central':'⚔️ Turno de '+G.names[p]);
     });
   }
 }
@@ -601,48 +624,62 @@ function endTurn(){
   beginTurn(1-G.turn);
 }
 
-/* ── Acciones del atacante ── */
-function actionAttack(){
+/* ── Tu mazo: abre la mano (atacar con elementos o jugar hechizo) ── */
+function openHandPanel(){
   if(G.phase!=='action'||G.busy||!isHuman(G.turn))return;
   G._buildRole='attack';
   G._buildFor=G.turn;
   G.build=[];
+  G.selHandSpell=null;
   handPage=0;
-  document.getElementById('bp-title').textContent='⚔️ Forma tu molécula de ataque (en el orden de la fórmula)';
+  document.getElementById('btn-bp-pass').style.display='none';
+  document.getElementById('bp-title').textContent='⚔️ Ataca con una molécula (en el orden de la fórmula) o juega un hechizo';
   renderHand(G.turn);
   document.getElementById('build-panel').classList.add('open');
 }
 
-function actionSpell(){
+/* ── Mazo central: robar 2 y pasar el turno (con confirmación) ── */
+function onSharedDeckClick(){
   if(G.phase!=='action'||G.busy||!isHuman(G.turn))return;
-  if(!G.spells[G.turn].length){toast('No tienes cartas de efecto');return;}
-  openSpellPanel(G.turn,'action');
+  document.getElementById('ov-draw').classList.add('open');
 }
 
-function actionDraw(){
+function confirmDraw(){
+  document.getElementById('ov-draw').classList.remove('open');
   if(G.phase!=='action'||G.busy||!isHuman(G.turn))return;
   G.busy=true;
   sharedDeckTake(G.turn,2);
   sfx.draw();
   renderDecks();
   toast('🃏 Robas 2 cartas');
-  updateActionBar('off');
+  setZoneHints();
   setTimeout(endTurn,700);
 }
 
 function onDeckClick(p){
   if(G.vsAI&&p===1)return;
-  if(G.phase==='action'&&p===G.turn){actionAttack();return;}
+  if(G.phase==='action'&&p===G.turn){openHandPanel();return;}
   if(G.phase==='defense'&&p===1-G.turn){abDefend();return;}
 }
 
 function cancelBuild(){
   G.build=[];
+  G.selHandSpell=null;
   document.getElementById('build-panel').classList.remove('open');
 }
 
-/* ── Confirmación de molécula (ataque o defensa) ── */
+/* ── Confirmación de jugada (molécula o hechizo desde la mano) ── */
 function confirmBuild(){
+  if(G._buildRole==='attack'&&G.selHandSpell){
+    const sp=G.selHandSpell;
+    G.selHandSpell=null;G.build=[];
+    document.getElementById('build-panel').classList.remove('open');
+    if(!doCastSpell(G.turn,sp.id))return;
+    G.busy=true;
+    setZoneHints();
+    announce(`✨ ${G.names[G.turn]} lanza un hechizo`,'#fbbf24',()=>startSpellRound(),1100);
+    return;
+  }
   if(!G.build.length)return;
   const mol=buildMol(G.build);
   if(!mol.valid)return;
@@ -710,8 +747,9 @@ function startDefense(){
     },900+Math.random()*900);
   } else {
     handOff(defP,()=>{
-      announce('🛡 ¡DEFIÉNDETE! El ataque es secreto','#22d3ee');
-      updateActionBar('defense');
+      setZoneHints();
+      /* sin botones: el panel de defensa se abre solo, con opción Pasar */
+      announce('🛡 ¡DEFIÉNDETE! El ataque es secreto','#22d3ee',()=>abDefend(),1250);
     });
   }
 }
@@ -722,16 +760,20 @@ function abDefend(){
   G._buildRole='defense';
   G._buildFor=defP;
   G.build=[];
+  G.selHandSpell=null;
   handPage=0;
-  document.getElementById('bp-title').textContent='🛡 Forma tu defensa — el ataque rival es secreto';
+  document.getElementById('btn-bp-pass').style.display='';
+  document.getElementById('bp-title').textContent='🛡 Forma tu defensa (o pasa) — el ataque rival es secreto';
   renderHand(defP);
   document.getElementById('build-panel').classList.add('open');
 }
 
 function abNoDefend(){
   if(G.phase!=='defense'||G.busy)return;
+  G.build=[];G.selHandSpell=null;
+  document.getElementById('build-panel').classList.remove('open');
   const defP=1-G.turn;
-  updateActionBar('off');
+  setZoneHints();
   announce(`😨 ${G.names[defP]} no se defiende`,'#fb7185',()=>startSpellRound());
 }
 
@@ -749,9 +791,23 @@ function startSpellRound(){
   G.spellSteps=0;
   G.spellTurn=1-G.turn; /* el defensor responde primero */
   setZoneHints();
-  /* si nadie tiene hechizos, la ronda se salta para no cortar el ritmo */
-  if(!G.spells[0].length&&!G.spells[1].length){finishSpellRound();return;}
-  announce('✨ RONDA DE HECHIZOS','#fbbf24',()=>spellStep(),1100);
+  /* GRAN REVELACIÓN: las jugadas estaban boca abajo durante el duelo y
+     se voltean AHORA, al empezar la fase de hechizos (ataque primero,
+     defensa después) */
+  revealMolecules(()=>{
+    /* si nadie tiene hechizos, la ronda se salta para no cortar el ritmo */
+    if(!G.spells[0].length&&!G.spells[1].length){finishSpellRound();return;}
+    announce('✨ RONDA DE HECHIZOS','#fbbf24',()=>spellStep(),1100);
+  });
+}
+
+function revealMolecules(cb){
+  const seq=[];
+  if(G.molCards[G.turn].length)seq.push(G.turn);
+  if(G.molCards[1-G.turn].length)seq.push(1-G.turn);
+  if(!seq.length){cb&&cb();return;}
+  const next=()=>{ if(!seq.length){cb&&cb();return;} flipZone(seq.shift(),next); };
+  next();
 }
 
 function spellStep(){
@@ -871,9 +927,8 @@ function passRoundSpell(){
 function resolveBattle(){
   G.phase='resolve';
   G.busy=true;
-  updateActionBar('off');
-  hideAIBanner();
   setZoneHints();
+  hideAIBanner();
   const atkP=G.turn, defP=1-atkP;
   const atk=G.mols[atkP], def=G.mols[defP];
   const defV=def?(atk.hasU?Math.floor(def.def/2):def.def):0;
@@ -881,17 +936,11 @@ function resolveBattle(){
   const blocked=!!def&&dmg<=0;
   G.stats.battles++;
 
-  /* GRAN REVELACIÓN: las jugadas estaban boca abajo — se voltea
-     primero el ataque, luego la defensa, y entonces chocan */
-  announce('💥 RESOLUCIÓN','#a78bfa',()=>{
-    flipZone(atkP,()=>{
-      const showVS=()=>announce(
-        `${atk.formula} 🗡${atk.atk}  VS  ${def?def.formula+' 🛡'+def.def:'SIN DEFENSA'}`,
-        '#a78bfa',doClash,1400);
-      if(def)flipZone(defP,showVS);
-      else showVS();
-    });
-  },1000);
+  /* las jugadas ya se revelaron al empezar la ronda de hechizos:
+     directo al veredicto y al choque */
+  announce(
+    `${atk.formula} 🗡${atk.atk}  VS  ${def?def.formula+' 🛡'+def.def:'SIN DEFENSA'}`,
+    '#a78bfa',doClash,1400);
 
   function doClash(){
     clashAnimation(atkP,defP,blocked,!def,()=>{
@@ -1004,7 +1053,7 @@ function clashAnimation(atkP,defP,blocked,direct,done){
     A.c.getBoundingClientRect();
     A.c.style.transform=`translate(${tx-(A.r.left+A.r.width/2)}px,${ty-(A.r.top+A.r.height/2)}px) scale(.8) rotate(${atkP===0?-8:8}deg)`;
     setTimeout(()=>{
-      screenFlash();shakeTable();sfx.hit();
+      screenFlash();shakeTable();sfx.hit();vibe(70);
       spawnSparks(tx,ty,'#fb7185',26);
       dmgPop(tx,ty-36,'💥 ¡GOLPE DIRECTO! −1','#fb7185');
       A.c.style.opacity='0';
@@ -1027,8 +1076,8 @@ function clashAnimation(atkP,defP,blocked,direct,done){
   }
 
   setTimeout(()=>{
-    screenFlash();shakeTable();
-    spawnSparks(cx,cy,blocked?'#7dd3fc':'#fbbf24',30);
+    screenFlash();shakeTable();vibe(blocked?35:70);
+    spawnSparks(cx,cy,blocked?'#7dd3fc':'#fbbf24',42);
     if(blocked){
       sfx.block();
       shieldRing(cx,cy);
@@ -1211,7 +1260,7 @@ function endGame(){
     <div class="crow"><span>Analistas restantes ${G.names[1]}</span><span class="cv ${G.an[1]>0?'':'bad'}">${G.an[1]}</span></div>`;
   showScreen('result');
   const playerWon = w===0 || (!G.vsAI && w===1);
-  if(playerWon){ sfx.win(); launchConfetti(); }
+  if(playerWon){ sfx.win(); vibe([80,60,140]); launchConfetti(); }
   else if(w===-1){ sfx.draw(); }
   else { sfx.lose(); }
 }
@@ -1357,17 +1406,23 @@ function showScreen(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-'+id).classList.add('active');
   document.body.classList.toggle('in-game',id==='game');
+  document.body.classList.toggle('on-intro',id==='intro');
 }
 function openRules(){document.getElementById('ov-rules').classList.add('open');}
 function openStory(){document.getElementById('ov-story').classList.add('open');}
 
+/* Ajustes (engranaje, solo en el panel principal) */
+function openSettings(){
+  _syncSoundUI();
+  document.getElementById('ov-settings').classList.add('open');
+}
+function _syncSoundUI(){
+  const b=document.getElementById('btn-sound-set');
+  if(b)b.textContent='Sonido: '+(sfx.muted?'silenciado':'activado');
+}
 function toggleSound(){
   const m=sfx.toggle();
-  const icon=m?'🔇':'🔊';
-  const b1=document.getElementById('btn-sound');
-  const b2=document.getElementById('btn-sound-game');
-  if(b1)b1.textContent=icon;
-  if(b2)b2.textContent=icon;
+  _syncSoundUI();
   if(!m)sfx.click();
 }
 
@@ -1417,16 +1472,14 @@ document.addEventListener('DOMContentLoaded',()=>{
   spawnBubbles();
   const v1=document.getElementById('app-ver');
   const v2=document.getElementById('app-ver-rules');
+  const v3=document.getElementById('app-ver-set');
   if(v1)v1.textContent=APP_VERSION;
   if(v2)v2.textContent='BreakingLab '+APP_VERSION;
-  const icon=sfx.muted?'🔇':'🔊';
-  const b1=document.getElementById('btn-sound');
-  const b2=document.getElementById('btn-sound-game');
-  if(b1)b1.textContent=icon;
-  if(b2)b2.textContent=icon;
+  if(v3)v3.textContent='BreakingLab '+APP_VERSION;
+  _syncSoundUI();
   document.addEventListener('pointerdown',()=>sfx.unlock(),{once:true});
   document.addEventListener('click',(e)=>{
-    if(e.target.closest('.btn,.mode-card,.diff-chip,.hand-arrow,.pdeck,.cpile.draw,.abtn'))sfx.click();
+    if(e.target.closest('.btn,.mode-card,.diff-chip,.hand-arrow,.pdeck,.cpile.draw'))sfx.click();
   });
   const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
   const standalone=matchMedia('(display-mode: standalone)').matches||navigator.standalone;

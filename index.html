@@ -30,12 +30,13 @@
 <body>
 
 <div id="bg-fx"></div>
-<button id="btn-sound" onclick="toggleSound()" title="Sonido">🔊</button>
+<button id="btn-settings" onclick="openSettings()" title="Ajustes">⚙</button>
 
 <!-- ═══ INTRO ═══ -->
 <div id="screen-intro" class="screen active">
+  <div class="float-cards"><span class="fc fc1"></span><span class="fc fc2"></span><span class="fc fc3"></span><span class="fc fc4"></span></div>
   <div class="logo">Breaking<span>Lab</span></div>
-  <div class="logo-sub">⚗️ El Duelo Molecular</div>
+  <div class="logo-sub">El Duelo Molecular</div>
   <div class="intro-story">
     <span class="isl l1">Dos laboratorios.</span>
     <span class="isl l2">Una molécula.</span>
@@ -45,10 +46,10 @@
   <div class="intro-credits">by Rafa Armero &amp; Tomás Aznar</div>
   <div class="intro-ver" id="app-ver">v—</div>
   <div class="intro-btns">
-    <button class="btn gold" onclick="showScreen('mode')">🎮 Jugar</button>
-    <button class="btn sec" onclick="openStory()">📜 La Historia</button>
-    <button class="btn sec" onclick="openRules()">📖 Ver Reglas</button>
-    <button class="btn sec" id="btn-install" style="display:none" onclick="installApp()">📲 Instalar en tu móvil</button>
+    <button class="btn gold cta" onclick="showScreen('mode')">Jugar</button>
+    <button class="btn sec" onclick="openStory()">La Historia</button>
+    <button class="btn sec" onclick="openRules()">Ver Reglas</button>
+    <button class="btn sec" id="btn-install" style="display:none" onclick="installApp()">Instalar en tu móvil</button>
   </div>
   <div id="ios-hint">En iPhone/iPad: pulsa <strong>Compartir</strong> y luego <strong>«Añadir a pantalla de inicio»</strong> para instalar el juego.</div>
 </div>
@@ -128,7 +129,7 @@
 
       <!-- Center: shared draw deck + shared discard -->
       <div class="center-row">
-        <div class="cpile draw" title="Robar 2 cartas" style="cursor:pointer" onclick="actionDraw()">
+        <div class="cpile draw" title="Robar 2 cartas" style="cursor:pointer" onclick="onSharedDeckClick()">
           <div class="cpile-cnt" id="shared-cnt" style="position:relative;z-index:1">32</div>
           <div class="cpile-lbl" style="position:relative;z-index:1">Robar</div>
         </div>
@@ -151,20 +152,6 @@
 
     </div><!-- .arena -->
 
-    <!-- Action bar -->
-    <div class="action-bar" id="action-bar">
-      <div class="ab-group" id="ab-attack-group">
-        <button class="abtn" id="ab-battle" onclick="actionAttack()">⚔️ Atacar</button>
-        <button class="abtn" id="ab-spell" onclick="actionSpell()">✨ Hechizo</button>
-        <button class="abtn" id="ab-draw" onclick="actionDraw()">🃏 Robar 2</button>
-      </div>
-      <div class="ab-group" id="ab-defense-group" style="display:none">
-        <button class="abtn def" id="ab-defend" onclick="abDefend()">🛡 ¡Defenderse!</button>
-        <button class="abtn" id="ab-nodefend" onclick="abNoDefend()">😨 No defender</button>
-      </div>
-      <button class="abtn icon" id="btn-sound-game" onclick="toggleSound()" title="Sonido">🔊</button>
-    </div>
-
     <!-- P1 analyst strip -->
     <div class="astrip" id="astrip1"></div>
 
@@ -174,6 +161,28 @@
 <!-- flash de impacto + anuncios de fase -->
 <div id="flash"></div>
 <div id="phase-banner"></div>
+
+<!-- ROBAR CONFIRM -->
+<div class="ov" id="ov-draw">
+  <div class="modal ai" style="max-width:300px">
+    <h2 style="font-size:1.05rem;margin-bottom:.5rem">Robar cartas</h2>
+    <p>¿Robar 2 cartas del mazo central y pasar el turno?</p>
+    <div class="mbtns">
+      <button class="btn gold" onclick="confirmDraw()">Robar</button>
+      <button class="btn sec" onclick="document.getElementById('ov-draw').classList.remove('open')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- AJUSTES -->
+<div class="ov" id="ov-settings">
+  <div class="modal ai" style="max-width:300px;position:relative">
+    <button class="close-x" onclick="document.getElementById('ov-settings').classList.remove('open')">✕</button>
+    <h2 style="margin-bottom:1rem">Ajustes</h2>
+    <button class="btn" id="btn-sound-set" onclick="toggleSound()" style="width:100%">Sonido: activado</button>
+    <div style="color:var(--mut);font-size:.6rem;letter-spacing:2px;margin-top:1.1rem" id="app-ver-set"></div>
+  </div>
+</div>
 
 <!-- VERSUS splash al empezar el duelo -->
 <div id="ov-versus">
@@ -226,6 +235,7 @@
     <button class="btn" id="btn-confirm" onclick="confirmBuild()" disabled style="opacity:.45">⚔️ ¡Atacar!</button>
     <div class="mprev" id="mprev"></div>
     <div id="build-stats" style="display:flex;gap:.5rem;align-items:center"></div>
+    <button class="btn sec" id="btn-bp-pass" onclick="abNoDefend()" style="display:none">Pasar</button>
     <button class="btn sec" style="padding:.4rem .7rem" onclick="cancelBuild()" title="Cancelar">✕</button>
   </div>
   <div id="no-mol-msg" class="no-mol-msg" style="display:none">⚠️ No puedes formar ninguna molécula con estas cartas.</div>
@@ -279,8 +289,8 @@
     <div style="font-size:.8rem;line-height:1.8;color:var(--mut)">
       <p><strong style="color:var(--txt)">Analistas</strong><br>Cada laboratorio tiene 5 cartas de analista. Son su única vida.</p><br>
       <p><strong style="color:var(--txt)">Moléculas válidas</strong><br>H₂O · H₂O₂ · O₂ · H₂ · H₃ · CO · CO₂ · N₂ · NOP · NO₂ · NH₃ · H₂S · SO₂ · S₂ · PH₃ · PO. Las cartas que no pueden combinarse se oscurecen automáticamente.</p><br>
-      <p><strong style="color:var(--txt)">Turnos</strong><br>El primer turno es tuyo y luego se alterna. En tu turno eliges UNA acción: ⚔️ <strong style="color:var(--txt)">Atacar</strong>, ✨ <strong style="color:var(--txt)">Hechizo</strong> o 🃏 <strong style="color:var(--txt)">Robar 2 cartas</strong>. Al empezar cada turno robas además 1 carta automática.</p><br>
-      <p><strong style="color:var(--txt)">Ataque y defensa</strong><br>Selecciona los elementos <strong style="color:var(--txt)">en el orden de la fórmula</strong> (H·H·O para H₂O). Tras tu ataque, el rival puede 🛡 defenderse formando otra molécula o pasar. Después viene la ✨ ronda de hechizos y por último la 💥 resolución.</p><br>
+      <p><strong style="color:var(--txt)">Turnos</strong><br>El primer turno es tuyo y luego se alterna. En tu turno, <strong style="color:var(--txt)">toca tu mazo</strong> para jugar cartas (atacar con elementos o lanzar un hechizo) o <strong style="color:var(--txt)">toca el mazo central</strong> para robar 2 y pasar. Al empezar cada turno robas además 1 carta automática.</p><br>
+      <p><strong style="color:var(--txt)">Ataque y defensa</strong><br>Selecciona los elementos <strong style="color:var(--txt)">en el orden de la fórmula</strong> (H·H·O para H₂O). Tu jugada queda <strong style="color:var(--txt)">boca abajo</strong>; el rival puede 🛡 defenderse formando otra molécula (también boca abajo) o pasar. Al empezar la ✨ ronda de hechizos ambas jugadas se revelan, y después llega la 💥 resolución.</p><br>
       <p><strong style="color:var(--txt)">Resolución de la batalla</strong><br>Se compara el 🗡 ATK del atacante con la 🛡 DEF del defensor. Si el ataque es mayor, el defensor pierde 1 analista; si no, no pasa nada (el atacante NUNCA pierde analistas al atacar). Las cartas son de un solo uso: ambas moléculas van al descarte tras la batalla. Uranio ☢ ignora la mitad de la DEF rival.</p><br>
       <p><strong style="color:var(--txt)">Hechizos</strong><br>Puedes jugarlos como acción de turno o durante la ronda de hechizos. Sus efectos están en desarrollo: de momento no alteran el combate.</p><br>
       <p><strong style="color:var(--txt)">Contra la Máquina</strong><br>Juega contra un científico artificial con tres niveles: Becario 🥼, Doctora 🔬 y Nobel 🧠.</p>
