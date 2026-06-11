@@ -76,21 +76,51 @@ body{
 .btn.sm{font-size:.75rem;padding:.4rem .95rem;}
 .btn:disabled{cursor:default;}
 
-/* ─── Floating controls ─── */
-#btn-sound{
+/* ─── Ajustes (engranaje, visible solo en el panel principal) ─── */
+#btn-settings{
   position:fixed;top:calc(.6rem + env(safe-area-inset-top));right:.7rem;z-index:300;
   width:42px;height:42px;border-radius:50%;border:1px solid var(--brd);
-  background:rgba(10,15,35,.7);color:var(--txt);font-size:1.05rem;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);
-  transition:border-color .2s,transform .15s;
+  background:rgba(10,15,35,.7);color:var(--mut);font-size:1.25rem;cursor:pointer;
+  display:none;align-items:center;justify-content:center;backdrop-filter:blur(6px);
+  transition:border-color .2s,transform .35s,color .2s;
 }
-#btn-sound:hover{border-color:var(--acc);transform:scale(1.08);}
-/* en partida el control de sonido vive en la barra de acciones,
-   el flotante se oculta para no tapar el mazo rival */
-body.in-game #btn-sound{display:none;}
+body.on-intro #btn-settings{display:flex;}
+#btn-settings:hover{border-color:var(--acc);color:var(--acc);transform:rotate(90deg) scale(1.08);}
 
 /* ─── INTRO ─── */
 #screen-intro{justify-content:center;gap:1.1rem;position:relative;height:100svh;height:100dvh;min-height:unset;overflow:hidden;}
+#screen-intro>*:not(.float-cards){position:relative;z-index:1;}
+
+/* cartas flotando tras el logo */
+.float-cards{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0;}
+.fc{
+  position:absolute;width:clamp(70px,18vw,110px);aspect-ratio:7/12;border-radius:10px;
+  background:#1b2348 url('img/mazo.png') center/cover no-repeat;
+  border:1px solid rgba(124,140,255,.35);
+  box-shadow:0 0 24px rgba(34,211,238,.25),0 10px 30px rgba(0,0,0,.5);
+  opacity:.32;
+  animation:fcFloat 9s ease-in-out infinite;
+}
+.fc1{top:6%;left:-2%;transform:rotate(-14deg);animation-delay:0s;}
+.fc2{top:12%;right:-3%;transform:rotate(12deg);animation-delay:-3s;animation-duration:11s;}
+.fc3{bottom:8%;left:6%;transform:rotate(8deg);animation-delay:-6s;animation-duration:10s;}
+.fc4{bottom:14%;right:4%;transform:rotate(-10deg);animation-delay:-1.5s;animation-duration:12s;}
+@keyframes fcFloat{
+  0%,100%{margin-top:0;filter:brightness(1);}
+  50%{margin-top:-18px;filter:brightness(1.25);}
+}
+
+/* CTA principal con pulso magnético */
+.btn.gold.cta{
+  font-size:clamp(1rem,4.2vw,1.2rem);
+  padding:.85rem 3.2rem;
+  letter-spacing:1px;
+  animation:ctaPulse 1.9s ease-in-out infinite;
+}
+@keyframes ctaPulse{
+  0%,100%{box-shadow:0 0 18px rgba(251,191,36,.45),0 4px 16px rgba(0,0,0,.4);transform:scale(1);}
+  50%{box-shadow:0 0 42px rgba(251,191,36,.85),0 6px 20px rgba(0,0,0,.45);transform:scale(1.045);}
+}
 .logo{
   font-family:'Orbitron','Exo 2',sans-serif;
   font-size:clamp(2.3rem,9vw,4rem);font-weight:900;letter-spacing:-1px;
@@ -377,10 +407,8 @@ body.in-game #btn-sound{display:none;}
 .cpile.disc .cpile-cnt,.cpile.disc .cpile-lbl{color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.8);}
 
 /* ── Action bar ── */
-.action-bar{display:flex;gap:.45rem;align-items:stretch;justify-content:center;flex-shrink:0;padding:.12rem 0;}
-.ab-group{display:flex;gap:.45rem;flex:1;justify-content:center;}
-.abtn.def{background:linear-gradient(135deg,rgba(34,211,238,.3),rgba(52,211,153,.2)),var(--felt);border-color:rgba(34,211,238,.55);animation:defPulse 1.4s ease-in-out infinite;}
-@keyframes defPulse{0%,100%{box-shadow:0 0 8px rgba(34,211,238,.3);}50%{box-shadow:0 0 22px rgba(34,211,238,.6);}}
+/* (obsoleto: la barra de acciones se eliminó — todo se juega tocando
+   los mazos; se conservan .abtn por si se reutilizan) */
 .abtn{
   flex:1;max-width:170px;
   background:linear-gradient(135deg,rgba(34,211,238,.16),rgba(167,139,250,.12)),var(--felt);
