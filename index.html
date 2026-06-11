@@ -37,7 +37,7 @@
   <div class="logo">Breaking<span>Lab</span></div>
   <div class="logo-sub">⚗️ El Duelo Molecular</div>
   <div class="intro-credits">by Rafa Armero &amp; Tomás Aznar</div>
-  <div class="intro-ver">v1.3</div>
+  <div class="intro-ver" id="app-ver">v—</div>
   <div class="intro-btns">
     <button class="btn gold" onclick="showScreen('mode')">🎮 Jugar</button>
     <button class="btn sec" onclick="openRules()">📖 Ver Reglas</button>
@@ -241,12 +241,14 @@
       <p><strong style="color:var(--txt)">Analistas</strong><br>Cada laboratorio tiene 5 cartas de analista. Son su única vida.</p><br>
       <p><strong style="color:var(--txt)">Moléculas válidas</strong><br>H₂O · H₂O₂ · O₂ · H₂ · H₃ · CO · CO₂ · N₂ · NOP · NO₂ · NH₃ · H₂S · SO₂ · S₂ · PH₃ · PO. Las cartas que no pueden combinarse se oscurecen automáticamente.</p><br>
       <p><strong style="color:var(--txt)">Turnos</strong><br>El primer turno es tuyo y luego se alterna. En tu turno eliges UNA acción: ⚔️ <strong style="color:var(--txt)">Atacar</strong>, ✨ <strong style="color:var(--txt)">Hechizo</strong> o 🃏 <strong style="color:var(--txt)">Robar 2 cartas</strong>. Al empezar cada turno robas además 1 carta automática.</p><br>
-      <p><strong style="color:var(--txt)">Ataque y defensa</strong><br>Selecciona los elementos <strong style="color:var(--txt)">en el orden de la fórmula</strong> (H·H·O para H₂O). Tras tu ataque, el rival puede 🛡 defenderse formando otra molécula o pasar. Después viene la ✨ ronda de hechizos y por último la 💥 resolución: ATK − DEF de la defensa. Si hay daño, el defensor pierde 1 analista; si no, queda bloqueado. Ambas moléculas se descartan. Uranio ☢ ignora la mitad de la DEF rival.</p><br>
+      <p><strong style="color:var(--txt)">Ataque y defensa</strong><br>Selecciona los elementos <strong style="color:var(--txt)">en el orden de la fórmula</strong> (H·H·O para H₂O). Tras tu ataque, el rival puede 🛡 defenderse formando otra molécula o pasar. Después viene la ✨ ronda de hechizos y por último la 💥 resolución.</p><br>
+      <p><strong style="color:var(--txt)">Resolución de la batalla</strong><br>Se compara el 🗡 ATK del atacante con la 🛡 DEF del defensor. Si el ataque es mayor, el defensor pierde 1 analista; si no, no pasa nada (el atacante NUNCA pierde analistas al atacar). Las cartas son de un solo uso: ambas moléculas van al descarte tras la batalla. Uranio ☢ ignora la mitad de la DEF rival.</p><br>
       <p><strong style="color:var(--txt)">Hechizos</strong><br>Puedes jugarlos como acción de turno o durante la ronda de hechizos. Sus efectos están en desarrollo: de momento no alteran el combate.</p><br>
       <p><strong style="color:var(--txt)">Contra la Máquina</strong><br>Juega contra un científico artificial con tres niveles: Becario 🥼, Doctora 🔬 y Nobel 🧠.</p>
     </div>
     <div style="text-align:center;margin-top:1.2rem">
       <button class="btn" onclick="document.getElementById('ov-rules').classList.remove('open')">¡Entendido!</button>
+      <div style="color:var(--mut);font-size:.55rem;letter-spacing:2px;margin-top:.7rem" id="app-ver-rules"></div>
     </div>
   </div>
 </div>
