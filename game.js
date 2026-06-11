@@ -1171,6 +1171,15 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(h)h.style.display='block';
   }
   if('serviceWorker' in navigator){
+    /* si un service worker nuevo toma el control (versión nueva
+       publicada), recarga una única vez para mostrarla */
+    const hadController=!!navigator.serviceWorker.controller;
+    let _swReloaded=false;
+    navigator.serviceWorker.addEventListener('controllerchange',()=>{
+      if(!hadController||_swReloaded)return;
+      _swReloaded=true;
+      window.location.reload();
+    });
     navigator.serviceWorker.register('sw.js').catch(()=>{});
   }
 });
