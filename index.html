@@ -36,7 +36,12 @@
 <div id="screen-intro" class="screen active">
   <div class="logo">Breaking<span>Lab</span></div>
   <div class="logo-sub">⚗️ El Duelo Molecular</div>
-  <div class="intro-story">Dos laboratorios rivales.<br>Una molécula que cambiará el mundo.<br><span>Solo uno conseguirá la patente.</span></div>
+  <div class="intro-story">
+    <span class="isl l1">Dos laboratorios.</span>
+    <span class="isl l2">Una molécula.</span>
+    <span class="isl l3">Una sola patente.</span>
+    <span class="isl l4">¿Tienes la química para ganar?</span>
+  </div>
   <div class="intro-credits">by Rafa Armero &amp; Tomás Aznar</div>
   <div class="intro-ver" id="app-ver">v—</div>
   <div class="intro-btns">
@@ -181,11 +186,14 @@
 <!-- HISTORIA -->
 <div class="ov" id="ov-story">
   <div class="modal ai" style="max-width:480px;text-align:left">
-    <h2 style="text-align:center;margin-bottom:.9rem">📜 La Historia</h2>
+    <div class="story-year">AÑO 2042</div>
     <div class="story-text">
-      <p>Año 2042. La <strong>Molécula Maestra</strong> — la clave de la energía limpia infinita — está a un solo experimento de ser sintetizada.</p>
-      <p>Dos laboratorios rivales compiten por lograrla primero. Cada elemento cuenta. Cada reacción puede ser la definitiva. Y solo hay una patente.</p>
-      <p>Roba elementos, forma moléculas y lánzalas contra el equipo rival. Cuando un laboratorio se queda sin analistas… <strong>cierra para siempre</strong>.</p>
+      <p>El planeta se apaga.</p>
+      <p>Solo una cosa puede salvarlo: la <strong>Molécula Maestra</strong>, la llave de la energía limpia e infinita.</p>
+      <p>Nadie ha logrado sintetizarla.<br><em>Hasta hoy.</em></p>
+      <p>Dos laboratorios. Los mismos elementos. Una sola patente.<br>El tuyo… y el de ellos.</p>
+      <p>⚔️ Lanza tus moléculas contra su equipo.<br>🛡 Protege a tus analistas.<br>✨ Y guárdate siempre un as bajo la bata.</p>
+      <p>Cuando un laboratorio pierde a sus 5 analistas, cierra.<br><strong>Para siempre.</strong></p>
       <p class="story-final">⚗️ Que gane la mejor química.</p>
     </div>
     <div style="text-align:center;margin-top:1.2rem">
@@ -257,7 +265,11 @@
 
 <!-- ZOOM -->
 <div class="ov" id="ov-zoom" onclick="closeZoom()">
-  <div class="zoom-card-wrap" id="zoom-card-inner"></div>
+  <div class="zoom-col">
+    <div class="zoom-card-wrap" id="zoom-card-inner"></div>
+    <div class="zoom-hist" id="zoom-hist" style="display:none" onclick="event.stopPropagation()"></div>
+    <button class="btn gold sm" id="zoom-hist-btn" onclick="toggleZoomHist(event)">📚 Historia del elemento</button>
+  </div>
 </div>
 
 <!-- RULES -->

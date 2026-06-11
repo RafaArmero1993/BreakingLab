@@ -78,31 +78,31 @@ const AI = {
     return {action:'attack', cards:best.cards};
   },
 
-  /* Decisión como DEFENSOR ante atkMol. Devuelve {cards:[...]} o null
-     (pasar). Solo cuenta el bloqueo total: cualquier daño > 0 cuesta
-     1 analista igualmente, así que defender sin bloquear es tirar
-     cartas (el Becario a veces lo hace de todos modos). */
-  chooseDefense(G, atkMol){
+  /* Decisión como DEFENSOR. Devuelve {cards:[...]} o null (pasar).
+     ⚠️ A CIEGAS: el ataque rival está boca abajo, la IA no conoce su
+     ATK. Defiende según la calidad de su mejor muro: una defensa
+     floja es tirar cartas (cualquier daño > 0 cuesta 1 analista). */
+  chooseDefense(G){
     const hand = G.hands[1];
     const lvl  = G.aiLevel || 'normal';
     const opts = this.findBuilds(hand);
     if(!opts.length) return null;
 
-    const blocks = o => atkMol.atk - (atkMol.hasU ? Math.floor(o.def/2) : o.def) <= 0;
-    const blockers = opts.filter(blocks);
-
     if(lvl === 'easy'){
-      if(blockers.length && Math.random() < .7)
-        return {cards: blockers[Math.floor(Math.random()*blockers.length)].cards};
-      if(Math.random() < .35)
+      if(Math.random() < .55)
         return {cards: opts[Math.floor(Math.random()*opts.length)].cards};
       return null;
     }
 
-    if(!blockers.length) return null;
-    /* el bloqueo más barato en cartas (desempate: menos DEF sobrante) */
-    blockers.sort((a,b)=>(a.n-b.n)||(a.def-b.def));
-    return {cards: blockers[0].cards};
+    /* mejor muro: máxima DEF, desempate por menos cartas */
+    opts.sort((a,b)=>(b.def-a.def)||(a.n-b.n));
+    const best = opts[0];
+    const desperate = G.an[1] <= 2; /* con la vida al límite arriesga más */
+    const minDef = lvl === 'hard' ? (desperate ? 3 : 4) : (desperate ? 3 : 4);
+    if(best.def >= minDef) return {cards: best.cards};
+    if(lvl === 'normal' && best.def >= 3 && Math.random() < .4)
+      return {cards: best.cards};
+    return null;
   },
 
   /* Paso de la ronda de hechizos: id del hechizo a jugar o null (pasar).

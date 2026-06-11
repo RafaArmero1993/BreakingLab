@@ -102,15 +102,25 @@ body.in-game #btn-sound{display:none;}
 @keyframes logoPulse{0%,100%{filter:drop-shadow(0 0 16px rgba(34,211,238,.35));}50%{filter:drop-shadow(0 0 34px rgba(167,139,250,.6));}}
 .logo-sub{color:var(--mut);letter-spacing:6px;text-transform:uppercase;font-size:clamp(.62rem,2.4vw,.8rem);font-weight:700;}
 .intro-story{
-  text-align:center;color:var(--mut);font-size:clamp(.72rem,2.8vw,.88rem);
-  line-height:1.75;font-weight:600;letter-spacing:.4px;margin-top:.4rem;
-  animation:fadeIn 1.2s ease;
+  display:flex;flex-direction:column;align-items:center;gap:.18rem;
+  text-align:center;margin-top:.5rem;
 }
-.intro-story span{
+.isl{
+  font-family:'Orbitron','Exo 2',sans-serif;font-weight:800;
+  font-size:clamp(.88rem,3.6vw,1.15rem);letter-spacing:1.5px;
+  color:var(--txt);text-transform:uppercase;
+  opacity:0;animation:storyLine .6s ease forwards;
+}
+.isl.l1{animation-delay:.15s;}
+.isl.l2{animation-delay:.55s;color:var(--acc);text-shadow:0 0 14px rgba(34,211,238,.5);}
+.isl.l3{animation-delay:.95s;
   background:linear-gradient(110deg,var(--gold),#fff,var(--gold));
   -webkit-background-clip:text;background-clip:text;color:transparent;
-  font-weight:800;
-}
+  filter:drop-shadow(0 0 12px rgba(251,191,36,.45));}
+.isl.l4{animation-delay:1.6s;font-family:'Exo 2',sans-serif;font-weight:600;
+  font-size:clamp(.66rem,2.6vw,.8rem);letter-spacing:.6px;color:var(--mut);
+  text-transform:none;margin-top:.35rem;}
+@keyframes storyLine{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
 .intro-credits{color:rgba(238,242,255,.4);font-size:.6rem;letter-spacing:1px;margin-top:.2rem;}
 .intro-ver{color:rgba(238,242,255,.25);font-size:.55rem;letter-spacing:2.5px;}
 .intro-btns{display:flex;flex-direction:column;gap:.6rem;margin-top:1.3rem;align-items:center;}
@@ -428,10 +438,41 @@ body.in-game #btn-sound{display:none;}
 .vs-tag{color:var(--mut);font-size:.7rem;letter-spacing:2.5px;text-transform:uppercase;animation:fadeIn .6s ease 1s both;}
 
 /* ── Historia ── */
-.story-text{font-size:.82rem;line-height:1.8;color:var(--mut);}
-.story-text p{margin-bottom:.8rem;}
+.story-year{
+  font-family:'Orbitron',sans-serif;font-weight:900;text-align:center;
+  font-size:clamp(1.2rem,5vw,1.7rem);letter-spacing:5px;margin-bottom:1rem;
+  background:linear-gradient(110deg,var(--gold),#fff,var(--gold));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 16px rgba(251,191,36,.4));
+}
+.story-text{font-size:.86rem;line-height:1.85;color:var(--mut);text-align:center;}
+.story-text p{margin-bottom:.85rem;opacity:0;animation:storyLine .55s ease forwards;}
+.story-text p:nth-child(1){animation-delay:.1s;font-weight:800;color:var(--txt);font-size:1rem;}
+.story-text p:nth-child(2){animation-delay:.45s;}
+.story-text p:nth-child(3){animation-delay:.85s;}
+.story-text p:nth-child(4){animation-delay:1.25s;}
+.story-text p:nth-child(5){animation-delay:1.65s;text-align:left;display:inline-block;}
+.story-text p:nth-child(6){animation-delay:2.05s;}
+.story-text p:nth-child(7){animation-delay:2.5s;}
 .story-text strong{color:var(--gold);}
+.story-text em{color:var(--acc);font-style:normal;font-weight:800;}
 .story-final{text-align:center;color:var(--txt);font-weight:800;letter-spacing:.5px;}
+
+/* ── Zoom: historia del elemento ── */
+.zoom-col{display:flex;flex-direction:column;align-items:center;gap:.9rem;max-width:94vw;}
+.zoom-hist{
+  width:min(86vw,440px);max-height:60vh;overflow-y:auto;
+  background:var(--glass);border:1px solid var(--brd);border-radius:20px;
+  padding:1.4rem 1.3rem;text-align:left;
+  box-shadow:0 20px 60px rgba(0,0,0,.6),0 0 36px rgba(251,191,36,.1);
+  animation:popIn .3s cubic-bezier(.34,1.56,.64,1);
+}
+.zoom-hist h3{
+  font-family:'Orbitron',sans-serif;font-size:1.05rem;color:var(--gold);
+  margin-bottom:.7rem;letter-spacing:.5px;
+}
+.zoom-hist h3 span{font-family:'Exo 2',sans-serif;font-size:.72rem;color:var(--mut);font-weight:700;}
+.zoom-hist p{font-size:.86rem;line-height:1.8;color:var(--txt);}
 
 /* ── Zona activa: brillo en quien debe actuar ── */
 @keyframes zoneGlow{0%,100%{box-shadow:inset 0 0 30px rgba(34,211,238,.08),0 0 10px rgba(255,255,255,.08);}50%{box-shadow:inset 0 0 30px rgba(34,211,238,.14),0 0 24px rgba(255,255,255,.22);}}
@@ -537,7 +578,7 @@ body.in-game #btn-sound{display:none;}
   transition:background .15s,border-color .15s,box-shadow .15s;align-self:center;
 }
 .hand-arrow:hover{border-color:var(--acc);color:var(--acc);box-shadow:0 0 12px rgba(34,211,238,.35);}
-.hand-row{display:flex;gap:.5rem;flex-wrap:wrap;padding-bottom:.3rem;flex:1;}
+.hand-row{display:flex;gap:.5rem;flex-wrap:wrap;padding-bottom:.3rem;flex:1;justify-content:center;}
 .no-mol-msg{font-size:.82rem;color:var(--red);font-weight:700;padding:.4rem .2rem;}
 
 /* ════════════════════════════════════
