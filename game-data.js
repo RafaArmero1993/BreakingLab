@@ -34,7 +34,10 @@
      def     : DEF total de la molécula
 ════════════════════════════════════════════════════════════════ */
 
-/* ── Moléculas válidas ── */
+/* ── Moléculas válidas ──
+   ⚠️ El orden de `ids` importa: es el orden en el que el jugador debe
+   seleccionar las cartas, y debe leerse igual que la fórmula
+   (NH₃ → N,H,H,H · SO₂ → S,O,O · PH₃ → P,H,H,H · PO → P,O). */
 const VALID_MOLECULES = [
   {ids:['H','H','O'],       name:'Agua',     formula:'H₂O',   atk:4, def:4},
   {ids:['H','H','O','O'],   name:'Peróxido', formula:'H₂O₂',  atk:5, def:3},
@@ -46,12 +49,12 @@ const VALID_MOLECULES = [
   {ids:['N','N'],           name:'N₂',       formula:'N₂',    atk:3, def:5},
   {ids:['N','O','P'],       name:'NOP',      formula:'NOP',   atk:6, def:3},
   {ids:['N','O','O'],       name:'NO₂',      formula:'NO₂',   atk:5, def:3},
-  {ids:['H','H','H','N'],   name:'Amoníaco', formula:'NH₃',   atk:5, def:3},
+  {ids:['N','H','H','H'],   name:'Amoníaco', formula:'NH₃',   atk:5, def:3},
   {ids:['H','H','S'],       name:'H₂S',      formula:'H₂S',   atk:6, def:2},
-  {ids:['O','O','S'],       name:'SO₂',      formula:'SO₂',   atk:6, def:2},
+  {ids:['S','O','O'],       name:'SO₂',      formula:'SO₂',   atk:6, def:2},
   {ids:['S','S'],           name:'S₂',       formula:'S₂',    atk:5, def:2},
-  {ids:['H','H','H','P'],   name:'PH₃',      formula:'PH₃',   atk:5, def:3},
-  {ids:['O','P'],           name:'PO',       formula:'PO',    atk:4, def:3},
+  {ids:['P','H','H','H'],   name:'PH₃',      formula:'PH₃',   atk:5, def:3},
+  {ids:['P','O'],           name:'PO',       formula:'PO',    atk:4, def:3},
 ];
 
 /* ── Elementos ── */
