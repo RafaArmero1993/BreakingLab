@@ -24,7 +24,7 @@
 
 /* Versión única de la app: se muestra en portada y reglas, y debe ir
    a la par con CACHE_VERSION en sw.js */
-const APP_VERSION='v1.9';
+const APP_VERSION='v2.0';
 
 /* ════════════════════════════════
    SFX (WebAudio, sin assets)

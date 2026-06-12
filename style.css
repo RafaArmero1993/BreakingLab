@@ -217,28 +217,75 @@ body.on-intro #btn-settings{display:flex;}
   box-shadow:0 0 14px rgba(251,191,36,.25);margin:.4rem 0;
 }
 .coin-chip.inline{display:inline-block;font-size:.78rem;padding:.2rem .7rem;}
-.map-path{display:flex;flex-direction:column;align-items:center;gap:0;width:min(380px,92vw);padding-bottom:.5rem;}
-.map-node{
-  width:100%;display:flex;align-items:center;gap:.8rem;text-align:left;
-  background:var(--glass);border:2px solid var(--brd);border-radius:16px;
-  padding:.55rem .9rem;cursor:pointer;color:var(--txt);font-family:inherit;
-  transition:transform .15s,border-color .2s,box-shadow .2s;
+.coin-chip.wins{color:var(--acc);border-color:rgba(34,211,238,.5);
+  background:linear-gradient(135deg,rgba(34,211,238,.2),rgba(167,139,250,.12)),var(--felt);
+  box-shadow:0 0 14px rgba(34,211,238,.2);}
+.map-hud{display:flex;gap:.5rem;align-items:center;margin:.3rem 0 .1rem;}
+.map-hint{color:var(--mut);font-size:.62rem;letter-spacing:1px;text-transform:uppercase;margin-bottom:.3rem;}
+
+/* ── El País de Reactivia: mapa 2D con carreteras ── */
+#country-map{
+  position:relative;
+  width:min(94vw,430px);
+  aspect-ratio:10/13;
+  border-radius:22px;
+  overflow:hidden;
+  border:2px solid var(--brd);
+  background:
+    radial-gradient(60% 38% at 26% 80%, rgba(34,211,238,.13), transparent 70%),
+    radial-gradient(55% 40% at 58% 60%, rgba(52,211,153,.10), transparent 70%),
+    radial-gradient(50% 35% at 44% 32%, rgba(167,139,250,.12), transparent 70%),
+    radial-gradient(45% 30% at 16% 32%, rgba(163,230,53,.10), transparent 70%),
+    radial-gradient(40% 26% at 78% 13%, rgba(251,191,36,.14), transparent 70%),
+    radial-gradient(140% 120% at 50% 50%, #101737 0%, #0a0f26 70%, #060a18 100%);
+  box-shadow:inset 0 0 60px rgba(0,0,0,.55),var(--shadow);
 }
-.map-node:hover{transform:translateY(-2px);}
-.map-node .mn-ico{font-size:1.5rem;}
-.map-node .mn-name{display:block;font-weight:800;font-size:.88rem;}
-.map-node .mn-corp{display:block;color:var(--mut);font-size:.66rem;letter-spacing:.4px;}
-.map-node.cleared{border-color:rgba(52,211,153,.5);}
-.map-node.cleared .mn-corp{color:var(--ok);}
-.map-node.current{
-  border-color:var(--gold);
-  animation:nodePulse 1.6s ease-in-out infinite;
+#country-map::after{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background-image:radial-gradient(rgba(255,255,255,.05) 1px,transparent 1.3px);
+  background-size:22px 22px;
 }
-.map-node.current .mn-corp{color:var(--gold);}
-@keyframes nodePulse{0%,100%{box-shadow:0 0 8px rgba(251,191,36,.3);}50%{box-shadow:0 0 26px rgba(251,191,36,.65);}}
-.map-node.locked{opacity:.38;cursor:default;}
-.map-seg{width:3px;height:16px;background:rgba(124,140,255,.25);border-radius:2px;}
-.map-seg.done{background:rgba(52,211,153,.55);box-shadow:0 0 8px rgba(52,211,153,.4);}
+.map-roads{position:absolute;inset:0;width:100%;height:100%;}
+.map-roads .road{
+  stroke:rgba(124,140,255,.3);stroke-width:.8;
+  stroke-dasharray:2 1.6;stroke-linecap:round;
+}
+.map-roads .road.near{stroke:rgba(251,191,36,.65);filter:drop-shadow(0 0 2px rgba(251,191,36,.6));}
+.map-region{
+  position:absolute;transform:translate(-50%,-50%);
+  color:rgba(238,242,255,.28);font-size:.56rem;font-weight:800;
+  letter-spacing:2.5px;text-transform:uppercase;pointer-events:none;white-space:nowrap;
+}
+.map-pin{
+  position:absolute;transform:translate(-50%,-50%);
+  display:flex;flex-direction:column;align-items:center;gap:1px;
+  background:none;border:none;cursor:pointer;color:var(--txt);font-family:inherit;
+  z-index:2;padding:.15rem;
+  transition:transform .15s;
+}
+.map-pin:hover{transform:translate(-50%,-50%) scale(1.12);}
+.map-pin .mp-ico{
+  font-size:clamp(1.05rem,4.6vw,1.45rem);line-height:1;
+  filter:drop-shadow(0 2px 6px rgba(0,0,0,.8));
+}
+.map-pin .mp-name{
+  font-size:clamp(.42rem,1.8vw,.55rem);font-weight:800;letter-spacing:.3px;
+  color:var(--mut);white-space:nowrap;text-shadow:0 1px 4px rgba(0,0,0,.9);
+}
+.map-pin.cleared .mp-name{color:var(--ok);}
+.map-pin.village .mp-name{color:#c4b5fd;}
+.map-pin.reachable .mp-ico{animation:pinBob 1.4s ease-in-out infinite;}
+.map-pin.reachable .mp-name{color:var(--gold);}
+@keyframes pinBob{0%,100%{transform:translateY(0);}50%{transform:translateY(-3px);}}
+.map-pin.here .mp-name{color:var(--acc);}
+.map-pin.locked{opacity:.55;}
+#map-token{
+  position:absolute;transform:translate(-50%,-115%);
+  font-size:clamp(1rem,4.4vw,1.35rem);z-index:3;pointer-events:none;
+  filter:drop-shadow(0 0 8px rgba(34,211,238,.9));
+  transition:left .7s cubic-bezier(.45,0,.4,1), top .7s cubic-bezier(.45,0,.4,1);
+}
+.town-region{color:var(--mut);font-size:.6rem;letter-spacing:2px;text-transform:uppercase;margin:.1rem 0 .25rem;}
 
 #screen-town{justify-content:center;padding:1rem;}
 .town-box{
