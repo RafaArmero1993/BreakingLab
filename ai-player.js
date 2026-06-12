@@ -61,6 +61,10 @@ const AI = {
       return {action:'attack', cards:o.cards};
     }
 
+    /* Radón = baja garantizada: siempre que lo tenga, lo usa de
+       primera acción (es la única ventana legal para jugarlo) */
+    if(G.spells[1].some(s=>s.id==='Rn'))
+      return {action:'spell', id:'Rn'};
     /* Oro = financiación: con la mano corta es la mejor jugada */
     if(G.spells[1].some(s=>s.id==='Au') && hand.length <= 4)
       return {action:'spell', id:'Au'};
@@ -111,7 +115,8 @@ const AI = {
      Pb blinda contra radiactivos · He/Pt refuerzan · Ne/Hg debilitan ·
      Ar contra-anula · Au roba 3. */
   chooseRoundSpell(G){
-    const hand = G.spells[1];
+    /* el Radón NUNCA se juega en la ronda (solo como primera acción) */
+    const hand = G.spells[1].filter(s=>s.id!=='Rn');
     if(!hand.length) return null;
     const lvl = G.aiLevel || 'normal';
     if(lvl === 'easy')
@@ -123,7 +128,8 @@ const AI = {
     const rivalCastSomething = (G.spellsInArena[0]||[]).length > 0;
     const isRad = m => !!(m && m.rad);
 
-    /* contramagia: anula los hechizos que el rival ya ha jugado */
+    /* contramagia: el Xenón anula todo y cierra la ronda sin réplica */
+    if(has('Xe') && rivalCastSomething) return 'Xe';
     if(has('Ar') && rivalCastSomething) return 'Ar';
     /* financiación siempre es valor */
     if(has('Au')) return 'Au';
@@ -131,7 +137,10 @@ const AI = {
     if(iAmAtk && myMol){
       const defV = rivalMol ? rivalMol.def : 0;
       const gap = defV - myMol.atk; /* >=0 → me bloquean */
-      if(rivalMol && gap >= 0){
+      if(!rivalMol || gap < 0){
+        /* voy ganando: el Iridio convierte la victoria en extinción */
+        if(has('Ir')) return 'Ir';
+      } else {
         if(has('Pb') && isRad(rivalMol)) return 'Pb';
         if(has('Hg') && gap < 2) return 'Hg';
         if(has('Pt') && gap < 1) return 'Pt';
@@ -147,6 +156,9 @@ const AI = {
           if(myMol && has('He')) return 'He';
           if(has('Ne')) return 'Ne';
         }
+      } else if(myMol){
+        /* estoy bloqueando: el Iridio devuelve el golpe al atacante */
+        if(has('Ir')) return 'Ir';
       }
     }
     return null;

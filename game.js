@@ -24,7 +24,7 @@
 
 /* Versión única de la app: se muestra en portada y reglas, y debe ir
    a la par con CACHE_VERSION en sw.js */
-const APP_VERSION='v1.7';
+const APP_VERSION='v1.8';
 
 /* ════════════════════════════════
    SFX (WebAudio, sin assets)
@@ -674,12 +674,26 @@ function cancelBuild(){
 function confirmBuild(){
   if(G._buildRole==='attack'&&G.selHandSpell){
     const sp=G.selHandSpell;
+    const p=G.turn;
     G.selHandSpell=null;G.build=[];
     document.getElementById('build-panel').classList.remove('open');
-    if(!doCastSpell(G.turn,sp.id))return;
+    if(!doCastSpell(p,sp.id))return;
     G.busy=true;
     setZoneHints();
-    announce(`✨ ${G.names[G.turn]} lanza un hechizo`,'#fbbf24',()=>startSpellRound(),1100);
+    if(sp.id==='Rn'){
+      /* ataque silencioso: ya ha eliminado 1 analista en doCastSpell */
+      announce('RADÓN: ATAQUE SILENCIOSO −1','#a3e635',()=>{
+        if(G.an[1-p]<=0){endGame();return;}
+        startSpellRound();
+      },1500);
+      return;
+    }
+    if(sp.id==='Xe'){
+      G.phase='spells';
+      announce('XENÓN: ANESTESIA TOTAL','#818cf8',()=>finishSpellRound(),1300);
+      return;
+    }
+    announce(`✨ ${G.names[p]} lanza un hechizo`,'#fbbf24',()=>startSpellRound(),1100);
     return;
   }
   if(!G.build.length)return;
@@ -831,6 +845,11 @@ function spellStep(){
         const sp=G.spells[1].find(s=>s.id===id);
         showAIBanner(`${G.aiAvatar} ${G.names[1]} juega ${sp?sp.name:id} ✨`,1600);
         doCastSpell(1,id);
+        if(id==='Xe'){
+          /* el Xenón duerme la magia y cierra la ronda sin réplica */
+          announce('XENÓN: ANESTESIA TOTAL','#818cf8',()=>finishSpellRound(),1300);
+          return;
+        }
         G.spellPasses=0;
       } else {
         showAIBanner(`${G.aiAvatar} ${G.names[1]} pasa`,1300);
@@ -868,14 +887,21 @@ function openSpellPanel(p,mode){
     `<span style="color:${_nameColor};font-weight:800;font-size:.9rem">✨ ${G.names[p]}</span>`;
   const hand=document.getElementById('sp-hand');hand.innerHTML='';
   G.spells[p].forEach(sp=>{
-    const el=makeElemCard(sp,p,false,false);
-    el.onclick=()=>{
-      G.selSpell=sp.id;
-      sfx.select();
-      hand.querySelectorAll('.card').forEach(c=>c.classList.remove('sel'));
-      el.classList.add('sel');
-      castBtn.disabled=false;castBtn.style.opacity='1';
-    };
+    /* el Radón solo se juega como primera acción del turno */
+    const rnBlocked=mode==='round'&&sp.id==='Rn';
+    const el=makeElemCard(sp,p,false,rnBlocked);
+    if(rnBlocked){
+      el.classList.remove('dimmed');el.style.opacity='.35';
+      el.onclick=()=>toast('El Radón solo puede jugarse como primera acción del turno');
+    } else {
+      el.onclick=()=>{
+        G.selSpell=sp.id;
+        sfx.select();
+        hand.querySelectorAll('.card').forEach(c=>c.classList.remove('sel'));
+        el.classList.add('sel');
+        castBtn.disabled=false;castBtn.style.opacity='1';
+      };
+    }
     addMarco(el);
     hand.appendChild(el);
   });
@@ -886,8 +912,8 @@ function closeSpellPanelOnly(){
   document.getElementById('spell-panel').classList.remove('open');
 }
 
-/* Efectos de los hechizos: Au actúa al instante; el resto se registran
-   en spellsInArena y los aplica battleMods() en la resolución */
+/* Efectos de los hechizos: Au y Rn actúan al instante; el resto se
+   registran en spellsInArena y los aplica spellFx() en la resolución */
 function doCastSpell(p,id){
   const sp=G.spells[p].find(s=>s.id===id);if(!sp)return false;
   G.spells[p]=G.spells[p].filter(s=>s.id!==id);
@@ -898,6 +924,11 @@ function doCastSpell(p,id){
     sharedDeckTake(p,3);
     if(isHuman(p))toast('💰 Financiación: robas 3 cartas');
   }
+  if(sp.id==='Rn'){
+    /* asesino silencioso: elimina 1 analista rival al instante */
+    loseAnalyst(1-p);
+    vibe(90);sfx.hit();
+  }
   renderZoneSpells(p);
   renderDecks();
   return true;
@@ -906,12 +937,18 @@ function doCastSpell(p,id){
 function castSpell(){
   if(!G.selSpell)return;
   const p=G._spellFor;
+  const id=G.selSpell;
   closeSpellPanelOnly();
-  if(!doCastSpell(p,G.selSpell))return;
+  if(!doCastSpell(p,id))return;
   G.selSpell=null;
+  if(id==='Xe'){
+    /* anestesia total: anula todo y cierra la ronda sin réplica */
+    announce('XENÓN: ANESTESIA TOTAL','#818cf8',()=>finishSpellRound(),1300);
+    return;
+  }
   if(G._spellMode==='action'){
     /* hechizo como acción de turno → se abre la ronda de hechizos */
-    updateActionBar('off');
+    setZoneHints();
     announce(`✨ ${G.names[p]} lanza un hechizo`,'#fbbf24',()=>startSpellRound(),1100);
   } else {
     G.spellPasses=0;
@@ -932,26 +969,29 @@ function passRoundSpell(){
    RESOLUCIÓN DE LA BATALLA
 ════════════════════════════════ */
 /* Modificadores de los hechizos jugados este turno (efectos reales):
-   Ar anula los hechizos del rival · Pb reduce 50% ATK/DEF a las jugadas
-   radiactivas rivales · He +2 DEF propia · Pt +1/+1 propia ·
-   Ne −2 ATK rival · Hg −2 DEF rival · (Au actúa al jugarse: roba 3) */
-function battleMods(atkP,defP){
+   Xe anula TODOS los hechizos · Ar anula los del rival · Pb reduce 50%
+   ATK/DEF a las jugadas radiactivas rivales · He +2 DEF propia ·
+   Pt +1/+1 propia · Ne −2 ATK rival · Hg −2 DEF rival · Ir multiplica
+   las bajas si su dueño gana el duelo · (Au y Rn actúan al jugarse) */
+function spellFx(atkP,defP){
   const cast=p=>(G.spellsInArena[p]||[]).map(s=>s.id);
+  const xenon=cast(0).includes('Xe')||cast(1).includes('Xe');
   const arCancel=[cast(0).includes('Ar'),cast(1).includes('Ar')];
-  const active=p=>arCancel[1-p]?[]:cast(p).filter(id=>id!=='Ar');
+  const active=p=>xenon?[]:(arCancel[1-p]?[]:cast(p).filter(id=>id!=='Ar'&&id!=='Xe'));
+  const aA=active(atkP), aD=active(defP);
   let atkMod=0, defMod=0, atkMul=1, defMul=1;
-  for(const id of active(atkP)){
+  for(const id of aA){
     if(id==='Pt')atkMod+=1;
     if(id==='Hg')defMod-=2;
     if(id==='Pb'&&molIsRad(G.mols[defP]))defMul=.5;
   }
-  for(const id of active(defP)){
+  for(const id of aD){
     if(id==='He')defMod+=2;
     if(id==='Pt')defMod+=1;
     if(id==='Ne')atkMod-=2;
     if(id==='Pb'&&molIsRad(G.mols[atkP]))atkMul=.5;
   }
-  return {atkMod,defMod,atkMul,defMul};
+  return {atkMod,defMod,atkMul,defMul,irAtk:aA.includes('Ir'),irDef:aD.includes('Ir')};
 }
 
 function resolveBattle(){
@@ -961,11 +1001,14 @@ function resolveBattle(){
   hideAIBanner();
   const atkP=G.turn, defP=1-atkP;
   const atk=G.mols[atkP], def=G.mols[defP];
-  const mods=battleMods(atkP,defP);
-  const atkV=Math.max(0,Math.round(atk.atk*mods.atkMul)+mods.atkMod);
-  const defV=def?Math.max(0,Math.round(def.def*mods.defMul)+mods.defMod):0;
+  const fxv=spellFx(atkP,defP);
+  const atkV=Math.max(0,Math.round(atk.atk*fxv.atkMul)+fxv.atkMod);
+  const defV=def?Math.max(0,Math.round(def.def*fxv.defMul)+fxv.defMod):0;
   const dmg=atkV-defV;
   const blocked=!!def&&dmg<=0;
+  /* Iridio: el ganador del duelo arrasa */
+  const defLosses=blocked?0:(fxv.irAtk?2:1);
+  const atkLosses=(blocked&&fxv.irDef)?1:0;
   G.stats.battles++;
 
   /* las jugadas ya se revelaron al empezar la ronda de hechizos:
@@ -976,8 +1019,22 @@ function resolveBattle(){
     '#a78bfa',doClash,1400);
 
   function doClash(){
-    clashAnimation(atkP,defP,blocked,!def,()=>{
-      if(!blocked)loseAnalyst(defP);
+    const verdict=blocked
+      ?'¡BLOQUEADO!'
+      :(!def?`¡GOLPE DIRECTO! −${defLosses}`:(defLosses>1?`EXTINCIÓN −${defLosses}`:'−1 ANALISTA'));
+    clashAnimation(atkP,defP,blocked,!def,verdict,()=>{
+      for(let i=0;i<defLosses;i++)loseAnalyst(defP);
+      if(atkLosses){
+        /* Iridio del defensor: contragolpe al atacante */
+        loseAnalyst(atkP);
+        const t=_analystTarget(atkP);
+        if(t){
+          const r=t.getBoundingClientRect();
+          spawnSparks(r.left+r.width/2,r.top+r.height/2,'#fcd34d',22);
+          dmgPop(r.left+r.width/2,r.top+r.height/2-30,'¡CONTRAGOLPE! −1','#fcd34d');
+          sfx.hit();vibe(60);
+        }
+      }
       /* ambas moléculas van al descarte */
       for(const p of [atkP,defP]){
         if(G.molCards[p].length){
@@ -987,7 +1044,7 @@ function resolveBattle(){
         }
       }
       renderDecks();
-      if(G.an[defP]<=0){setTimeout(endGame,900);return;}
+      if(G.an[defP]<=0||G.an[atkP]<=0){setTimeout(endGame,900);return;}
       setTimeout(endTurn,650);
     });
   }
@@ -1070,7 +1127,7 @@ function dmgPop(x,y,txt,color){
   setTimeout(()=>d.remove(),1400);
 }
 
-function clashAnimation(atkP,defP,blocked,direct,done){
+function clashAnimation(atkP,defP,blocked,direct,verdict,done){
   const sA=document.getElementById('stack'+(atkP+1));
   if(!sA||!sA.children.length){done&&done();return;}
   const cx=innerWidth/2, cy=innerHeight*0.44;
@@ -1088,7 +1145,7 @@ function clashAnimation(atkP,defP,blocked,direct,done){
     setTimeout(()=>{
       screenFlash();shakeTable();sfx.hit();vibe(70);
       spawnSparks(tx,ty,'#fb7185',26);
-      dmgPop(tx,ty-36,'💥 ¡GOLPE DIRECTO! −1','#fb7185');
+      dmgPop(tx,ty-36,verdict,'#fb7185');
       A.c.style.opacity='0';
       setTimeout(()=>{A.c.remove();sA.style.visibility='';done&&done();},500);
     },620);
@@ -1114,11 +1171,11 @@ function clashAnimation(atkP,defP,blocked,direct,done){
     if(blocked){
       sfx.block();
       shieldRing(cx,cy);
-      dmgPop(cx,cy-60,'🛡 ¡BLOQUEADO!','#7dd3fc');
+      dmgPop(cx,cy-60,verdict,'#7dd3fc');
       A.c.classList.add('blasted'); /* el ataque se estrella contra el escudo */
     } else {
       sfx.hit();
-      dmgPop(cx,cy-60,'💥 −1 ANALISTA','#fb7185');
+      dmgPop(cx,cy-60,verdict,'#fb7185');
       if(B)B.c.classList.add('blasted'); /* la defensa salta en pedazos */
     }
     setTimeout(()=>{
@@ -1246,6 +1303,18 @@ function aiTakeTurn(){
       const sp=G.spells[1].find(s=>s.id===choice.id);
       showAIBanner(`${G.aiAvatar} ${G.names[1]} juega ${sp?sp.name:choice.id} ✨`,1600);
       doCastSpell(1,choice.id);
+      if(choice.id==='Rn'){
+        announce('RADÓN: ATAQUE SILENCIOSO −1','#a3e635',()=>{
+          if(G.an[0]<=0){endGame();return;}
+          startSpellRound();
+        },1500);
+        return;
+      }
+      if(choice.id==='Xe'){
+        G.phase='spells';
+        announce('XENÓN: ANESTESIA TOTAL','#818cf8',()=>finishSpellRound(),1300);
+        return;
+      }
       setTimeout(()=>startSpellRound(),1100);
     } else {
       sharedDeckTake(1,2);
