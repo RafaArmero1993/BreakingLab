@@ -2,9 +2,11 @@
    MODO AVENTURA — BreakingLab · El País de Reactivia (RPG)
    ════════════════════════════════════════════════════════════════
    RPG clásico de los 90 a calidad comercial:
-   - Mapa grande 44×52 (generado y validado por tools/generate_map.py)
-     con biomas: costa, río con puentes, lago, desierto, bosques,
-     cordillera y capital amurallada.
+   - MUNDO CONTINENTAL 440×520 (228.800 baldosas, 100× el anterior)
+     generado en tiempo de ejecución con semilla fija: costa ondulada,
+     cordillera nevada, río, lago, desierto, bosques y capital
+     amurallada. Minimapa cacheado y VIAJE RÁPIDO entre localidades
+     visitadas.
    - Sprites PIXEL-ART propios con 4 direcciones y animación de
      caminar; movimiento interpolado entre baldosas con cámara suave.
    - NPCs con paleta intercambiada que deambulan, se giran hacia ti
@@ -18,67 +20,157 @@
           t bosque · letras = localidades
 ════════════════════════════════════════════════════════════════ */
 
-/*MAP-START*/
-const RPG_MAP = [
-'~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~',
-'~.~~~.~~~.~~~.~~~.~~~.~~~.~~~.~~~.~~~.~~~.~~',
-'~~mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm.~',
-'~~mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm~~',
-'~~mmmmmmm.........mmmmmmmmmmmm....H....mmm~~',
-'~.mmmmmmm....W....mmmmmmmmmmmm.........mmm~~',
-'~~mmmmmmm.........mmmmmmmmmmmm.........mmm.~',
-'~~mmmmmmm.........mmmmmmmmmmmmmmmm.mmmmmmm~~',
-'~~mmmmmmmmmmm.mmmmmmmmmmmmmmmmmmmm.mmmmmmm~~',
-'~.mmmmmmmmmmm.mmmmmmmmmmmmmmmmmmmmrmmmmmmm~~',
-'~~m..m.m..m.m..m.m..m.m.~~.m..m.m.rm.m..m~.~',
-'~~...........r.......f..~~........r.......~~',
-'~~.ssssssss..r.......f..~~.......Mr.......~~',
-'~..sssrrrrrrrr.......f..~~.......r........~~',
-'~~.sssrssss..r~~~~~.....~~..t....r.........~',
-'~~~sssDssss..L~~~~~.....~~.t.t...r........~~',
-'~~.sssrssssffr~~~~~.....~~tt.t...r........~~',
-'~..sssrssssf.r~~~~~.....~~..tt...r....tt.~~~',
-'~~.sssrssss..r....h.hh..~~..t....r..t.t.t..~',
-'~~.sssrssss..r....h.h.h.~~.......r...tt...~~',
-'~~.sssrssss..rrrrrrrh.h.~~.......r........~~',
-'~..sssrsssst.......r.hh.~~.......r........~~',
-'~~~sssrrssst......hr.h..~~.......r.........~',
-'~~.ssssrssst.......rh...~~.......r........~~',
-'~~.ssssrsss........r....~~.......C.......~~~',
-'~..ssssrsss........r....~~.......r........~~',
-'~~.ssssrsss........r....~~...h...r.........~',
-'~~.ssssrsss........r....~~..hh...r....t...~~',
-'~~.ssssrsss.rrrrrrrZrrrrbbrrrrrrrr..t.t.t.~~',
-'~.~ssssOsss.r......r....~~..h.h..r...tt.t.~~',
-'~~.ssssrrrrrr..h.h.r....~~...ht..r.t.t.tt..~',
-'~~.ssssssss...h.hh.r....~~...t.ttr..tt.t.~~~',
-'~~.ssssssss..tt.t..r....~~..tt.t.r..t.tt..~~',
-'~............t.tt.tr...h~~..t.tt.r....t...~~',
-'~~........h.tt.t.ttr..hh~~..t.t.tr.........~',
-'~~.......hh.t.tt.t.r..h.~~...tt.tr.h.h....~~',
-'~~~......h.ht.t.tt.r.hh.~~h......rh.hh....~~',
-'~........h.h.tt.t.tr.h.h~~.......r..h.....~~',
-'~~........h..t.tt..r.h.h~~.......r..h....~.~',
-'~~.............t.ffr...h~~.......r........~~',
-'~~....P........f.f.r....~~.......r........~~',
-'~.....r.........ff.r....~~.......r........~~',
-'~~....r............VrrrrbbrrrrrrrS.........~',
-'~~~...r....t.t.....r....~~t.........f.....~~',
-'~~....rrrrrrrrrrrrrr....~~.tt......f.f....~~',
-'~...........t...........~~.t.............~~~',
-'~~yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy.~',
-'~~yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy~~',
-'~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~',
-'~.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~',
-'~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~.~',
-'~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~',
-];
-/*MAP-END*/
-const RPG_W = RPG_MAP[0].length;
-const RPG_H = RPG_MAP.length;
-const RPG_VIEW = 13;
-const RPG_BLOCK = '~mt';
-const RPG_ENCOUNTER = {h:.12, s:.10};
+/* ════════════════════════════════
+   GENERADOR DEL MUNDO (440×520 = 228.800 baldosas, 100× el anterior)
+   Se genera en tiempo de ejecución con SEMILLA FIJA (mulberry32):
+   determinista, 0 KB de mapa en el código y validado por la suite
+   (BFS: todas las localidades alcanzables a pie).
+   Tiles: ~ agua · y playa · . hierba · f flores · h hierba alta ·
+   s arena (encuentros) · n nieve (encuentros) · r camino · b puente ·
+   m montaña · t bosque · letras = localidades
+════════════════════════════════ */
+const RPG_W=440, RPG_H=520;
+const RPG_VIEW=13;
+const RPG_BLOCK='~mt';
+const RPG_ENCOUNTER={h:.08, s:.07, n:.07};
+
+const RPG_TOWN_POS={
+  V:[200,440], P:[70,420], S:[340,430], Z:[210,300], C:[330,260],
+  M:[350,140], L:[150,172], O:[80,292], D:[60,200], W:[180,84], H:[350,60],
+};
+
+const RPG_MAP=(function buildWorld(){
+  /* PRNG con semilla fija */
+  let _s=0x9E3779B9;
+  const rnd=()=>{
+    _s|=0;_s=(_s+0x6D2B79F5)|0;
+    let t=Math.imul(_s^(_s>>>15),1|_s);
+    t=(t+Math.imul(t^(t>>>7),61|t))^t;
+    return ((t^(t>>>14))>>>0)/4294967296;
+  };
+  const W=RPG_W,H=RPG_H;
+  const g=new Array(H);
+  for(let y=0;y<H;y++)g[y]=new Array(W).fill('.');
+  const get=(x,y)=>(x<0||y<0||x>=W||y>=H)?'~':g[y][x];
+  const put=(x,y,ch)=>{if(x>=0&&y>=0&&x<W&&y<H)g[y][x]=ch;};
+  const ellipse=(cx,cy,rx,ry,ch,over)=>{
+    for(let y=Math.max(0,cy-ry);y<=Math.min(H-1,cy+ry);y++)
+      for(let x=Math.max(0,cx-rx);x<=Math.min(W-1,cx+rx);x++){
+        const dx=(x-cx)/rx,dy=(y-cy)/ry;
+        if(dx*dx+dy*dy<=1&&(!over||over.includes(get(x,y))))put(x,y,ch);
+      }
+  };
+  const blob=(cx,cy,r,ch,density)=>{
+    for(let y=cy-r;y<=cy+r;y++)for(let x=cx-r;x<=cx+r;x++){
+      const dx=x-cx,dy=y-cy;
+      if(dx*dx+dy*dy<=r*r&&get(x,y)==='.'&&rnd()<density)put(x,y,ch);
+    }
+  };
+
+  /* océano perimetral con costa ondulada */
+  for(let y=0;y<H;y++){
+    const k=y*0.045;
+    const wl=22+Math.round(10*Math.sin(k)+6*Math.sin(k*2.7));
+    const wr=22+Math.round(10*Math.cos(k*1.3)+6*Math.sin(k*1.9+2));
+    for(let x=0;x<wl;x++)put(x,y,'~');
+    for(let x=W-wr;x<W;x++)put(x,y,'~');
+  }
+  for(let x=0;x<W;x++){
+    const k=x*0.05;
+    const wt=20+Math.round(9*Math.sin(k)+5*Math.cos(k*2.2));
+    const wb=24+Math.round(11*Math.sin(k*1.4+1)+6*Math.cos(k*0.8));
+    for(let y=0;y<wt;y++)put(x,y,'~');
+    for(let y=H-wb;y<H;y++)put(x,y,'~');
+  }
+
+  /* cordillera norte (banda con relieve) + sierras secundarias */
+  for(let x=0;x<W;x++){
+    const k=x*0.03;
+    const top=34+Math.round(8*Math.sin(k*1.7));
+    const bot=92+Math.round(14*Math.sin(k+2)+8*Math.sin(k*2.3));
+    for(let y=top;y<bot;y++)if(get(x,y)==='.')put(x,y,'m');
+  }
+  ellipse(255,200,26,16,'m',['.']);
+  ellipse(120,350,20,12,'m',['.']);
+  ellipse(390,330,16,22,'m',['.']);
+
+  /* nieve en el norte */
+  for(let y=0;y<118;y++)for(let x=0;x<W;x++)
+    if(get(x,y)==='.'&&rnd()<.8)put(x,y,'n');
+
+  /* meseta de las Cumbres */
+  ellipse(180,84,22,13,'.');
+  /* recinto amurallado de la capital con puerta sur */
+  for(let y=40;y<=82;y++)for(let x=326;x<=374;x++){
+    const edge=(y<=42||y>=80||x<=328||x>=372);
+    put(x,y,edge?'m':'.');
+  }
+  for(let y=80;y<=88;y++){put(349,y,'.');put(350,y,'.');put(351,y,'.');}
+
+  /* desierto del oeste */
+  ellipse(75,245,48,95,'s',['.','n']);
+  /* lago de Argón */
+  ellipse(165,150,22,14,'.',['m','n']);
+  ellipse(165,150,18,11,'~');
+
+  /* ríos: caminata sesgada hacia el sur desde la cordillera */
+  const river=(x0,y0,drift)=>{
+    let x=x0;
+    for(let y=y0;y<H;y++){
+      put(x,y,'~');put(x+1,y,'~');
+      if(y>H-45&&get(x,y+2)==='~')break;
+      x+=rnd()<.5?0:(rnd()<.5+drift?1:-1);
+      x=Math.max(30,Math.min(W-30,x));
+    }
+  };
+  river(255,95,.06);
+  river(120,118,-.04);
+
+  /* bosques, hierba alta y flores */
+  for(let i=0;i<150;i++)blob(40+Math.floor(rnd()*(W-80)),120+Math.floor(rnd()*(H-180)),4+Math.floor(rnd()*7),'t',.55);
+  for(let i=0;i<170;i++)blob(35+Math.floor(rnd()*(W-70)),110+Math.floor(rnd()*(H-160)),3+Math.floor(rnd()*6),'h',.7);
+  for(let i=0;i<60;i++)blob(40+Math.floor(rnd()*(W-80)),130+Math.floor(rnd()*(H-190)),2+Math.floor(rnd()*3),'f',.6);
+
+  /* playas junto al mar */
+  for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){
+    if(g[y][x]!=='.')continue;
+    if(get(x,y+1)==='~'||get(x+1,y)==='~'||get(x-1,y)==='~')put(x,y,'y');
+  }
+
+  /* localidades: plaza despejada + letra */
+  for(const [ch,p] of Object.entries(RPG_TOWN_POS)){
+    const tx=p[0],ty=p[1];
+    for(let y=ty-3;y<=ty+3;y++)for(let x=tx-3;x<=tx+3;x++)
+      if(get(x,y)!=='~')put(x,y,'.');
+    put(tx,ty,ch);
+  }
+
+  /* carreteras entre localidades (tramos en L; el agua se vuelve puente) */
+  const ROADS=[
+    ['V',[200,360],'Z'], ['P',[70,442],[200,442],'V'], ['V',[270,442],[340,442],'S'],
+    ['S',[338,330],'C'], ['C',[345,180],'M'], ['M',[350,90],[350,84]],
+    ['Z',[300,300],[330,290],'C'], ['Z',[210,220],[150,220],'L'],
+    ['L',[150,100],[176,88],'W'], ['Z',[120,300],'O'], ['O',[62,250],'D'],
+    ['D',[60,120],[150,100]],
+  ];
+  const pos=p=>Array.isArray(p)?p:RPG_TOWN_POS[p];
+  for(const path of ROADS){
+    for(let i=0;i<path.length-1;i++){
+      let xy=pos(path[i]);
+      let x=xy[0],y=xy[1];
+      const tgt=pos(path[i+1]);
+      const carve=()=>{
+        const ch=get(x,y);
+        if(ch==='~')put(x,y,'b');
+        else if('.hftsmyn'.includes(ch))put(x,y,'r');
+      };
+      while(x!==tgt[0]){x+=tgt[0]>x?1:-1;carve();}
+      while(y!==tgt[1]){y+=tgt[1]>y?1:-1;carve();}
+    }
+  }
+
+  return g.map(r=>r.join(''));
+})();
 
 const RPG_TOWNS = {
  V:{id:'villa',   icon:'🏠', name:'Villa Hidrógeno', region:'Costa Azur',
@@ -308,9 +400,11 @@ function advWins(){ return Object.values(ADV.cleared).filter(Boolean).length; }
 function rpgRegionAt(x,y){
   const t=rpgTownAt(x,y);
   if(t)return t.name;
-  if(y<10)return x>26?'Murallas de la Capital':'Sierra Wolframio';
-  if(x<12&&y<34)return 'Páramo Radiante';
-  if(y>38)return 'Costa Azur';
+  const ch=rpgTile(x,y);
+  if(x>320&&y<90)return 'Murallas de la Capital';
+  if(y<118)return 'Sierra Nevada de Wolframio';
+  if(ch==='s'||(x<130&&y<350))return 'Páramo Radiante';
+  if(y>400)return 'Costa Azur';
   return 'Llanos del Centro';
 }
 
@@ -318,7 +412,7 @@ function rpgRegionAt(x,y){
 function advSave(){
   try{ localStorage.setItem(ADV_SAVE_KEY, JSON.stringify({
     x:ADV.x, y:ADV.y, dir:ADV.dir, coins:ADV.coins, col:ADV.col,
-    cleared:ADV.cleared, flags:ADV.flags, done:ADV.done
+    cleared:ADV.cleared, flags:ADV.flags, visited:ADV.visited||{}, done:ADV.done
   })); }catch(e){}
 }
 function advLoad(){
@@ -331,7 +425,7 @@ function advLoad(){
 function advNew(){
   const v=rpgFindTile('V');
   ADV={x:v.x, y:v.y+1, dir:'down', coins:ADV_START_COINS, col:{...ADV_STARTER},
-       cleared:{}, flags:{}, done:false,
+       cleared:{}, flags:{}, visited:{}, done:false,
        inBattle:false, duelKind:'town', duelTown:'villa',
        wildLevel:'easy', wildName:'', wildCoins:0,
        battleDeck:[], battleSpells:[], offers:[], _onTown:false};
@@ -342,7 +436,7 @@ function advNew(){
 function advEnter(){
   const s=advLoad();
   if(s){
-    ADV={...s, dir:s.dir||'down', flags:s.flags||{},
+    ADV={...s, dir:s.dir||'down', flags:s.flags||{}, visited:s.visited||{},
          inBattle:false, duelKind:'town', duelTown:'villa',
          wildLevel:'easy', wildName:'', wildCoins:0,
          battleDeck:[], battleSpells:[], offers:[],
@@ -359,6 +453,7 @@ function advEnter(){
   rpgInit();
 }
 function advReset(){
+  _miniCache=null;
   if(!confirm('¿Reiniciar la aventura? Perderás tu colección y tus monedas.'))return;
   advNew();
   rpgPlaceNPCs();
@@ -448,6 +543,7 @@ function rpgInit(){
       else if(k==='arrowleft'||k==='a'){e.preventDefault();rpgStep(-1,0,'left');}
       else if(k==='arrowright'||k==='d'){e.preventDefault();rpgStep(1,0,'right');}
       else if(k==='enter'||k===' '){e.preventDefault();rpgAction();}
+      else if(k==='m'){e.preventDefault();openMinimap();}
     });
     _rpgCv.addEventListener('click',()=>{if(_dlg)dlgAdvance();});
   }
@@ -463,7 +559,7 @@ function rpgInit(){
 const RPG_COLORS={
   '~':'#0d2c5e', '.':'#17402b', 'h':'#0e4f2a', 's':'#6b5a2e',
   'r':'#7c6a45', 'm':'#3a3f55', 't':'#123a24', 'b':'#7a5a38',
-  'y':'#b9a468', 'f':'#1c4a2f',
+  'y':'#b9a468', 'f':'#1c4a2f', 'n':'#aebfd8',
 };
 
 function drawSprite(ctx,px,py,ts,dir,frame,pal){
@@ -517,6 +613,9 @@ function rpgDraw(){
       } else if(ch==='s'||ch==='y'){
         ctx.fillStyle='rgba(255,235,170,.14)';
         ctx.fillRect(sx+(n%4)*ts*.2,sy+(n%5)*ts*.17,Math.max(1,ts*.1),Math.max(1,ts*.08));
+      } else if(ch==='n'){
+        ctx.fillStyle='rgba(255,255,255,'+((n%3)?'.25':'.1')+')';
+        ctx.fillRect(sx+(n%4)*ts*.22,sy+(n%5)*ts*.18,Math.max(1,ts*.12),Math.max(1,ts*.1));
       } else if(ch==='r'){
         ctx.fillStyle='rgba(0,0,0,.16)';
         ctx.fillRect(sx,sy+ts*.42,ts,ts*.16);
@@ -612,6 +711,79 @@ function padStart(dx,dy,dir){
 }
 function padStop(){_padDir=null;}
 
+/* ════════════════════════════════
+   MINIMAPA del continente (cacheado, 1px por baldosa)
+════════════════════════════════ */
+let _miniCache=null;
+function rpgBuildMinimap(){
+  const cv=document.createElement('canvas');
+  cv.width=RPG_W;cv.height=RPG_H;
+  const c=cv.getContext('2d');
+  if(!c)return null;
+  for(let y=0;y<RPG_H;y++)for(let x=0;x<RPG_W;x++){
+    const ch=rpgTile(x,y);
+    c.fillStyle=RPG_TOWNS[ch]?'#fbbf24':(RPG_COLORS[ch]||'#17402b');
+    c.fillRect(x,y,1,1);
+  }
+  /* localidades como puntos brillantes */
+  for(const [ch,[tx,ty]] of Object.entries(RPG_TOWN_POS)){
+    c.fillStyle='#fde047';
+    c.fillRect(tx-2,ty-2,5,5);
+  }
+  return cv;
+}
+function openMinimap(){
+  if(!ADV)return;
+  if(!_miniCache)_miniCache=rpgBuildMinimap();
+  const cv=document.getElementById('mini-canvas');
+  if(!cv||!_miniCache)return;
+  cv.width=RPG_W;cv.height=RPG_H;
+  const c=cv.getContext('2d');
+  if(!c)return;
+  c.drawImage(_miniCache,0,0);
+  /* tu posición */
+  c.fillStyle='#22d3ee';
+  c.fillRect(ADV.x-3,ADV.y-3,7,7);
+  c.strokeStyle='#fff';c.lineWidth=2;
+  c.strokeRect(ADV.x-5,ADV.y-5,11,11);
+  document.getElementById('ov-mini').classList.add('open');
+}
+
+/* ════════════════════════════════
+   VIAJE RÁPIDO entre localidades visitadas
+════════════════════════════════ */
+function advOpenFastTravel(){
+  const list=document.getElementById('fast-list');
+  list.innerHTML='';
+  const visited=Object.keys(ADV.visited||{}).filter(id=>id!==ADV.duelTown);
+  if(!visited.length){
+    list.innerHTML='<div class="no-mol-msg">Aún no has visitado otras localidades.</div>';
+  }
+  for(const id of visited){
+    const t=advPlaceById(id);
+    if(!t)continue;
+    const b=document.createElement('button');
+    b.className='btn sec';
+    b.style.width='100%';
+    b.innerHTML=`${t.icon} ${t.name} <small style="color:var(--mut)">· ${t.region}</small>`;
+    b.onclick=()=>advFastTravel(id);
+    list.appendChild(b);
+  }
+  document.getElementById('ov-fast').classList.add('open');
+}
+function advFastTravel(id){
+  document.getElementById('ov-fast').classList.remove('open');
+  let ch=null;
+  for(const [k,t] of Object.entries(RPG_TOWNS))if(t.id===id)ch=k;
+  if(!ch)return;
+  const [tx,ty]=RPG_TOWN_POS[ch];
+  ADV.x=tx;ADV.y=ty;ADV.dir='down';ADV._onTown=true;
+  advSave();
+  sfx.whoosh();
+  toast('🧭 Viajas a '+advPlaceById(id).name);
+  advBackToMap();
+}
+
 /* botón A: hablar con el NPC de enfrente o entrar en la localidad */
 const DIRV={down:[0,1],up:[0,-1],left:[-1,0],right:[1,0]};
 function rpgAction(){
@@ -700,10 +872,11 @@ const RPG_WILD={
   h_easy:[{n:'Químico Errante',lv:'easy',c:18},{n:'Becario Fugado',lv:'easy',c:15}],
   h_hard:[{n:'Alquimista Salvaje',lv:'normal',c:30},{n:'Catedrático Ermitaño',lv:'normal',c:34}],
   s:[{n:'Mutante del Páramo',lv:'normal',c:38},{n:'Carroñero Radiactivo',lv:'hard',c:55}],
+  n:[{n:'Yeti Criogénico',lv:'hard',c:60},{n:'Glaciólogo Renegado',lv:'normal',c:36}],
 };
 function rpgWildEncounter(ch,y){
   if(advShuffledElements().length<8)return;
-  const pool=ch==='s'?RPG_WILD.s:(y<26?RPG_WILD.h_hard:RPG_WILD.h_easy);
+  const pool=ch==='s'?RPG_WILD.s:(ch==='n'?RPG_WILD.n:(y<RPG_H*0.45?RPG_WILD.h_hard:RPG_WILD.h_easy));
   const foe=pool[Math.floor(Math.random()*pool.length)];
   ADV.duelKind='wild';
   ADV.wildLevel=foe.lv;
@@ -758,6 +931,8 @@ function advShuffledSpells(){
 function advOpenTown(id){
   ADV.duelKind='town';
   ADV.duelTown=id;
+  ADV.visited=ADV.visited||{};
+  if(!ADV.visited[id]){ADV.visited[id]=true;advSave();}
   const t=advPlaceById(id);
   document.getElementById('town-icon').textContent=t.icon;
   document.getElementById('town-name').textContent=t.name;

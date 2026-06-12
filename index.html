@@ -132,7 +132,8 @@
       <button class="dbtn down"  onpointerdown="padStart(0,1,'down')"   onpointerup="padStop()" onpointerleave="padStop()" onpointercancel="padStop()">▼</button>
     </div>
     <div class="rpg-side">
-      <div class="rpg-tip">Camina con la cruceta<br>(o flechas / WASD).<br>A = hablar / entrar · 🌿 peligro</div>
+      <div class="rpg-tip">Cruceta o flechas/WASD.<br>A = hablar / entrar<br>🌿 peligro · M = mapa</div>
+      <button class="btn sm" onclick="openMinimap()">🗺 Mapa</button>
       <button class="btn sec sm" onclick="showScreen('mode')">← Salir</button>
       <button class="btn sec sm" onclick="advReset()">Reiniciar</button>
     </div>
@@ -155,8 +156,29 @@
       <button class="btn gold" id="town-duel" onclick="advStartDuel()">⚔️ Duelo</button>
       <button class="btn" id="town-shop" onclick="advOpenShop()">🛒 Tienda de cartas</button>
       <button class="btn sec" onclick="advOpenCollection()">🎴 Mi colección</button>
+      <button class="btn sec" onclick="advOpenFastTravel()">🧭 Viaje rápido</button>
       <button class="btn sec" onclick="advBackToMap()">🗺 Volver al país</button>
     </div>
+  </div>
+</div>
+
+<!-- MINIMAPA DEL CONTINENTE -->
+<div class="ov" id="ov-mini" onclick="document.getElementById('ov-mini').classList.remove('open')">
+  <div class="modal ai" style="max-width:440px;position:relative" onclick="event.stopPropagation()">
+    <button class="close-x" onclick="document.getElementById('ov-mini').classList.remove('open')">✕</button>
+    <h2 style="margin-bottom:.6rem">🗺 Reactivia</h2>
+    <canvas id="mini-canvas" class="mini-canvas"></canvas>
+    <div style="color:var(--mut);font-size:.62rem;margin-top:.5rem">⬛ tú · 🟡 localidades</div>
+  </div>
+</div>
+
+<!-- VIAJE RÁPIDO -->
+<div class="ov" id="ov-fast">
+  <div class="modal ai" style="max-width:380px;position:relative">
+    <button class="close-x" onclick="document.getElementById('ov-fast').classList.remove('open')">✕</button>
+    <h2 style="margin-bottom:.3rem">🧭 Viaje rápido</h2>
+    <p style="margin-bottom:.8rem">Vuela a cualquier localidad que ya hayas visitado.</p>
+    <div id="fast-list" style="display:flex;flex-direction:column;gap:.45rem;max-height:55vh;overflow-y:auto"></div>
   </div>
 </div>
 
