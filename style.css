@@ -227,6 +227,7 @@ body.on-intro #btn-settings{display:flex;}
 .coin-chip.loc{color:#c4b5fd;border-color:rgba(167,139,250,.5);
   background:linear-gradient(135deg,rgba(167,139,250,.2),rgba(244,114,182,.1)),var(--felt);
   box-shadow:0 0 14px rgba(167,139,250,.2);}
+.rpg-stage{position:relative;}
 #rpg-canvas{
   border-radius:18px;
   border:3px solid var(--brd);
@@ -235,6 +236,34 @@ body.on-intro #btn-settings{display:flex;}
   touch-action:none;
   background:#0d2c5e;
 }
+/* ── Caja de diálogo clásica ── */
+#dialog-box{
+  position:absolute;left:3%;right:3%;bottom:3%;
+  background:rgba(8,12,30,.94);
+  border:3px solid #e8ecf2;outline:2px solid #23304a;
+  border-radius:10px;
+  padding:.6rem .8rem .8rem;
+  min-height:74px;cursor:pointer;z-index:5;
+  box-shadow:0 6px 22px rgba(0,0,0,.6);
+}
+.dlg-name{
+  display:inline-block;
+  background:#e8ecf2;color:#10152e;
+  font-weight:900;font-size:.62rem;letter-spacing:1px;text-transform:uppercase;
+  border-radius:5px;padding:.1rem .5rem;
+  margin-top:-1.15rem;margin-bottom:.3rem;
+}
+.dlg-text{
+  font-size:.78rem;line-height:1.55;color:var(--txt);font-weight:600;
+  min-height:2.4em;
+}
+.dlg-next{
+  position:absolute;right:.7rem;bottom:.3rem;
+  color:var(--gold);font-size:.7rem;
+  animation:dlgBob 1s ease-in-out infinite;
+}
+@keyframes dlgBob{0%,100%{transform:translateY(0);}50%{transform:translateY(3px);}}
+
 .rpg-controls{
   display:flex;align-items:center;justify-content:space-between;
   width:min(94vw,430px);margin:.6rem 0 1.2rem;gap:.8rem;
