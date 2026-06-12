@@ -77,7 +77,7 @@
       <span class="mc-ico">🗺</span>
       <span>
         <span class="mc-t">Aventura</span><br/>
-        <span class="mc-d">Recorre el País de Reactivia con libertad: carreteras, tiendas, compañías rivales y la capital. Tu colección se guarda.</span>
+        <span class="mc-d">RPG clásico: camina por el País de Reactivia, entra en pueblos, esquiva la hierba alta y derrota a las compañías. Tu colección se guarda.</span>
       </span>
     </button>
   </div>
@@ -107,18 +107,28 @@
   </div>
 </div>
 
-<!-- ═══ AVENTURA: EL PAÍS ═══ -->
+<!-- ═══ AVENTURA: EL PAÍS (RPG) ═══ -->
 <div id="screen-map" class="screen">
   <h2 class="map-title">🗺 El País de Reactivia</h2>
   <div class="map-hud">
     <div class="coin-chip inline" id="map-coins">🪙 0</div>
     <div class="coin-chip inline wins" id="map-wins">🏅 0 / 5</div>
+    <div class="coin-chip inline loc" id="map-loc">📍</div>
   </div>
-  <div class="map-hint">Toca una localidad conectada por carretera para viajar</div>
-  <div id="country-map"></div>
-  <div class="mbtns" style="margin:.8rem 0 1.4rem">
-    <button class="btn sec sm" onclick="showScreen('mode')">← Salir</button>
-    <button class="btn sec sm" onclick="advReset()">Reiniciar aventura</button>
+  <canvas id="rpg-canvas"></canvas>
+  <div class="rpg-controls">
+    <div class="dpad">
+      <button class="dbtn up"    onpointerdown="padStart(0,-1)" onpointerup="padStop()" onpointerleave="padStop()" onpointercancel="padStop()">▲</button>
+      <button class="dbtn left"  onpointerdown="padStart(-1,0)" onpointerup="padStop()" onpointerleave="padStop()" onpointercancel="padStop()">◀</button>
+      <button class="dbtn abtn-a" onclick="rpgAction()">A</button>
+      <button class="dbtn right" onpointerdown="padStart(1,0)"  onpointerup="padStop()" onpointerleave="padStop()" onpointercancel="padStop()">▶</button>
+      <button class="dbtn down"  onpointerdown="padStart(0,1)"  onpointerup="padStop()" onpointerleave="padStop()" onpointercancel="padStop()">▼</button>
+    </div>
+    <div class="rpg-side">
+      <div class="rpg-tip">Camina con la cruceta<br>(o flechas / WASD).<br>A = entrar · 🌿 = peligro</div>
+      <button class="btn sec sm" onclick="showScreen('mode')">← Salir</button>
+      <button class="btn sec sm" onclick="advReset()">Reiniciar</button>
+    </div>
   </div>
 </div>
 
@@ -138,7 +148,7 @@
       <button class="btn gold" id="town-duel" onclick="advStartDuel()">⚔️ Duelo</button>
       <button class="btn" id="town-shop" onclick="advOpenShop()">🛒 Tienda de cartas</button>
       <button class="btn sec" onclick="advOpenCollection()">🎴 Mi colección</button>
-      <button class="btn sec" onclick="advRenderMap();showScreen('map')">🗺 Volver al país</button>
+      <button class="btn sec" onclick="advBackToMap()">🗺 Volver al país</button>
     </div>
   </div>
 </div>
@@ -358,7 +368,7 @@
       <p><strong style="color:var(--txt)">Resolución de la batalla</strong><br>Se compara el 🗡 ATK del atacante con la 🛡 DEF del defensor (con los hechizos ya aplicados). Si el ataque es mayor, el defensor pierde 1 analista; si no, no pasa nada (el atacante NUNCA pierde analistas al atacar). Las cartas son de un solo uso: ambas moléculas van al descarte tras la batalla.</p><br>
       <p><strong style="color:var(--txt)">Hechizos (10)</strong><br>Cada uno actúa según sus propiedades reales: <strong style="color:var(--txt)">Plomo</strong> blinda contra radiactivos (U·Ra·Po pierden 50%), <strong style="color:var(--txt)">Helio</strong> aligera tu jugada (+2 DEF), <strong style="color:var(--txt)">Neón</strong> deslumbra (−2 ATK rival), <strong style="color:var(--txt)">Argón</strong> anula los hechizos rivales, <strong style="color:var(--txt)">Oro</strong> financia (+3 cartas), <strong style="color:var(--txt)">Platino</strong> cataliza (+1/+1), <strong style="color:var(--txt)">Mercurio</strong> envenena (−2 DEF rival), <strong style="color:var(--txt)">Xenón</strong> anestesia (anula TODOS los hechizos y cierra la ronda sin réplica), <strong style="color:var(--txt)">Radón</strong> asesina en silencio (elimina 1 analista; solo como primera acción del turno, nunca tras un duelo) e <strong style="color:var(--txt)">Iridio</strong> extingue (si ganas el duelo: como atacante eliminas 2 analistas, como defensor 1 del atacante).</p><br>
       <p><strong style="color:var(--txt)">Contra la Máquina</strong><br>Juega contra un científico artificial con tres niveles: Becario 🥼, Doctora 🔬 y Nobel 🧠.</p><br>
-      <p><strong style="color:var(--txt)">Modo Aventura</strong><br>Recorre el <strong style="color:var(--txt)">País de Reactivia</strong> con libertad: 11 localidades unidas por carreteras con bifurcaciones. Viaja entre localidades conectadas; 8 pueblos tienen compañía rival (duelo opcional) y 3 aldeas tienen tiendas especiales (mercado con descuento, balneario de hechizos, caravana de rarezas). En los duelos robas de TU colección; ganar da monedas y botín, perder cuesta 10. La capital, Helix City, exige 5 victorias para abrir sus puertas — dentro esperan el jefe final y la Molécula Maestra. Tu progreso se guarda en el dispositivo.</p>
+      <p><strong style="color:var(--txt)">Modo Aventura (RPG)</strong><br>Camina por el <strong style="color:var(--txt)">País de Reactivia</strong> como en los RPG de los 90: cruceta táctil o flechas/WASD, montañas y bosques que bloquean el paso, y caminos seguros. Pisar la <strong style="color:var(--txt)">hierba alta 🌿 o la arena del páramo</strong> puede provocar un duelo salvaje. Entra en los pueblos pisándolos (o con el botón A): 8 tienen compañía rival y 3 aldeas tienen tiendas especiales (mercado con descuento, balneario de hechizos, caravana de rarezas). En los duelos robas de TU colección; ganar da monedas y botín. La capital exige 5 victorias — dentro esperan el jefe final y la Molécula Maestra. Tu progreso se guarda en el dispositivo.</p>
     </div>
     <div style="text-align:center;margin-top:1.2rem">
       <button class="btn" onclick="document.getElementById('ov-rules').classList.remove('open')">¡Entendido!</button>
