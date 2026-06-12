@@ -1,7 +1,7 @@
 /* ════════════════════════════════════════════════════════════════
    GAME DATA — BreakingLab  (GENERADO por tools/generate_data.py)
    No editar a mano: ejecuta el generador para regenerar.
-   43 elementos de batalla + 7 hechizos = 50 cartas.
+   43 elementos de batalla + 10 hechizos = 53 cartas.
    290 moléculas/elementos nativos reales.
    ids de cada molécula = orden de lectura de la fórmula.
    ATK/DEF de molécula = suma de los stats de sus elementos.
@@ -165,6 +165,15 @@ const SPELLS = [
   {id:"Hg", sym:"Hg", name:"Mercurio", num:80, atk:0, def:0, type:'spell', img:'img/Hg.png',
    eff:"☠️ VAPOR TÓXICO: −2 DEF a la jugada rival esta batalla.", info:"Sus vapores envenenan la defensa.",
    hist:"El «agua viva» de los alquimistas. Volvió locos a los sombrereros del XIX — de ahí la expresión."},
+  {id:"Xe", sym:"Xe", name:"Xenón", num:54, atk:0, def:0, type:'spell', img:'img/Xe.png',
+   eff:"💤 ANESTESIA TOTAL: anula TODOS los hechizos de la batalla y cierra la ronda de hechizos al instante, sin réplica posible.", info:"Gas anestésico real: duerme la magia.",
+   hist:"Ramsay y Travers lo aislaron en 1898: «el extraño». Es un anestésico quirúrgico real, tan caro que se recicla en los quirófanos."},
+  {id:"Rn", sym:"Rn", name:"Radón", num:86, atk:0, def:0, type:'spell', img:'img/Rn.png',
+   eff:"☢ ATAQUE SILENCIOSO: elimina 1 analista rival. Solo como primera acción del turno — nunca tras un duelo.", info:"Gas radiactivo invisible e inodoro.",
+   hist:"Dorn lo identificó en 1900 emanando del radio. Se filtra desde el subsuelo a los sótanos: un asesino silencioso de verdad."},
+  {id:"Ir", sym:"Ir", name:"Iridio", num:77, atk:0, def:0, type:'spell', img:'img/Ir.png',
+   eff:"☄️ EXTINCIÓN: si ganas el duelo — como atacante eliminas 2 analistas; como defensor, 1 analista del atacante.", info:"El metal de la extinción de los dinosaurios.",
+   hist:"Tennant lo descubrió en 1803. La fina capa de iridio que envuelve el planeta delató al asteroide que exterminó a los dinosaurios."},
 ];
 
 /* ── Colores neón por carta ── */
@@ -219,6 +228,9 @@ const CARD_COLORS = {
   "Au": "#fde047",
   "Pt": "#e5e7eb",
   "Hg": "#f87171",
+  "Xe": "#818cf8",
+  "Rn": "#a3e635",
+  "Ir": "#fcd34d",
 };
 
 /* ── 290 moléculas válidas ── */

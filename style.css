@@ -487,7 +487,7 @@ body.on-intro #btn-settings{display:flex;}
 .story-final{text-align:center;color:var(--txt);font-weight:800;letter-spacing:.5px;}
 
 /* ── Zoom: historia del elemento ── */
-.zoom-col{display:flex;flex-direction:column;align-items:center;gap:.9rem;max-width:94vw;}
+.zoom-col{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.9rem;max-width:94vw;max-height:100svh;padding:1rem 0 calc(1rem + env(safe-area-inset-bottom));}
 .zoom-hist{
   width:min(86vw,440px);max-height:60vh;overflow-y:auto;
   background:var(--glass);border:1px solid var(--brd);border-radius:20px;
@@ -629,13 +629,17 @@ body.on-intro #btn-settings{display:flex;}
 .mbtns{display:flex;gap:.55rem;justify-content:center;flex-wrap:wrap;margin-top:.7rem;}
 .mol-hint{background:linear-gradient(135deg,var(--ok),#059669);color:#fff;border-radius:50px;padding:.2rem .7rem;font-size:.66rem;font-weight:700;display:inline-block;margin:.2rem 0;}
 
-/* ── Zoom overlay ── */
+/* ── Zoom overlay ──
+   La carta + el botón de historia deben caber en pantalla: la altura
+   de la carta es cw·12/7, así que cw ≤ ~45vh para que el borde
+   inferior (y el marco, que sobresale 4px) no quede oculto. */
 #ov-zoom{background:rgba(0,0,0,.88);z-index:200;}
 #ov-zoom .zoom-card-wrap{
-  --cw: min(72vw, 54vh);
+  --cw: min(72vw, 45vh);
   --ch: calc(var(--cw) * 12 / 7);
   --cr: 14px;
   width:var(--cw);height:var(--ch);
+  flex-shrink:0;
 }
 #ov-zoom .card{pointer-events:none;width:var(--cw);height:var(--ch);}
 #ov-zoom .ec-tl{font-size:clamp(1.1rem,2.8vw,1.8rem);}

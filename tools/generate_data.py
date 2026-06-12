@@ -91,6 +91,18 @@ SPELLS = [
   '☠️ VAPOR TÓXICO: −2 DEF a la jugada rival esta batalla.',
   'Sus vapores envenenan la defensa.',
   'El «agua viva» de los alquimistas. Volvió locos a los sombrereros del XIX — de ahí la expresión.',4,'#f87171'),
+ ('Xe','Xenón',54,
+  '💤 ANESTESIA TOTAL: anula TODOS los hechizos de la batalla y cierra la ronda de hechizos al instante, sin réplica posible.',
+  'Gas anestésico real: duerme la magia.',
+  'Ramsay y Travers lo aislaron en 1898: «el extraño». Es un anestésico quirúrgico real, tan caro que se recicla en los quirófanos.',3,'#818cf8'),
+ ('Rn','Radón',86,
+  '☢ ATAQUE SILENCIOSO: elimina 1 analista rival. Solo como primera acción del turno — nunca tras un duelo.',
+  'Gas radiactivo invisible e inodoro.',
+  'Dorn lo identificó en 1900 emanando del radio. Se filtra desde el subsuelo a los sótanos: un asesino silencioso de verdad.',2,'#a3e635'),
+ ('Ir','Iridio',77,
+  '☄️ EXTINCIÓN: si ganas el duelo — como atacante eliminas 2 analistas; como defensor, 1 analista del atacante.',
+  'El metal de la extinción de los dinosaurios.',
+  'Tennant lo descubrió en 1803. La fina capa de iridio que envuelve el planeta delató al asteroide que exterminó a los dinosaurios.',2,'#fcd34d'),
 ]
 
 # ── Moléculas y elementos nativos REALES (display, parse, nombre) ──

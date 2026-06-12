@@ -56,4 +56,7 @@ const CARD_WEIGHTS = {
   "Au":  3,  // hechizo
   "Pt":  4,  // hechizo
   "Hg":  4,  // hechizo
+  "Xe":  3,  // hechizo
+  "Rn":  2,  // hechizo
+  "Ir":  2,  // hechizo
 };
