@@ -77,7 +77,7 @@
       <span class="mc-ico">🗺</span>
       <span>
         <span class="mc-t">Aventura</span><br/>
-        <span class="mc-d">Viaja de pueblo en pueblo, compra cartas y derrota a las compañías. Tu colección se guarda.</span>
+        <span class="mc-d">Recorre el País de Reactivia con libertad: carreteras, tiendas, compañías rivales y la capital. Tu colección se guarda.</span>
       </span>
     </button>
   </div>
@@ -107,33 +107,38 @@
   </div>
 </div>
 
-<!-- ═══ AVENTURA: MAPA ═══ -->
+<!-- ═══ AVENTURA: EL PAÍS ═══ -->
 <div id="screen-map" class="screen">
-  <h2 class="map-title">🗺 La Ruta de la Molécula</h2>
-  <div class="coin-chip" id="map-coins">🪙 0</div>
-  <div class="map-path" id="map-path"></div>
-  <div class="mbtns" style="margin:1rem 0 1.4rem">
+  <h2 class="map-title">🗺 El País de Reactivia</h2>
+  <div class="map-hud">
+    <div class="coin-chip inline" id="map-coins">🪙 0</div>
+    <div class="coin-chip inline wins" id="map-wins">🏅 0 / 5</div>
+  </div>
+  <div class="map-hint">Toca una localidad conectada por carretera para viajar</div>
+  <div id="country-map"></div>
+  <div class="mbtns" style="margin:.8rem 0 1.4rem">
     <button class="btn sec sm" onclick="showScreen('mode')">← Salir</button>
     <button class="btn sec sm" onclick="advReset()">Reiniciar aventura</button>
   </div>
 </div>
 
-<!-- ═══ AVENTURA: PUEBLO ═══ -->
+<!-- ═══ AVENTURA: LOCALIDAD ═══ -->
 <div id="screen-town" class="screen">
   <div class="town-box ai">
     <div class="town-head">
       <span class="town-ico" id="town-icon">🏠</span>
       <div>
         <h2 id="town-name">Pueblo</h2>
+        <div class="town-region" id="town-region"></div>
         <div class="coin-chip inline" id="town-coins">🪙 0</div>
       </div>
     </div>
     <p class="town-desc" id="town-desc"></p>
     <div class="town-btns">
       <button class="btn gold" id="town-duel" onclick="advStartDuel()">⚔️ Duelo</button>
-      <button class="btn" onclick="advOpenShop()">🛒 Tienda de cartas</button>
+      <button class="btn" id="town-shop" onclick="advOpenShop()">🛒 Tienda de cartas</button>
       <button class="btn sec" onclick="advOpenCollection()">🎴 Mi colección</button>
-      <button class="btn sec" onclick="advRenderMap();showScreen('map')">🗺 Volver al mapa</button>
+      <button class="btn sec" onclick="advRenderMap();showScreen('map')">🗺 Volver al país</button>
     </div>
   </div>
 </div>
@@ -353,7 +358,7 @@
       <p><strong style="color:var(--txt)">Resolución de la batalla</strong><br>Se compara el 🗡 ATK del atacante con la 🛡 DEF del defensor (con los hechizos ya aplicados). Si el ataque es mayor, el defensor pierde 1 analista; si no, no pasa nada (el atacante NUNCA pierde analistas al atacar). Las cartas son de un solo uso: ambas moléculas van al descarte tras la batalla.</p><br>
       <p><strong style="color:var(--txt)">Hechizos (10)</strong><br>Cada uno actúa según sus propiedades reales: <strong style="color:var(--txt)">Plomo</strong> blinda contra radiactivos (U·Ra·Po pierden 50%), <strong style="color:var(--txt)">Helio</strong> aligera tu jugada (+2 DEF), <strong style="color:var(--txt)">Neón</strong> deslumbra (−2 ATK rival), <strong style="color:var(--txt)">Argón</strong> anula los hechizos rivales, <strong style="color:var(--txt)">Oro</strong> financia (+3 cartas), <strong style="color:var(--txt)">Platino</strong> cataliza (+1/+1), <strong style="color:var(--txt)">Mercurio</strong> envenena (−2 DEF rival), <strong style="color:var(--txt)">Xenón</strong> anestesia (anula TODOS los hechizos y cierra la ronda sin réplica), <strong style="color:var(--txt)">Radón</strong> asesina en silencio (elimina 1 analista; solo como primera acción del turno, nunca tras un duelo) e <strong style="color:var(--txt)">Iridio</strong> extingue (si ganas el duelo: como atacante eliminas 2 analistas, como defensor 1 del atacante).</p><br>
       <p><strong style="color:var(--txt)">Contra la Máquina</strong><br>Juega contra un científico artificial con tres niveles: Becario 🥼, Doctora 🔬 y Nobel 🧠.</p><br>
-      <p><strong style="color:var(--txt)">Modo Aventura</strong><br>Recorre la Ruta de la Molécula: 8 pueblos, cada uno con su compañía rival y su tienda. En los duelos robas de TU colección; ganar da monedas y cartas de botín, perder cuesta 10 monedas. Puedes volver a pueblos superados para comprar o re-duelar (recompensa reducida). Tu progreso se guarda en el dispositivo. En Helix City espera el jefe final… y la Molécula Maestra.</p>
+      <p><strong style="color:var(--txt)">Modo Aventura</strong><br>Recorre el <strong style="color:var(--txt)">País de Reactivia</strong> con libertad: 11 localidades unidas por carreteras con bifurcaciones. Viaja entre localidades conectadas; 8 pueblos tienen compañía rival (duelo opcional) y 3 aldeas tienen tiendas especiales (mercado con descuento, balneario de hechizos, caravana de rarezas). En los duelos robas de TU colección; ganar da monedas y botín, perder cuesta 10. La capital, Helix City, exige 5 victorias para abrir sus puertas — dentro esperan el jefe final y la Molécula Maestra. Tu progreso se guarda en el dispositivo.</p>
     </div>
     <div style="text-align:center;margin-top:1.2rem">
       <button class="btn" onclick="document.getElementById('ov-rules').classList.remove('open')">¡Entendido!</button>
