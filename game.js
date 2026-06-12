@@ -24,7 +24,7 @@
 
 /* Versión única de la app: se muestra en portada y reglas, y debe ir
    a la par con CACHE_VERSION en sw.js */
-const APP_VERSION='v1.8';
+const APP_VERSION='v1.9';
 
 /* ════════════════════════════════
    SFX (WebAudio, sin assets)
@@ -174,16 +174,37 @@ function initState(n1,n2){
 
 function rand(a){return a[Math.floor(Math.random()*a.length)];}
 
-/* 5 elementos + 1 hechizo = 6 cartas (con pesos, duplicados permitidos) */
+/* 5 elementos + 1 hechizo = 6 cartas (con pesos, duplicados permitidos).
+   En el Modo Aventura el jugador roba de SU COLECCIÓN (adventure.js). */
 function dealHand(p){
+  if(p===0&&typeof ADV!=='undefined'&&ADV&&ADV.inBattle){
+    ADV.battleDeck=advShuffledElements();
+    ADV.battleSpells=advShuffledSpells();
+    G.hands[0]=[];
+    for(let i=0;i<5&&ADV.battleDeck.length;i++)G.hands[0].push({...ADV.battleDeck.pop()});
+    G.spells[0]=ADV.battleSpells.length?[{...ADV.battleSpells.pop()}]:[];
+    G.deckSize[0]=G.hands[0].length+G.spells[0].length;
+    return;
+  }
   G.hands[p]=[];
   for(let i=0;i<5;i++) G.hands[p].push({...weightedRandom(ELEMENTS)});
   G.spells[p]=[{...weightedRandom(SPELLS)}];
   G.deckSize[p]=G.hands[p].length+G.spells[p].length;
 }
 
-/* Roba n cartas del mazo central. Si se agota, se rebaraja el descarte. */
+/* Roba n cartas del mazo central. Si se agota, se rebaraja el descarte.
+   En aventura, el mazo central del jugador es su propia colección. */
 function sharedDeckTake(p,n){
+  if(p===0&&G.adventure&&typeof ADV!=='undefined'&&ADV){
+    for(let i=0;i<n;i++){
+      if(G.hands[0].length>=HAND_MAX)break;
+      if(!ADV.battleDeck.length)ADV.battleDeck=advShuffledElements();
+      if(!ADV.battleDeck.length)break;
+      G.hands[0].push({...ADV.battleDeck.pop()});
+    }
+    G.sharedDeck=ADV.battleDeck.length;
+    return;
+  }
   for(let i=0;i<n;i++){
     if(G.hands[p].length>=HAND_MAX) break;
     if(G.sharedDeck<=0){
@@ -599,9 +620,16 @@ function beginTurn(p){
   G.busy=false;
 
   /* mantenimiento: roba 1 carta automática (salvo los 2 primeros turnos),
-     repone hechizo si no queda ninguno y limpia hechizos de la arena */
+     repone hechizo si no queda ninguno y limpia hechizos de la arena.
+     En aventura el hechizo solo se repone si quedan en TU colección */
   if(G.turnCount>2) sharedDeckTake(p,1);
-  if(!G.spells[p].length) G.spells[p]=[{...weightedRandom(SPELLS)}];
+  if(!G.spells[p].length){
+    if(p===0&&G.adventure&&typeof ADV!=='undefined'&&ADV){
+      if(ADV.battleSpells.length)G.spells[0]=[{...ADV.battleSpells.pop()}];
+    } else {
+      G.spells[p]=[{...weightedRandom(SPELLS)}];
+    }
+  }
   for(let q=0;q<2;q++){if(G.spellsInArena[q].length){G.spellsInArena[q]=[];renderZoneSpells(q);}}
   renderDecks();
 
@@ -1332,6 +1360,11 @@ function aiTakeTurn(){
 function endGame(){
   hideAIBanner();
   const w=G.an[0]>0?0:(G.an[1]>0?1:-1);
+  /* en aventura las recompensas y los botones los gestiona adventure.js */
+  if(G.adventure&&typeof advBattleEnd==='function'){advBattleEnd(w);return;}
+  const btns=document.getElementById('result-btns');
+  if(btns)btns.innerHTML=`<button class="btn gold" onclick="rematch()">⚔️ Revancha</button>
+    <button class="btn sec" onclick="showScreen('intro')">🏠 Menú</button>`;
   const title=document.getElementById('rtitle');
   const sub=document.getElementById('rsub');
   title.classList.remove('lose');
