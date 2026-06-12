@@ -26,6 +26,7 @@
   <script src="game-data.js"></script>
   <script src="ai-player.js" defer></script>
   <script src="game.js" defer></script>
+  <script src="adventure.js" defer></script>
 </head>
 <body>
 
@@ -72,6 +73,13 @@
         <span class="mc-d">Duelo local en el mismo dispositivo, pasando el móvil.</span>
       </span>
     </button>
+    <button class="mode-card adv" onclick="advEnter()">
+      <span class="mc-ico">🗺</span>
+      <span>
+        <span class="mc-t">Aventura</span><br/>
+        <span class="mc-d">Viaja de pueblo en pueblo, compra cartas y derrota a las compañías. Tu colección se guarda.</span>
+      </span>
+    </button>
   </div>
   <button class="btn sec sm" onclick="showScreen('intro')">← Volver</button>
 </div>
@@ -96,6 +104,57 @@
     <div style="margin-top:.5rem">
       <button class="btn gold" style="width:100%" onclick="startGame()">¡A por el Nobel!</button>
     </div>
+  </div>
+</div>
+
+<!-- ═══ AVENTURA: MAPA ═══ -->
+<div id="screen-map" class="screen">
+  <h2 class="map-title">🗺 La Ruta de la Molécula</h2>
+  <div class="coin-chip" id="map-coins">🪙 0</div>
+  <div class="map-path" id="map-path"></div>
+  <div class="mbtns" style="margin:1rem 0 1.4rem">
+    <button class="btn sec sm" onclick="showScreen('mode')">← Salir</button>
+    <button class="btn sec sm" onclick="advReset()">Reiniciar aventura</button>
+  </div>
+</div>
+
+<!-- ═══ AVENTURA: PUEBLO ═══ -->
+<div id="screen-town" class="screen">
+  <div class="town-box ai">
+    <div class="town-head">
+      <span class="town-ico" id="town-icon">🏠</span>
+      <div>
+        <h2 id="town-name">Pueblo</h2>
+        <div class="coin-chip inline" id="town-coins">🪙 0</div>
+      </div>
+    </div>
+    <p class="town-desc" id="town-desc"></p>
+    <div class="town-btns">
+      <button class="btn gold" id="town-duel" onclick="advStartDuel()">⚔️ Duelo</button>
+      <button class="btn" onclick="advOpenShop()">🛒 Tienda de cartas</button>
+      <button class="btn sec" onclick="advOpenCollection()">🎴 Mi colección</button>
+      <button class="btn sec" onclick="advRenderMap();showScreen('map')">🗺 Volver al mapa</button>
+    </div>
+  </div>
+</div>
+
+<!-- TIENDA -->
+<div class="ov" id="ov-shop">
+  <div class="modal ai" style="max-width:520px;position:relative">
+    <button class="close-x" onclick="document.getElementById('ov-shop').classList.remove('open')">✕</button>
+    <h2 style="margin-bottom:.2rem">🛒 Tienda de cartas</h2>
+    <div class="coin-chip inline" id="shop-coins" style="margin-bottom:.8rem">🪙 0</div>
+    <div class="shop-grid" id="shop-grid"></div>
+  </div>
+</div>
+
+<!-- COLECCIÓN -->
+<div class="ov" id="ov-collection">
+  <div class="modal ai" style="max-width:560px;position:relative">
+    <button class="close-x" onclick="document.getElementById('ov-collection').classList.remove('open')">✕</button>
+    <h2 style="margin-bottom:.2rem">🎴 Mi colección</h2>
+    <div style="color:var(--mut);font-size:.72rem;margin-bottom:.8rem" id="col-count"></div>
+    <div class="shop-grid" id="col-grid"></div>
   </div>
 </div>
 
@@ -217,7 +276,7 @@
   <div class="rtitle" id="rtitle">🏆 Victoria</div>
   <div class="rsub"   id="rsub"></div>
   <div class="rstats" id="rstats"></div>
-  <div class="mbtns" style="margin-top:1rem">
+  <div class="mbtns" id="result-btns" style="margin-top:1rem">
     <button class="btn gold" onclick="rematch()">⚔️ Revancha</button>
     <button class="btn sec" onclick="showScreen('intro')">🏠 Menú</button>
   </div>
@@ -293,7 +352,8 @@
       <p><strong style="color:var(--txt)">Ataque y defensa</strong><br>Selecciona los elementos <strong style="color:var(--txt)">en el orden de la fórmula</strong> (H·H·O para H₂O). Tu jugada queda <strong style="color:var(--txt)">boca abajo</strong>; el rival puede 🛡 defenderse formando otra molécula (también boca abajo) o pasar. Al empezar la ✨ ronda de hechizos ambas jugadas se revelan, y después llega la 💥 resolución.</p><br>
       <p><strong style="color:var(--txt)">Resolución de la batalla</strong><br>Se compara el 🗡 ATK del atacante con la 🛡 DEF del defensor (con los hechizos ya aplicados). Si el ataque es mayor, el defensor pierde 1 analista; si no, no pasa nada (el atacante NUNCA pierde analistas al atacar). Las cartas son de un solo uso: ambas moléculas van al descarte tras la batalla.</p><br>
       <p><strong style="color:var(--txt)">Hechizos (10)</strong><br>Cada uno actúa según sus propiedades reales: <strong style="color:var(--txt)">Plomo</strong> blinda contra radiactivos (U·Ra·Po pierden 50%), <strong style="color:var(--txt)">Helio</strong> aligera tu jugada (+2 DEF), <strong style="color:var(--txt)">Neón</strong> deslumbra (−2 ATK rival), <strong style="color:var(--txt)">Argón</strong> anula los hechizos rivales, <strong style="color:var(--txt)">Oro</strong> financia (+3 cartas), <strong style="color:var(--txt)">Platino</strong> cataliza (+1/+1), <strong style="color:var(--txt)">Mercurio</strong> envenena (−2 DEF rival), <strong style="color:var(--txt)">Xenón</strong> anestesia (anula TODOS los hechizos y cierra la ronda sin réplica), <strong style="color:var(--txt)">Radón</strong> asesina en silencio (elimina 1 analista; solo como primera acción del turno, nunca tras un duelo) e <strong style="color:var(--txt)">Iridio</strong> extingue (si ganas el duelo: como atacante eliminas 2 analistas, como defensor 1 del atacante).</p><br>
-      <p><strong style="color:var(--txt)">Contra la Máquina</strong><br>Juega contra un científico artificial con tres niveles: Becario 🥼, Doctora 🔬 y Nobel 🧠.</p>
+      <p><strong style="color:var(--txt)">Contra la Máquina</strong><br>Juega contra un científico artificial con tres niveles: Becario 🥼, Doctora 🔬 y Nobel 🧠.</p><br>
+      <p><strong style="color:var(--txt)">Modo Aventura</strong><br>Recorre la Ruta de la Molécula: 8 pueblos, cada uno con su compañía rival y su tienda. En los duelos robas de TU colección; ganar da monedas y cartas de botín, perder cuesta 10 monedas. Puedes volver a pueblos superados para comprar o re-duelar (recompensa reducida). Tu progreso se guarda en el dispositivo. En Helix City espera el jefe final… y la Molécula Maestra.</p>
     </div>
     <div style="text-align:center;margin-top:1.2rem">
       <button class="btn" onclick="document.getElementById('ov-rules').classList.remove('open')">¡Entendido!</button>

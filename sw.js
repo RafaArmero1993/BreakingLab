@@ -8,7 +8,7 @@
    - Fuentes de Google: stale-while-revalidate en caché aparte.
    Sube CACHE_VERSION al publicar cambios.
 ════════════════════════════════════════════════════════════════ */
-const CACHE_VERSION = 'breakinglab-v1.8.0';
+const CACHE_VERSION = 'breakinglab-v1.9.0';
 
 const PRECACHE = [
   './',
@@ -16,6 +16,7 @@ const PRECACHE = [
   './style.css',
   './game.js',
   './ai-player.js',
+  './adventure.js',
   './game-data.js',
   './card-config.js',
   './manifest.webmanifest',
