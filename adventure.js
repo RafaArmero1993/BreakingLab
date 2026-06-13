@@ -9,6 +9,13 @@
      visitadas.
    - Sprites PIXEL-ART propios con 4 direcciones y animación de
      caminar; movimiento interpolado entre baldosas con cámara suave.
+   - RENDER POR CAPAS con objetos a ESCALA REALISTA: el personaje mide
+     1 baldosa, pero árboles (~2), casas (~3) y edificios (hasta ~4,5)
+     se dibujan como sprites grandes ordenados por profundidad. Cada
+     localidad es un POBLADO (edificio principal según su estilo, casas,
+     tienda, cartel, jardines, parque/fuente, árboles, vallas y farolas).
+     Todo cacheado en lienzos fuera de pantalla; solo visual (no altera
+     baldosas ni colisiones).
    - NPCs con paleta intercambiada que deambulan, se giran hacia ti
      al hablar y bloquean el paso.
    - Sistema de DIÁLOGOS con caja clásica, efecto máquina de escribir
@@ -216,108 +223,225 @@ const ADV_SAVE_KEY = 'bl-rpg';
 let ADV = null;
 
 /* ════════════════════════════════
-   SPRITES pixel-art (10×12, 4 direcciones × 2 frames)
+   SPRITES pixel-art a ESCALA REALISTA
+   ─────────────────────────────────
+   El personaje mide 1 baldosa de ancho y ~1,5 de alto. Los árboles,
+   casas y edificios se dibujan MUCHO más grandes (2–4 baldosas) como
+   objetos independientes, ordenados por profundidad. Todo se cachea en
+   lienzos fuera de pantalla y se vuelca con drawImage (rápido y nítido).
+   ART = píxeles-de-arte por baldosa.
 ════════════════════════════════ */
-const SPR={
+const ART=10;
+
+/* utilidades de color */
+function _hex(h){h=h.replace('#','');if(h.length===3)h=h.split('').map(c=>c+c).join('');
+  return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+function _rgb(a){return '#'+a.map(v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join('');}
+function shade(hex,f){const c=_hex(hex);return _rgb(f<1?c.map(v=>v*f):c.map(v=>v+(255-v)*(f-1)));}
+function mix(a,b,t){const x=_hex(a),y=_hex(b);return _rgb(x.map((v,i)=>v+(y[i]-v)*t));}
+
+/* construye la paleta completa del muñeco a partir de pocos colores */
+function mkPal(o){return {
+  O:'#0c1126', E:'#101a30',
+  H:o.hair, h:shade(o.hair,.7),
+  F:o.skin, f:shade(o.skin,.82),
+  C:o.coat, c:shade(o.coat,.8),
+  S:o.shirt,s:shade(o.shirt,.78),
+  P:o.pants,p:shade(o.pants,.78),
+  B:o.boot||shade(o.pants,.6),
+  G:o.accent };}
+
+const PAL_PLAYER=mkPal({skin:'#f4c9a0',hair:'#2b3357',coat:'#eef3fb',shirt:'#22d3ee',pants:'#2c3566',boot:'#1a2036',accent:'#22d3ee'});
+const NPC_PALS={
+ profe:   mkPal({skin:'#ecc09a',hair:'#cfd4e8',coat:'#e6def4',shirt:'#a78bfa',pants:'#4a3f73',accent:'#a78bfa'}),
+ abuela:  mkPal({skin:'#eebfa0',hair:'#e6e8f0',coat:'#c8718f',shirt:'#9c5277',pants:'#6e4458',accent:'#f0a8c4'}),
+ marino:  mkPal({skin:'#d9a878',hair:'#5a4632',coat:'#3b6a9c',shirt:'#274e74',pants:'#22405e',accent:'#7fd0ff'}),
+ guardia: mkPal({skin:'#e0a87a',hair:'#2b2218',coat:'#b3403f',shirt:'#8a2f2f',pants:'#3a2828',accent:'#f59e0b'}),
+ mercader:mkPal({skin:'#dba87f',hair:'#3a2d1c',coat:'#c79b3b',shirt:'#9a7424',pants:'#5e4a22',accent:'#fde047'}),
+ nino:    mkPal({skin:'#f4c9a0',hair:'#7a4a2a',coat:'#3fae6a',shirt:'#2a8050',pants:'#2a5e44',accent:'#a7f3d0'}),
+ minero:  mkPal({skin:'#d9a878',hair:'#4a3b2d',coat:'#8c7a5b',shirt:'#6b5d44',pants:'#4a4032',accent:'#fbbf24'}),
+ botanica:mkPal({skin:'#e8b88a',hair:'#2d4a33',coat:'#2f8f5b',shirt:'#247048',pants:'#1f5c3b',accent:'#86efac'}),
+ eremita: mkPal({skin:'#dba87f',hair:'#bfc4d8',coat:'#6b7280',shirt:'#525a66',pants:'#3f4654',accent:'#cbd5e1'}),
+ banista: mkPal({skin:'#f4c9a0',hair:'#2d3a5e',coat:'#38bdf8',shirt:'#2a93c4',pants:'#1f6b8f',accent:'#7fe7ff'}),
+ cientif: mkPal({skin:'#f2c79b',hair:'#8a3b5e',coat:'#f1f5f9',shirt:'#f472b6',pants:'#7a3450',accent:'#f472b6'}),
+ viejo:   mkPal({skin:'#e0a87a',hair:'#d8d8d8',coat:'#7a6a4a',shirt:'#5e523a',pants:'#4a4232',accent:'#cbd5e1'}),
+};
+
+/* matrices del muñeco — 11×14, '.'=transparente, espejo para 'right' */
+const CHAR={
 down:[[
-'..kkkkkk..',
-'.kkkkkkkk.',
-'.kssssssk.',
-'.sggssggs.',
-'..ssssss..',
-'.wwwwwwww.',
-'swwwwwwwws',
-'.wwwwwwww.',
-'.wwwwwwww.',
-'..bbbbbb..',
-'..bb..bb..',
-'..oo..oo..',
+'...OOOOO...','..OHHHHHO..','.OHHHHHHHO.','.OHFFFFFHO.','.OFFFFFFFO.',
+'.OFEFFFEFO.','.OFFFFFFFO.','..OfFFFfO..','.OCCCCCCCO.','OCCCSSSCCCO',
+'OCcCSSScCcO','.OCcSSScCO.','..PPP.PPP..','..BB...BB..',
 ],[
-'..kkkkkk..',
-'.kkkkkkkk.',
-'.kssssssk.',
-'.sggssggs.',
-'..ssssss..',
-'.wwwwwwww.',
-'.wwwwwwww.',
-'swwwwwwwws',
-'.wwwwwwww.',
-'..bbbbbb..',
-'.bb....bb.',
-'.oo....oo.',
+'...OOOOO...','..OHHHHHO..','.OHHHHHHHO.','.OHFFFFFHO.','.OFFFFFFFO.',
+'.OFEFFFEFO.','.OFFFFFFFO.','..OfFFFfO..','.OCCCCCCCO.','OCCCSSSCCCO',
+'OCcCSSScCcO','.OCcSSScCO.','..PPP.PPP..','.BB.....BB.',
 ]],
 up:[[
-'..kkkkkk..',
-'.kkkkkkkk.',
-'.kkkkkkkk.',
-'.skkkkkks.',
-'..kkkkkk..',
-'.wwwwwwww.',
-'swwwwwwwws',
-'.wwwwwwww.',
-'.wwwwwwww.',
-'..bbbbbb..',
-'..bb..bb..',
-'..oo..oo..',
+'...OOOOO...','..OHHHHHO..','.OHHHHHHHO.','.OHHHHHHHO.','.OHHHHHHHO.',
+'.OHHHHHHHO.','.OHHHHHHHO.','..OHHHHHO..','.OCCCCCCCO.','OCCCCCCCCCO',
+'OCcCCCCCcCO','.OCcCCCcCO.','..PPP.PPP..','..BB...BB..',
 ],[
-'..kkkkkk..',
-'.kkkkkkkk.',
-'.kkkkkkkk.',
-'.skkkkkks.',
-'..kkkkkk..',
-'.wwwwwwww.',
-'.wwwwwwww.',
-'swwwwwwwws',
-'.wwwwwwww.',
-'..bbbbbb..',
-'.bb....bb.',
-'.oo....oo.',
+'...OOOOO...','..OHHHHHO..','.OHHHHHHHO.','.OHHHHHHHO.','.OHHHHHHHO.',
+'.OHHHHHHHO.','.OHHHHHHHO.','..OHHHHHO..','.OCCCCCCCO.','OCCCCCCCCCO',
+'OCcCCCCCcCO','.OCcCCCcCO.','..PPP.PPP..','.BB.....BB.',
 ]],
 left:[[
-'..kkkkkk..',
-'.kkkkkkkk.',
-'.kkssssk..',
-'.kggsssk..',
-'..ssssss..',
-'..wwwwww..',
-'..swwwww..',
-'..wwwwww..',
-'..wwwwww..',
-'..bbbbb...',
-'..bb.bb...',
-'..oo.oo...',
+'..OOOOO....','.OHHHHHO...','OHHHHHHHO..','OHFFFFHO...','OHFFFFFO...',
+'OEFFFFFO...','OFFFFFFO...','.OfFFFfO...','.OCCCCCO...','OCCSCCCO...',
+'OCcSCCcO...','.OCSCCcO...','..PPPP.....','..BBBB.....',
 ],[
-'..kkkkkk..',
-'.kkkkkkkk.',
-'.kkssssk..',
-'.kggsssk..',
-'..ssssss..',
-'..wwwwww..',
-'..wwwwws..',
-'..wwwwww..',
-'..wwwwww..',
-'..bbbbb...',
-'.bb...bb..',
-'.oo...oo..',
+'..OOOOO....','.OHHHHHO...','OHHHHHHHO..','OHFFFFHO...','OHFFFFFO...',
+'OEFFFFFO...','OFFFFFFO...','.OfFFFfO...','.OCCCCCO...','OCCSCCCO...',
+'OCcSCCcO...','.OCSCCcO...','..PP.PP....','.BB..BB....',
 ]],
 };
-SPR.right=SPR.left; /* se dibuja en espejo */
+CHAR.right=CHAR.left;
 
-const PAL_PLAYER={k:'#23304a',s:'#f2c79b',w:'#e8ecf2',b:'#3b4a8c',o:'#1c1c28',g:'#22d3ee'};
-const NPC_PALS={
- profe:   {k:'#cfd4e8',s:'#e8b88a',w:'#d9c9ee',b:'#5b4a8c',o:'#1c1c28',g:'#a78bfa'},
- abuela:  {k:'#d9dbe8',s:'#eebfa0',w:'#b3678f',b:'#7a4a66',o:'#1c1c28',g:'#b3678f'},
- marino:  {k:'#5a4632',s:'#d9a878',w:'#3b6a9c',b:'#27496b',o:'#1c1c28',g:'#3b6a9c'},
- guardia: {k:'#332b22',s:'#e0a87a',w:'#b3403f',b:'#5e2a2a',o:'#1c1c28',g:'#f59e0b'},
- mercader:{k:'#3a2d1c',s:'#dba87f',w:'#c79b3b',b:'#7a5c2a',o:'#1c1c28',g:'#fde047'},
- nino:    {k:'#7a4a2a',s:'#f2c79b',w:'#3fae6a',b:'#2a6b46',o:'#1c1c28',g:'#3fae6a'},
- minero:  {k:'#4a3b2d',s:'#d9a878',w:'#8c7a5b',b:'#4a4032',o:'#1c1c28',g:'#fbbf24'},
- botanica:{k:'#2d4a33',s:'#e8b88a',w:'#2f8f5b',b:'#1f5c3b',o:'#1c1c28',g:'#86efac'},
- eremita: {k:'#bfc4d8',s:'#dba87f',w:'#6b7280',b:'#3f4654',o:'#1c1c28',g:'#9ca3af'},
- banista: {k:'#2d3a5e',s:'#f2c79b',w:'#38bdf8',b:'#1f6b8f',o:'#1c1c28',g:'#38bdf8'},
- cientif: {k:'#8a3b5e',s:'#f2c79b',w:'#f1f5f9',b:'#8a3b5e',o:'#1c1c28',g:'#f472b6'},
- viejo:   {k:'#d8d8d8',s:'#e0a87a',w:'#7a6a4a',b:'#4a4232',o:'#1c1c28',g:'#9ca3af'},
+/* ════════════════════════════════
+   CACHÉ DE SPRITES (lienzos fuera de pantalla al tamaño de baldosa)
+════════════════════════════════ */
+let _PX=3, _sprTs=0, _scn=new Map(), _charC=new Map();
+function _cv(w,h){const c=document.createElement('canvas');c.width=Math.max(1,w);c.height=Math.max(1,h);return c;}
+function rpgBuildSprites(){
+  _PX=Math.max(2,Math.floor(_rpgTs/ART));
+  _sprTs=_rpgTs; _scn.clear(); _charC.clear();
+}
+/* bloque de "píxel de arte" */
+function _b(ctx,x,y,w,h,col){ctx.fillStyle=col;ctx.fillRect(Math.round(x*_PX),Math.round(y*_PX),Math.ceil(w*_PX),Math.ceil(h*_PX));}
+
+/* —— MUÑECO —— */
+function charCanvas(palKey,pal,dir,frame){
+  const key=palKey+'|'+dir+'|'+frame+'|'+_sprTs;
+  let c=_charC.get(key); if(c)return c;
+  const W=11,H=14, mat=(CHAR[dir]||CHAR.down)[frame%2], flip=dir==='right';
+  c=_cv(W*_PX,H*_PX); const x=c.getContext('2d');
+  for(let r=0;r<H;r++){const line=mat[r]||''; for(let col=0;col<W;col++){
+    const ch=line[flip?W-1-col:col]||'.'; if(ch==='.')continue;
+    _b(x,col,r,1,1,pal[ch]||'#fff');
+  }}
+  _charC.set(key,c); return c;
+}
+
+/* —— ESCENARIO (procedural, estética pixel chunky) —— */
+function _scnGet(key,aw,ah,paint){
+  let o=_scn.get(key); if(o)return o;
+  const c=_cv(aw*_PX,ah*_PX), x=c.getContext('2d');
+  paint(x,aw,ah); o={cv:c,aw,ah}; _scn.set(key,o); return o;
+}
+/* copa de árbol frondoso (~1.6×2.2 baldosas) */
+function paintTree(x,aw,ah,leaf){
+  const dk=shade(leaf,.62), lt=shade(leaf,1.28), trunk='#6b4a2c', td='#4f3620';
+  _b(x,aw/2-1.4,ah-6,2.8,6,td); _b(x,aw/2-1.4,ah-6,1.3,6,trunk);          // tronco
+  const cx=aw/2, blobs=[[cx,7,7.2],[cx-4,9,4.6],[cx+4,9,4.6],[cx,11,7.6],[cx,4.5,5.4]];
+  for(const[bx,by,br]of blobs)for(let yy=-br;yy<=br;yy++)for(let xx=-br;xx<=br;xx++){
+    if(xx*xx+yy*yy>br*br)continue; const px=bx+xx,py=by+yy;
+    if(px<0||px>=aw||py<0||py>=ah-5)continue;
+    const t=(xx-yy)/br, col=t<-.35?lt:(t>.45?dk:leaf); _b(x,px,py,1,1,col);
+  }
+  for(let i=0;i<10;i++){_b(x,cx-3+(i*1.7)%6,3+((i*2.3)%7),1,1, i%2?lt:dk);} // moteado
+}
+/* conífera */
+function paintPine(x,aw,ah,snow){
+  const g='#1f6b3e',gd='#15502d',gl='#2f8a52',trunk='#5a3f26';
+  _b(x,aw/2-1,ah-5,2,5,trunk);
+  let tiers=[[2.5,4.5],[5,5.5],[7.8,6.5]];
+  for(let t=0;t<tiers.length;t++){const[ty,tw]=tiers[t];
+    for(let r=0;r<5;r++){const w=tw*(r/5+.2), y=ty+r;
+      _b(x,aw/2-w/2,y,w,1, r<2?gl:(r>3?gd:g));}}
+  if(snow){for(let i=0;i<7;i++)_b(x,aw/2-3+i,2.6+(i%3),1,1,'#eef4ff');}
+}
+/* roca / risco */
+function paintRock(x,aw,ah,snow){
+  const g='#5b6378',gd='#3c4456',gl='#828aa0';
+  for(let r=0;r<ah;r++){const f=r/ah, w=aw*(0.5+0.5*f);
+    _b(x,(aw-w)/2,r,w,1, r<ah*0.4?gl:(r>ah*0.72?gd:g));}
+  _b(x,aw*0.2,ah*0.45,aw*0.18,ah*0.3,gd); _b(x,aw*0.6,ah*0.5,aw*0.16,ah*0.28,gd);
+  if(snow){_b(x,aw*0.16,0,aw*0.68,2.4,'#eef4ff'); _b(x,aw*0.3,2.2,aw*0.4,1,'#dbe6f7');}
+}
+/* edificio genérico parametrizable */
+function paintBuilding(x,aw,ah,o){
+  const wall=o.wall,wd=shade(wall,.82),wl=shade(wall,1.12);
+  const roof=o.roof,rd=shade(roof,.78);
+  const roofH=o.roofH||Math.round(ah*0.34), bodyY=roofH, bodyH=ah-roofH;
+  // cuerpo
+  _b(x,1,bodyY,aw-2,bodyH,wall);
+  _b(x,1,bodyY,1.2,bodyH,wd); _b(x,aw-2.2,bodyY,1.2,bodyH,wd);  // esquinas sombreadas
+  _b(x,1,bodyY,aw-2,1,wl);
+  // hiladas de "ladrillo"/tablones suaves
+  for(let r=bodyY+2;r<ah-1;r+=2)_b(x,1.6,r,aw-3.2,0.4,wd);
+  // tejado
+  if(o.flat){ _b(x,0.4,roofH-2.4,aw-0.8,2.4,roof); _b(x,0.4,roofH-2.4,aw-0.8,0.8,shade(roof,1.15));
+    for(let i=1;i<aw-1;i+=2)_b(x,i,roofH-3.4,1,1,roof); // almenas
+  } else {
+    /* tejado a dos aguas: pico estrecho arriba, alero ancho abajo (△) */
+    for(let r=0;r<roofH;r++){const w=aw*((r+1)/roofH); _b(x,(aw-w)/2,r,w,1, r<roofH*0.45?roof:rd);}
+    _b(x,1,roofH-1,aw-2,0.8,rd);             // alero
+    _b(x,aw/2-0.5,0.2,1,1.4,rd);             // caballete del pico
+  }
+  // puerta
+  const dw=Math.max(2.2,aw*0.2), dh=Math.max(3,bodyH*0.55), dx=aw/2-dw/2, dy=ah-dh;
+  _b(x,dx,dy,dw,dh,'#3a2718'); _b(x,dx+0.4,dy+0.5,dw-0.8,dh-0.6,o.door||'#6b4a2c');
+  _b(x,aw/2-0.3,dy+dh*0.45,0.6,0.8,'#f4d27a');
+  // ventanas iluminadas
+  const wy=bodyY+1.6, ww=Math.max(1.6,aw*0.14);
+  for(const wx of [aw*0.18, aw*0.82-ww]){
+    _b(x,wx-0.4,wy-0.4,ww+0.8,ww+0.8,wd);
+    _b(x,wx,wy,ww,ww,o.accent||'#ffe08a');
+    _b(x,wx+ww/2-0.2,wy,0.4,ww,wd); _b(x,wx,wy+ww/2-0.2,ww,0.4,wd);
+  }
+  // chimeneas / torres
+  if(o.chimney)for(const cxp of (o.chimney===2?[aw*0.3,aw*0.62]:[aw*0.66])){
+    _b(x,cxp,roofH-roofH*0.2,2,roofH*0.6,wd); _b(x,cxp-0.3,roofH-roofH*0.2,2.6,1,shade(wall,.6));
+  }
+}
+
+/* —— constructores cacheados por tipo —— */
+const TREE_LEAVES=['#2f9e54','#3aa85f','#2b8f6a','#4fae3e'];
+function scnTree(v){return _scnGet('tree'+v,16,22,(x,aw,ah)=>paintTree(x,aw,ah,TREE_LEAVES[v%TREE_LEAVES.length]));}
+function scnPine(snow){return _scnGet('pine'+(snow?'s':''),13,24,(x,aw,ah)=>paintPine(x,aw,ah,snow));}
+function scnRock(snow){return _scnGet('rock'+(snow?'s':''),17,15,(x,aw,ah)=>paintRock(x,aw,ah,snow));}
+function scnBush(){return _scnGet('bush',12,9,(x,aw,ah)=>{const g='#2f8f50';
+  for(let yy=0;yy<ah;yy++){const w=aw*(0.5+0.5*Math.sin((yy/ah)*Math.PI)); _b(x,(aw-w)/2,yy,w,1, yy<3?shade(g,1.25):(yy>ah-3?shade(g,.7):g));}});}
+function scnFence(){return _scnGet('fence',10,7,(x,aw,ah)=>{const w='#9c8156',wd='#6e5a3a';
+  _b(x,0,2,aw,1.4,w); _b(x,0,4.6,aw,1.4,w);
+  for(const px of [1,aw*0.5-0.7,aw-2.4]){_b(x,px,0.5,1.4,ah-0.5,w);_b(x,px,0.5,0.5,ah-0.5,wd);}});}
+function scnSign(txt){return _scnGet('sign',10,14,(x,aw,ah)=>{const w='#b58a52',wd='#7a5a32';
+  _b(x,aw/2-0.7,5,1.4,ah-5,wd);                       // poste
+  _b(x,0.5,1,aw-1,5,w); _b(x,0.5,1,aw-1,1,shade(w,1.2)); _b(x,0.5,5,aw-1,1,wd);
+  for(let r=0;r<3;r++)_b(x,1.6,2+r*1.1,aw-3.2,0.5,'#4a3320');});}     // "texto"
+function scnGarden(c1,c2){return _scnGet('garden'+c1,12,8,(x,aw,ah)=>{
+  _b(x,0.5,3,aw-1,ah-3,'#5a3f28'); _b(x,0.5,3,aw-1,1,'#6e4f34');       // tierra
+  const cols=[c1,c2,'#fde047'];
+  for(let i=0;i<7;i++){const px=1.4+(i*1.5)%(aw-2), py=0.5+(i%3)*1.2;
+    _b(x,px,py,1.4,1.4,cols[i%3]); _b(x,px+0.4,py+0.4,0.6,0.6,'#fffbe6');}});}
+function scnFountain(){return _scnGet('fountain',18,12,(x,aw,ah)=>{const st='#8b93a6';
+  _b(x,1,ah-5,aw-2,5,st); _b(x,1,ah-5,aw-2,1,shade(st,1.2)); _b(x,2,ah-3.4,aw-4,2,'#2f7fd6');
+  _b(x,aw/2-1.2,2,2.4,ah-6,st); _b(x,aw/2-2.6,1,5.2,2,'#3f95e8'); _b(x,aw/2-0.5,0,1,2,'#7fd0ff');});}
+function scnLamp(){return _scnGet('lamp',6,18,(x,aw,ah)=>{const m='#3a4256';
+  _b(x,aw/2-0.6,3,1.2,ah-3,m); _b(x,aw/2-1.6,1,3.2,3,m); _b(x,aw/2-1,1.4,2,2,'#ffe9a8');});}
+function scnCrate(){return _scnGet('crate',8,8,(x,aw,ah)=>{const w='#a9824e',wd='#7a5d34';
+  _b(x,0.5,0.5,aw-1,ah-1,w); _b(x,0.5,0.5,aw-1,1,shade(w,1.2)); _b(x,0.5,ah-1.5,aw-1,1,wd);
+  _b(x,aw/2-0.4,0.5,0.8,ah-1,wd); _b(x,0.5,ah/2-0.4,aw-1,0.8,wd);});}
+/* edificios por estilo (devuelven {cv,aw,ah}) */
+function scnHouse(v){const pal=[['#d9b48a','#b0413c'],['#cbb89a','#3f6aa0'],['#d7c39a','#4a8f5f'],['#c9a37a','#8a5a86']][v%4];
+  return _scnGet('house'+v,18,24,(x,aw,ah)=>paintBuilding(x,aw,ah,{wall:pal[0],roof:pal[1],accent:'#ffe08a'}));}
+function scnShop(){return _scnGet('shop',22,22,(x,aw,ah)=>{paintBuilding(x,aw,ah,{wall:'#e6d2a6',roof:'#c8762e',accent:'#bff0ff'});
+  const ax=x; for(let i=0;i<aw-2;i++)_b(ax,1+i, ah*0.5, 1, 1.6, i%2?'#e23b3b':'#f4f0e6');});}  // toldo a rayas
+const BUILD_STYLES={
+  lab:    {aw:30,ah:34,o:{wall:'#dfe6f2',roof:'#5b6bb0',accent:'#7fe7ff',chimney:1}},
+  factory:{aw:32,ah:34,o:{wall:'#9aa1ad',roof:'#6b5040',accent:'#ffcf6a',chimney:2}},
+  port:   {aw:28,ah:34,o:{wall:'#cdd6dd',roof:'#c23b3b',accent:'#bff0ff',chimney:1}},
+  salt:   {aw:28,ah:32,o:{wall:'#eef2f7',roof:'#9fb6c9',accent:'#dff3ff'}},
+  mine:   {aw:30,ah:34,o:{wall:'#b8a07e',roof:'#5a4632',accent:'#ffcf6a',chimney:1}},
+  spa:    {aw:28,ah:30,o:{wall:'#e7d2e6',roof:'#7a4f86',accent:'#ffd6f0'}},
+  desert: {aw:30,ah:30,o:{wall:'#e3c98f',roof:'#c08a3e',accent:'#ffe7a8',flat:true}},
+  market: {aw:28,ah:28,o:{wall:'#d8b27a',roof:'#3f8f6a',accent:'#ffe7a8'}},
+  capital:{aw:30,ah:46,o:{wall:'#d7def0',roof:'#6a5ba8',accent:'#a7f3ff',flat:true,roofH:14,chimney:2}},
 };
+function scnBuild(style){const b=BUILD_STYLES[style]||BUILD_STYLES.lab;
+  return _scnGet('bld:'+style,b.aw,b.ah,(x,aw,ah)=>paintBuilding(x,aw,ah,b.o));}
 
 /* ════════════════════════════════
    NPCs — anclados a localidades (se colocan en la 1ª baldosa libre)
@@ -381,6 +505,56 @@ const RPG_NPCS=[
    'Este río baja de la cordillera cargado de minerales…',
    'Antes había peces. Ahora hay patentes flotando. Qué tiempos.']},
 ];
+
+/* ════════════════════════════════
+   POBLADOS — cada localidad es un caserío con edificio principal,
+   casas, tienda, cartel, jardines, parque, árboles y vallas.
+   Solo VISUAL: no altera baldosas ni colisiones (la lógica entra al
+   pisar la baldosa-letra). Distribución determinista por pueblo.
+════════════════════════════════ */
+const TOWN_STYLE={villa:'lab',puerto:'port',salinas:'salt',cruce:'market',
+  carbono:'factory',minas:'mine',lago:'spa',oasis:'market',desierto:'desert',
+  cumbres:'factory',helix:'capital'};
+const GARDEN_COLS=[['#f472b6','#a78bfa'],['#fb7185','#fbbf24'],['#7fe7ff','#86efac'],['#f9a8d4','#fde047']];
+let _villages={};
+function villageProps(townChar){
+  if(_villages[townChar])return _villages[townChar];
+  const t=RPG_TOWNS[townChar]; const [tx,ty]=RPG_TOWN_POS[townChar];
+  let s=(tx*131+ty*977+7)>>>0; const rnd=()=>((s=(s*1664525+1013904223)>>>0)/4294967296);
+  const style=TOWN_STYLE[t.id]||'lab';
+  const P=[]; const add=(type,dx,dy,extra)=>P.push({type,ox:tx+dx,oy:ty+dy,...extra});
+  add('build',0,0,{style});                                     // edificio principal
+  add('house',-3,-1,{v:(s>>>1)%4}); add('house',3,-1,{v:(s>>>3)%4});
+  add('house',-3,2,{v:(s>>>5)%4});  add('shop',3,2,{});         // casas + tienda
+  add('sign',-1,3,{});                                          // cartel de bienvenida
+  add('lamp',-2,1,{}); add('lamp',2,1,{});                      // farolas junto a la puerta
+  add('garden',-3,3,{cols:GARDEN_COLS[(s>>>7)%4]});
+  add('garden',1,3,{cols:GARDEN_COLS[(s>>>9)%4]});             // jardines
+  add('fence',-2,3,{}); add('fence',2,3,{});                    // vallas
+  add('tree',-4,-1,{v:(s>>>2)%4}); add('tree',4,0,{v:(s>>>4)%4});
+  add('tree',-4,2,{v:(s>>>6)%4});  add('tree',4,3,{v:(s>>>8)%4});
+  add('bush',-2,2,{}); add('bush',2,3,{});
+  if(t.id==='helix'||t.id==='lago'||t.id==='salinas') add('fountain',0,3,{}); // parque/fuente
+  if(t.id==='puerto'||t.id==='cruce'||t.id==='oasis'){add('crate',-2,2,{});add('crate',4,1,{});}
+  _villages[townChar]=P; return P;
+}
+/* sprite cacheado para un prop del poblado */
+function scnForProp(p){
+  switch(p.type){
+    case 'build':   return scnBuild(p.style);
+    case 'house':   return scnHouse(p.v||0);
+    case 'shop':    return scnShop();
+    case 'sign':    return scnSign();
+    case 'garden':  return scnGarden((p.cols||GARDEN_COLS[0])[0],(p.cols||GARDEN_COLS[0])[1]);
+    case 'fountain':return scnFountain();
+    case 'tree':    return scnTree(p.v||0);
+    case 'bush':    return scnBush();
+    case 'fence':   return scnFence();
+    case 'lamp':    return scnLamp();
+    case 'crate':   return scnCrate();
+  }
+  return scnBush();
+}
 
 /* ── estado ── */
 function rpgTile(x,y){
@@ -531,6 +705,7 @@ function rpgInit(){
   _rpgCv.width=_rpgTs*RPG_VIEW;
   _rpgCv.height=_rpgTs*RPG_VIEW;
   _rpgCtx=_rpgCv.getContext('2d');
+  rpgBuildSprites();
   if(!_rpgKeysBound){
     _rpgKeysBound=true;
     document.addEventListener('keydown',(e)=>{
@@ -556,101 +731,160 @@ function rpgInit(){
   rpgDraw();
 }
 
+/* colores base del suelo (también los usa el minimapa) */
 const RPG_COLORS={
-  '~':'#0d2c5e', '.':'#17402b', 'h':'#0e4f2a', 's':'#6b5a2e',
-  'r':'#7c6a45', 'm':'#3a3f55', 't':'#123a24', 'b':'#7a5a38',
-  'y':'#b9a468', 'f':'#1c4a2f', 'n':'#aebfd8',
+  '~':'#15396b', '.':'#2e7d46', 'h':'#236437', 's':'#cdb074',
+  'r':'#9c8158', 'm':'#5b6378', 't':'#2a6b3e', 'b':'#8a6a40',
+  'y':'#d8c389', 'f':'#2e7d46', 'n':'#dce8f6',
 };
+const GRASS2='#379a55', GRASS_D='#246b3c';
 
-function drawSprite(ctx,px,py,ts,dir,frame,pal){
-  const mat=(SPR[dir]||SPR.down)[frame%2];
-  const flip=dir==='right';
-  const cell=ts/10;
-  for(let r=0;r<12;r++){
-    const line=mat[r];
-    for(let c=0;c<10;c++){
-      const ch=line[flip?9-c:c];
-      if(ch==='.')continue;
-      ctx.fillStyle=pal[ch]||'#fff';
-      ctx.fillRect(px+c*cell, py+(r-3)*cell, cell+0.5, cell+0.5);
+/* dibuja UNA baldosa de suelo con textura y orillas */
+function drawGround(ctx,ch,sx,sy,ts,x,y,now,n,waveF){
+  const base=RPG_COLORS[ch]||(RPG_TOWNS[ch]?'#3f9a5e':'#2e7d46');
+  ctx.fillStyle=RPG_TOWNS[ch]?'#3f9a5e':base;
+  ctx.fillRect(sx,sy,ts+1,ts+1);
+  if(ch==='~'){                                   // agua: bandas + oleaje
+    ctx.fillStyle='rgba(10,28,60,.45)';
+    ctx.fillRect(sx,sy+ts*.5,ts+1,ts*.5);
+    ctx.fillStyle='rgba(140,195,255,'+((n%2===waveF)?'.22':'.08')+')';
+    ctx.fillRect(sx+ts*.12,sy+ts*(.25+(n%4)*.16),ts*.5,Math.max(1,ts*.08));
+    /* espuma junto a tierra */
+    if('.hsytrfb'.includes(rpgTile(x,y-1)))ctx.fillRect(sx,sy,ts+1,Math.max(1,ts*.14));
+    if('.hsytrfb'.includes(rpgTile(x-1,y))){ctx.fillStyle='rgba(200,225,255,.5)';ctx.fillRect(sx,sy,Math.max(1,ts*.12),ts+1);}
+  } else if(ch==='.'||ch==='f'||ch==='t'||RPG_TOWNS[ch]){ // hierba: moteado bitono
+    ctx.fillStyle=(n%3===0)?GRASS2:GRASS_D;
+    ctx.fillRect(sx+(n%5)*ts*.17,sy+(n%4)*ts*.2,Math.max(1,ts*.12),Math.max(1,ts*.1));
+    ctx.fillStyle='rgba(180,255,200,.10)';
+    ctx.fillRect(sx+((n>>3)%4)*ts*.22,sy+((n>>2)%5)*ts*.16,Math.max(1,ts*.1),Math.max(1,ts*.07));
+    if(ch==='f'){                                  // flores
+      ctx.fillStyle=(n%2)?'#f472b6':'#fde047';
+      ctx.fillRect(sx+ts*.24,sy+ts*.3,Math.max(2,ts*.13),Math.max(2,ts*.13));
+      ctx.fillStyle=(n%2)?'#a78bfa':'#fb7185';
+      ctx.fillRect(sx+ts*.58,sy+ts*.6,Math.max(2,ts*.12),Math.max(2,ts*.12));
     }
+  } else if(ch==='h'){                              // hierba alta (peligro)
+    for(let i=0;i<4;i++){ctx.fillStyle=(i+n)%2?'#1c5530':'#2f8f50';
+      ctx.fillRect(sx+i*ts*.26+ts*.05,sy+ts*(.3+((i+n)%3)*.12),Math.max(1,ts*.12),ts*.55);}
+  } else if(ch==='s'||ch==='y'){                    // arena / playa
+    ctx.fillStyle='rgba(255,240,190,.18)';
+    ctx.fillRect(sx+(n%4)*ts*.22,sy+(n%5)*ts*.17,Math.max(1,ts*.1),Math.max(1,ts*.08));
+    ctx.fillStyle='rgba(150,110,60,.12)';
+    ctx.fillRect(sx+((n>>2)%5)*ts*.18,sy+((n>>1)%4)*ts*.22,Math.max(1,ts*.07),Math.max(1,ts*.07));
+  } else if(ch==='n'){                              // nieve
+    ctx.fillStyle='rgba(255,255,255,'+((n%3)?'.5':'.2')+')';
+    ctx.fillRect(sx+(n%4)*ts*.22,sy+(n%5)*ts*.18,Math.max(1,ts*.13),Math.max(1,ts*.11));
+    ctx.fillStyle='rgba(150,180,220,.25)';
+    ctx.fillRect(sx,sy+ts*.8,ts+1,ts*.2);
+  } else if(ch==='r'){                              // camino de tierra
+    ctx.fillStyle='rgba(0,0,0,.14)';ctx.fillRect(sx,sy+ts*.74,ts+1,ts*.26);
+    ctx.fillStyle='rgba(255,235,190,.10)';ctx.fillRect(sx,sy,ts+1,ts*.18);
+    ctx.fillStyle='rgba(90,70,40,.4)';
+    ctx.fillRect(sx+(n%5)*ts*.18,sy+(n%4)*ts*.2,Math.max(1,ts*.09),Math.max(1,ts*.09));
+  } else if(ch==='b'){                              // puente de tablones
+    ctx.fillStyle='rgba(60,40,20,.5)';
+    for(let i=0;i<4;i++)ctx.fillRect(sx,sy+ts*(.12+i*.24),ts+1,Math.max(1,ts*.05));
+    ctx.fillStyle='rgba(255,220,160,.12)';ctx.fillRect(sx,sy,ts+1,ts*.1);
+  } else if(ch==='m'){                              // base rocosa (bajo el risco)
+    ctx.fillStyle='rgba(0,0,0,.18)';
+    ctx.fillRect(sx+(n%4)*ts*.2,sy+(n%5)*ts*.18,Math.max(1,ts*.14),Math.max(1,ts*.1));
   }
 }
 
+/* sombra suave bajo un objeto */
+function _shadow(ctx,cx,by,w){
+  ctx.fillStyle='rgba(0,0,0,.22)';
+  ctx.beginPath();ctx.ellipse(cx,by-w*.06,w*.5,w*.2,0,0,7);ctx.fill();
+}
 function rpgDraw(){
   if(!_rpgCtx||!ADV)return;
-  const ctx=_rpgCtx, ts=_rpgTs;
-  const now=Date.now();
-  /* posición de cámara (en píxeles de baldosa, con interpolación) */
+  if(_sprTs!==_rpgTs)rpgBuildSprites();
+  const ctx=_rpgCtx, ts=_rpgTs, now=Date.now();
   let px=ADV.x, py=ADV.y;
   if(_anim){
     const k=Math.min(1,(now-_anim.t0)/_anim.dur);
-    px=_anim.fx+(_anim.tx-_anim.fx)*k;
-    py=_anim.fy+(_anim.ty-_anim.fy)*k;
+    px=_anim.fx+(_anim.tx-_anim.fx)*k; py=_anim.fy+(_anim.ty-_anim.fy)*k;
   }
   const half=(RPG_VIEW-1)/2;
-  let camX=Math.max(0,Math.min(px-half,RPG_W-RPG_VIEW));
-  let camY=Math.max(0,Math.min(py-half,RPG_H-RPG_VIEW));
+  const camX=Math.max(0,Math.min(px-half,RPG_W-RPG_VIEW));
+  const camY=Math.max(0,Math.min(py-half,RPG_H-RPG_VIEW));
   ctx.clearRect(0,0,_rpgCv.width,_rpgCv.height);
-  ctx.textAlign='center';ctx.textBaseline='middle';
   const waveF=Math.floor(now/600)%2;
   const x0=Math.floor(camX),y0=Math.floor(camY);
-  for(let vy=0;vy<=RPG_VIEW;vy++){
-    for(let vx=0;vx<=RPG_VIEW;vx++){
-      const x=x0+vx,y=y0+vy;
-      const sx=(x-camX)*ts, sy=(y-camY)*ts;
-      const ch=rpgTile(x,y);
+
+  /* ── CAPA 1: SUELO ── */
+  for(let vy=-1;vy<=RPG_VIEW+1;vy++)for(let vx=-1;vx<=RPG_VIEW+1;vx++){
+    const x=x0+vx,y=y0+vy, ch=rpgTile(x,y);
+    const n=(x*73856093 ^ y*19349663)>>>0;
+    drawGround(ctx,ch,(x-camX)*ts,(y-camY)*ts,ts,x,y,now,n,waveF);
+  }
+
+  /* ── CAPA 2: OBJETOS (ordenados por profundidad) ── */
+  const objs=[];
+  const blit=(o,cx,by,w)=>objs.push({...o,cx,by,w});
+  for(let vy=-5;vy<=RPG_VIEW+2;vy++)for(let vx=-4;vx<=RPG_VIEW+4;vx++){
+    const x=x0+vx,y=y0+vy; if(x<0||y<0||x>=RPG_W||y>=RPG_H)continue;
+    const ch=rpgTile(x,y), n=(x*2654435761 ^ y*40503)>>>0;
+    const cx=(x-camX+.5)*ts, by=(y-camY+1)*ts;
+    if(ch==='t'){
+      const spr=(y<150||(n&7)===0)?scnPine(y<118):scnTree(n%4);
+      blit({spr,kind:'scn'},cx,by, spr.aw*_PX);
+    } else if(ch==='m'){
+      const spr=scnRock(y<118); blit({spr,kind:'scn'},cx,by, spr.aw*_PX);
+    } else if(RPG_TOWNS[ch]){
       const town=RPG_TOWNS[ch];
-      ctx.fillStyle=town?'#27513a':(RPG_COLORS[ch]||'#17402b');
-      ctx.fillRect(sx,sy,ts+1,ts+1);
-      const n=(x*73856093 ^ y*19349663)>>>0;
-      if(ch==='~'){
-        ctx.fillStyle='rgba(120,180,255,'+((n%2===waveF)?'.16':'.05')+')';
-        ctx.fillRect(sx+ts*.12,sy+ts*(.28+(n%4)*.14),ts*.55,Math.max(1,ts*.07));
-      } else if(ch==='.'||ch==='h'){
-        ctx.fillStyle='rgba(90,220,140,'+(ch==='h'?'.22':'.10')+')';
-        ctx.fillRect(sx+(n%5)*ts*.16,sy+(n%3)*ts*.27,Math.max(1,ts*.08),Math.max(1,ts*.15));
-      } else if(ch==='s'||ch==='y'){
-        ctx.fillStyle='rgba(255,235,170,.14)';
-        ctx.fillRect(sx+(n%4)*ts*.2,sy+(n%5)*ts*.17,Math.max(1,ts*.1),Math.max(1,ts*.08));
-      } else if(ch==='n'){
-        ctx.fillStyle='rgba(255,255,255,'+((n%3)?'.25':'.1')+')';
-        ctx.fillRect(sx+(n%4)*ts*.22,sy+(n%5)*ts*.18,Math.max(1,ts*.12),Math.max(1,ts*.1));
-      } else if(ch==='r'){
-        ctx.fillStyle='rgba(0,0,0,.16)';
-        ctx.fillRect(sx,sy+ts*.42,ts,ts*.16);
-      } else if(ch==='b'){
-        ctx.fillStyle='rgba(0,0,0,.25)';
-        for(let i=0;i<3;i++)ctx.fillRect(sx,sy+ts*(.18+i*.3),ts,Math.max(1,ts*.07));
-      } else if(ch==='f'){
-        ctx.fillStyle=(n%2)?'#f472b6':'#fbbf24';
-        ctx.fillRect(sx+ts*.25,sy+ts*.3,Math.max(2,ts*.14),Math.max(2,ts*.14));
-        ctx.fillStyle=(n%2)?'#fbbf24':'#f472b6';
-        ctx.fillRect(sx+ts*.6,sy+ts*.62,Math.max(2,ts*.12),Math.max(2,ts*.12));
+      for(const p of villageProps(ch)){
+        const spr=scnForProp(p);
+        blit({spr,kind:'scn',sub:p.type,town:p.type==='build'?town:null,_oy:p.oy},
+             (p.ox-camX+.5)*ts,(p.oy-camY+1)*ts, spr.aw*_PX);
       }
-      ctx.font=(ts*.78)+'px serif';
-      if(ch==='m')ctx.fillText('⛰',sx+ts/2,sy+ts*.55);
-      else if(ch==='t')ctx.fillText('🌲',sx+ts/2,sy+ts*.55);
-      else if(ch==='h')ctx.fillText('🌿',sx+ts/2,sy+ts*.6);
-      else if(town){
-        const locked=town.boss&&advWins()<ADV_CAPITAL_WINS&&!ADV.cleared[town.id];
-        ctx.fillText(locked?'🔒':town.icon,sx+ts/2,sy+ts*.52);
-        if(ADV.cleared[town.id]){
-          ctx.font=(ts*.34)+'px serif';
-          ctx.fillText('✅',sx+ts*.78,sy+ts*.22);
-        }
+    } else if(ch==='.'&&(n%41===0)){            // matojos dispersos
+      const spr=scnBush(); blit({spr,kind:'scn'},cx,by, spr.aw*_PX);
+    } else if(ch==='.'&&(n%163===0)){           // algún árbol solitario
+      const spr=scnTree(n%4); blit({spr,kind:'scn'},cx,by, spr.aw*_PX);
+    }
+  }
+  /* NPCs */
+  for(const npc of _npcs){
+    if(npc.x<x0-2||npc.x>x0+RPG_VIEW+2||npc.y<y0-2||npc.y>y0+RPG_VIEW+2)continue;
+    blit({kind:'char',pal:NPC_PALS[npc.pal]||PAL_PLAYER,palKey:npc.pal,dir:npc.dir,frame:0},
+         (npc.x-camX+.5)*ts,(npc.y-camY+1)*ts, 11*_PX);
+  }
+  /* jugador */
+  blit({kind:'char',player:true,pal:PAL_PLAYER,palKey:'player',dir:ADV.dir,frame:_walkFrame},
+       (px-camX+.5)*ts,(py-camY+1)*ts, 11*_PX);
+
+  /* orden: por línea base; el personaje pisa por delante en su fila */
+  objs.sort((a,b)=> (a.by - b.by) || ((a.kind==='char'?1:0)-(b.kind==='char'?1:0)) );
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  for(const o of objs){
+    if(o.kind==='char'){
+      const c=charCanvas(o.palKey,o.pal,o.dir,o.frame);
+      _shadow(ctx,o.cx,o.by,o.w*.9);
+      if(o.player){ctx.save();ctx.shadowColor='rgba(34,211,238,.5)';ctx.shadowBlur=ts*.22;}
+      ctx.drawImage(c,Math.round(o.cx-c.width/2),Math.round(o.by-c.height));
+      if(o.player)ctx.restore();
+    } else {
+      const s=o.spr;
+      if(o.sub==='build'||o.sub==='house'||o.sub==='shop'||o.sub==='tree'||!o.sub)
+        _shadow(ctx,o.cx,o.by,o.w);
+      ctx.drawImage(s.cv,Math.round(o.cx-s.cv.width/2),Math.round(o.by-s.cv.height));
+      /* estado del pueblo sobre el edificio principal */
+      if(o.sub==='build'&&o.town){
+        const top=o.by - s.cv.height - ts*.1;
+        const locked=o.town.boss&&advWins()<ADV_CAPITAL_WINS&&!ADV.cleared[o.town.id];
+        ctx.font=(ts*.6)+'px serif';
+        if(locked)ctx.fillText('🔒',o.cx,top);
+        else if(ADV.cleared[o.town.id])ctx.fillText('✅',o.cx,top);
+        ctx.font='700 '+(ts*.34)+'px Exo 2,sans-serif';
+        ctx.fillStyle='rgba(8,12,30,.78)';
+        const nm=o.town.name, tw=ctx.measureText(nm).width;
+        ctx.fillRect(o.cx-tw/2-4,top-ts*.62,tw+8,ts*.42);
+        ctx.fillStyle='#eef2ff';ctx.fillText(nm,o.cx,top-ts*.41);
       }
     }
   }
-  /* NPCs visibles */
-  for(const npc of _npcs){
-    if(npc.x<x0-1||npc.x>x0+RPG_VIEW+1||npc.y<y0-1||npc.y>y0+RPG_VIEW+1)continue;
-    drawSprite(ctx,(npc.x-camX)*ts,(npc.y-camY)*ts,ts,npc.dir,0,NPC_PALS[npc.pal]||PAL_PLAYER);
-  }
-  /* jugador */
-  ctx.shadowColor='rgba(34,211,238,.55)';ctx.shadowBlur=ts*.3;
-  drawSprite(ctx,(px-camX)*ts,(py-camY)*ts,ts,ADV.dir,_walkFrame,PAL_PLAYER);
-  ctx.shadowBlur=0;
+
   /* HUD */
   const coins=document.getElementById('map-coins');
   if(coins)coins.textContent='🪙 '+ADV.coins;
