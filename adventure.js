@@ -13,13 +13,14 @@
      (16×16 u) con relieve y ANIMACIÓN (agua con oleaje y espuma de orilla,
      hierba que se mece, flores, nieve); las costas y los acantilados se
      autoconectan. Las copas de bosque rellenan su celda sin solaparse.
-   - OBJETOS a escala con HUELLA en celdas (árbol 2×2, casa 3×3, fuente
-     3×3 con agua dinámica, capital 4×4) colocados en una REJILLA con
-     control de ocupación: ninguna huella se solapa con otra. Cada
-     localidad es un POBLADO (edificio principal según su estilo, casas,
-     tienda, plaza adoquinada, cartel, jardines, parque con fuente,
-     árboles, vallas y farolas). Todo cacheado fuera de pantalla; solo
-     visual (no altera baldosas ni colisiones).
+   - OBJETOS como TILES 1×1 (estilo 16-bit, finales 90 / principios 2000):
+     árbol, arbusto, roca, cartel, farola, valla, jardín, caja y flores
+     ocupan UNA celda; la fuente se compone con 3×3 tiles (agua animada).
+     Los EDIFICIOS se MONTAN con piezas (tejado/pared/puerta/ventana), así
+     que el pueblo se dibuja como un tilemap clásico, sin sprites grandes
+     pegados ni solapes. Cada localidad es un POBLADO (edificio principal
+     según su estilo, casas, plaza adoquinada, cartel, jardines, fuente,
+     árboles, vallas y farolas). Solo visual (no altera baldosas/colisiones).
    - NPCs con paleta intercambiada que deambulan, se giran hacia ti
      al hablar y bloquean el paso.
    - Sistema de DIÁLOGOS con caja clásica, efecto máquina de escribir
@@ -306,12 +307,12 @@ CHAR.right=CHAR.left;
 /* ════════════════════════════════
    CACHÉ DE SPRITES (lienzos fuera de pantalla al tamaño de baldosa)
 ════════════════════════════════ */
-let _PX=3, _U=2, _sprTs=0, _frame=0, _scn=new Map(), _charC=new Map(), _tile=new Map();
+let _PX=3, _U=2, _sprTs=0, _frame=0, _scn=new Map(), _charC=new Map(), _tile=new Map(), _obj=new Map();
 function _cv(w,h){const c=document.createElement('canvas');c.width=Math.max(1,w);c.height=Math.max(1,h);return c;}
 function rpgBuildSprites(){
   _PX=Math.max(2,Math.floor(_rpgTs/ART));
   _U=Math.max(2,Math.floor(_rpgTs/16));
-  _sprTs=_rpgTs; _scn.clear(); _charC.clear(); _tile.clear();
+  _sprTs=_rpgTs; _scn.clear(); _charC.clear(); _tile.clear(); _obj.clear();
 }
 /* bloque de "píxel de arte" del MUÑECO (escala _PX) */
 function _b(ctx,x,y,w,h,col){ctx.fillStyle=col;ctx.fillRect(Math.round(x*_PX),Math.round(y*_PX),Math.ceil(w*_PX),Math.ceil(h*_PX));}
@@ -397,112 +398,107 @@ function paintTile(x,ch,f){
 }
 
 /* ════════════════════════════════
-   OBJETOS (un sprite por TIPO; huella en celdas → no se solapan)
-   footprint [anchoCeldas, altoCeldas]; el sprite puede ser más alto.
+   TILES DE OBJETO 1×1 (estética 16-bit, finales 90 / principios 2000)
+   Cada objeto es UNA celda; los edificios se MONTAN con tiles (tejado,
+   pared, puerta, ventana). Fondo transparente salvo lo opaco (edificios).
 ════════════════════════════════ */
-const OBJ_FOOT={tree:[2,2],bigtree:[2,2],bush:[1,1],fountain:[3,3],sign:[1,1],lamp:[1,1],
-  fence:[1,1],garden:[2,1],crate:[1,1],flowerpot:[1,1],
-  house:[3,3],shop:[3,3],build:[3,3],capital:[4,4]};
-function _scnGet(key,wpx,hpx,paint){
-  let o=_scn.get(key); if(o)return o;
-  const c=_cv(Math.round(wpx*_U),Math.round(hpx*_U)), x=c.getContext('2d');
-  paint(x,wpx,hpx); o={cv:c,wpx,hpx}; _scn.set(key,o); return o;
-}
-/* árbol redondo (huella 2×2) con volumen */
-function paintTree(x,wpx,hpx,leaf){
-  const dk=shade(leaf,.6),lt=shade(leaf,1.3),tr='#6f4c2c',td='#503520', cx=wpx/2;
-  q(x,cx-2,hpx-9,4,9,td); q(x,cx-2,hpx-9,2,9,tr); q(x,cx-2,hpx-3,4,1.4,'rgba(0,0,0,.25)');
-  const blobs=[[cx,10,9],[cx-5,13,6],[cx+5,13,6],[cx,15,9.5],[cx,6,7]];
-  for(const[bx,by,br] of blobs)for(let yy=-br;yy<=br;yy++)for(let xx=-br;xx<=br;xx++){
-    if(xx*xx+yy*yy>br*br)continue; const px=bx+xx,py=by+yy; if(px<1||px>=wpx-1||py<0||py>hpx-8)continue;
-    const t=(xx*0.7+yy)/br; q(x,px,py,1,1, t<-.45?lt:(t>.5?dk:leaf)); }
-  for(const[i,p] of [[0,[6,6]],[1,[14,9]],[0,[10,14]],[1,[5,12]],[0,[18,12]]]) q(x,p[0],p[1],1.4,1.4, i?dk:lt);
-}
-function paintBush(x,wpx,hpx){const g='#2f9050',d='#1f6e3c',l='#52b56e';
-  for(let yy=0;yy<hpx;yy++){const w=wpx*(0.45+0.55*Math.sin((yy/hpx)*Math.PI)); q(x,(wpx-w)/2,yy,w,1, yy<3?l:(yy>hpx-3?d:g));}
-  q(x,wpx*0.3,hpx*0.3,1.2,1.2,l); q(x,wpx*0.62,hpx*0.5,1,1,d);}
-/* FUENTE 3×3 con AGUA DINÁMICA (4 frames) */
-function paintFountain(x,wpx,hpx,f){
-  const st='#9aa1b3', sd='#6c7488', sl='#c2c8d6', cx=wpx/2, by=hpx-2;
-  q(x,2,by-7,wpx-4,8,sd); q(x,2,by-8,wpx-4,2,st); q(x,2,by-8,wpx-4,0.8,sl);     // pilón exterior
-  q(x,4,by-6.5,wpx-8,5.5,'#2f7fd6'); q(x,4,by-6.5,wpx-8,1,'#1f64ad');            // agua del pilón
-  for(let i=0;i<5;i++){const r=((f+i)%5)*1.6; q(x,cx-r,by-4,r*2,0.8,'rgba(180,222,255,.5)');} // ondas
-  q(x,cx-2.5,by-15,5,9,sd); q(x,cx-2.5,by-15,5,1,sl); q(x,cx-1.5,by-14,3,8,st);  // columna
-  q(x,cx-3.5,by-18,7,3.5,st); q(x,cx-3.5,by-18,7,1,sl); q(x,cx-3.5,by-15,7,1,sd);// taza superior
-  for(const[hx,ph] of [[cx-3.2,f%2?1:0],[cx+2.2,f%2?0:1]])
-    for(let k=0;k<6;k++) q(x,hx+k*0.15,by-13+k*1.8+ph,0.9,1.2,'#bfe2ff');        // chorros
-  q(x,cx-0.8,by-22,1.6,4,'#7fd0ff');                                             // surtidor
-}
-function paintSign(x,wpx,hpx){const w='#b58a52',wd='#7a5a32',wl='#cda671';
-  q(x,wpx/2-0.8,7,1.6,hpx-7,wd);
-  q(x,1,2,wpx-2,6,w); q(x,1,2,wpx-2,1,wl); q(x,1,7,wpx-2,1,wd);
-  for(let r=0;r<3;r++)q(x,2.2,3+r*1.3,wpx-4.4,0.7,'#4a3320');}
-function paintLamp(x,wpx,hpx){const m='#39414f',ml='#525b6c';
-  q(x,wpx/2-0.7,4,1.4,hpx-4,m); q(x,wpx/2-0.7,4,0.6,hpx-4,ml);
-  q(x,wpx/2-2,1,4,4,m); q(x,wpx/2-1.4,1.6,2.8,2.8,'#ffe9a8'); q(x,wpx/2-1,2,2,2,'#fff6d8');}
-function paintFence(x,wpx,hpx){const w='#a78a5c',wd='#71623f';
-  q(x,0,hpx*0.35,wpx,1.6,w); q(x,0,hpx*0.68,wpx,1.6,w);
-  for(const px of [1,wpx*0.5-0.8,wpx-2.6]){q(x,px,1,1.6,hpx-1,w);q(x,px,1,0.6,hpx-1,wd);}}
-function paintGarden(x,wpx,hpx,c1,c2){q(x,0.5,hpx*0.35,wpx-1,hpx*0.65,'#5a3f28');q(x,0.5,hpx*0.35,wpx-1,1,'#6e4f34');
-  const C=[c1,c2,'#fde047']; for(let i=0;i<6;i++){const px=1.4+(i*2.3)%(wpx-3),py=0.5+(i%2)*2.2;
-    q(x,px,py,1.8,1.8,C[i%3]); q(x,px+0.5,py+0.5,0.7,0.7,'#fffbe6');}}
-function paintCrate(x,wpx,hpx){const w='#ac8450',wd='#7a5d34',wl='#c79c63';
-  q(x,1,1,wpx-2,hpx-2,w); q(x,1,1,wpx-2,1,wl); q(x,1,hpx-2,wpx-2,1,wd);
-  q(x,wpx/2-0.5,1,1,hpx-2,wd); q(x,1,hpx/2-0.5,wpx-2,1,wd);}
-function paintPot(x,wpx,hpx){q(x,wpx*0.25,hpx*0.5,wpx*0.5,hpx*0.5,'#a9603a');q(x,wpx*0.22,hpx*0.45,wpx*0.56,1.2,'#c2724a');
-  q(x,wpx*0.3,hpx*0.18,wpx*0.4,hpx*0.34,'#2f9050'); q(x,wpx*0.42,hpx*0.1,1.6,1.6,'#f472b6');}
-/* EDIFICIO con relieve (cuerpo + tejado a dos aguas/azotea, puerta, ventanas, chimeneas) */
-function paintBuilding(x,wpx,hpx,o){
-  const wall=o.wall,wd=shade(wall,.8),wl=shade(wall,1.13),roof=o.roof,rd=shade(roof,.74),rl=shade(roof,1.16);
-  const roofH=o.flat?Math.round(hpx*0.22):Math.round(hpx*0.4), bY=roofH, bH=hpx-roofH;
-  q(x,1,bY,wpx-2,bH,wall); q(x,1,bY,2,bH,wl); q(x,wpx-3,bY,2,bH,wd); q(x,1,hpx-2,wpx-2,2,wd);
-  for(let r=bY+3;r<hpx-2;r+=3)q(x,2,r,wpx-4,0.5,'rgba(0,0,0,.10)');
-  if(o.flat){ q(x,0.5,roofH-3,wpx-1,3.4,roof); q(x,0.5,roofH-3,wpx-1,1,rl);
-    for(let i=1;i<wpx-1;i+=3)q(x,i,roofH-5,1.6,2,roof);
-  } else { for(let r=0;r<roofH;r++){const w=wpx*((r+1)/roofH); q(x,(wpx-w)/2,r,w,1, r<roofH*0.4?rl:(r>roofH*0.8?rd:roof));}
-    q(x,1,roofH-1.4,wpx-2,1.4,rd); q(x,wpx/2-0.7,0.3,1.4,2,rd); }
-  const dw=Math.max(3,wpx*0.2),dh=Math.max(5,bH*0.55),dx=wpx/2-dw/2,dy=hpx-dh;
-  q(x,dx-0.6,dy-0.6,dw+1.2,dh+0.6,wd); q(x,dx,dy,dw,dh,'#3a2718'); q(x,dx+0.6,dy+0.7,dw-1.2,dh-0.8,o.door||'#6f4a2c');
-  q(x,dx+dw*0.62,dy+dh*0.45,0.7,1,'#f4d27a');
-  const wy=bY+2.4, ww=Math.max(2.4,wpx*0.16);
-  for(const wx of [wpx*0.16, wpx*0.84-ww]){ q(x,wx-0.7,wy-0.7,ww+1.4,ww+1.4,wd); q(x,wx,wy,ww,ww,'#2a3550');
-    q(x,wx,wy,ww,ww,o.accent||'#ffe08a'); q(x,wx+ww/2-0.3,wy,0.6,ww,wd); q(x,wx,wy+ww/2-0.3,ww,0.6,wd);
-    q(x,wx,wy,ww*0.5,ww*0.5,shade(o.accent||'#ffe08a',1.25)); }
-  if(o.chimney)for(const cxp of (o.chimney===2?[wpx*0.26,wpx*0.6]:[wpx*0.64])){
-    q(x,cxp,roofH-roofH*0.5,2.4,roofH*0.9,wd); q(x,cxp-0.4,roofH-roofH*0.5,3.2,1.2,shade(wall,.55));}
-  if(o.awning)for(let i=0;i<wpx-3;i++)q(x,1.5+i,bY+bH*0.46,1,2,i%2?'#e23b3b':'#f6f0e4');
-}
 const BUILD_STYLES={
-  lab:    {wall:'#e0e7f3',roof:'#5b6bb0',accent:'#7fe7ff',chimney:1},
-  factory:{wall:'#9aa1ad',roof:'#6b5040',accent:'#ffcf6a',chimney:2},
-  port:   {wall:'#cdd6dd',roof:'#c23b3b',accent:'#bff0ff',chimney:1},
-  salt:   {wall:'#eef2f7',roof:'#9fb6c9',accent:'#dff3ff'},
-  mine:   {wall:'#b8a07e',roof:'#5a4632',accent:'#ffcf6a',chimney:1},
-  spa:    {wall:'#e7d2e6',roof:'#7a4f86',accent:'#ffd6f0'},
-  desert: {wall:'#e3c98f',roof:'#c08a3e',accent:'#ffe7a8',flat:true},
-  market: {wall:'#d8b27a',roof:'#3f8f6a',accent:'#ffe7a8',awning:true},
-  capital:{wall:'#d7def0',roof:'#6a5ba8',accent:'#a7f3ff',flat:true,chimney:2},
+  lab:    {wall:'#e6ebf6',roof:'#5b6bb0'}, factory:{wall:'#aab0bc',roof:'#6b5040'},
+  port:   {wall:'#d2dade',roof:'#c23b3b'}, salt:   {wall:'#eef2f7',roof:'#8fa6bb'},
+  mine:   {wall:'#c2ab86',roof:'#5a4632'}, spa:    {wall:'#ecd6ea',roof:'#7a4f86'},
+  desert: {wall:'#e6cd92',roof:'#c08a3e'}, market: {wall:'#dcb87e',roof:'#3f8f6a'},
+  capital:{wall:'#dde4f4',roof:'#6a5ba8'},
 };
-const TREE_LEAVES=['#37a25a','#2f9e6e','#46a83e','#2b8f52'];
-/* devuelve {cv,wpx,hpx} del objeto (con frame para los animados) */
-function objSprite(type,opt,frame){
-  opt=opt||{};
-  if(type==='tree')   return _scnGet('tree'+(opt.v||0),32,46,(x,w,h)=>paintTree(x,w,h,TREE_LEAVES[(opt.v||0)%4]));
-  if(type==='bigtree')return _scnGet('btree'+(opt.v||0),34,52,(x,w,h)=>paintTree(x,w,h,TREE_LEAVES[(opt.v||0)%4]));
-  if(type==='bush')   return _scnGet('bush',16,15,paintBush);
-  if(type==='fountain')return _scnGet('foun'+(frame%4),48,42,(x,w,h)=>paintFountain(x,w,h,frame%4));
-  if(type==='sign')   return _scnGet('sign',16,26,paintSign);
-  if(type==='lamp')   return _scnGet('lamp',16,30,paintLamp);
-  if(type==='fence')  return _scnGet('fence',16,14,paintFence);
-  if(type==='garden') return _scnGet('grd'+((opt.cols||['#f472b6'])[0]),32,15,(x,w,h)=>paintGarden(x,w,h,(opt.cols||['#f472b6','#a78bfa'])[0],(opt.cols||['#f472b6','#a78bfa'])[1]));
-  if(type==='crate')  return _scnGet('crate',16,16,paintCrate);
-  if(type==='flowerpot')return _scnGet('pot',16,16,paintPot);
-  if(type==='capital')return _scnGet('bld:capital',64,84,(x,w,h)=>paintBuilding(x,w,h,BUILD_STYLES.capital));
-  if(type==='shop')   return _scnGet('shop',48,58,(x,w,h)=>paintBuilding(x,w,h,{...BUILD_STYLES.market,awning:true}));
-  if(type==='house'){const P=[['#d9b48a','#b0413c'],['#cbb89a','#3f6aa0'],['#d7c39a','#4a8f5f'],['#c9a37a','#8a5a86']][(opt.v||0)%4];
-    return _scnGet('house'+(opt.v||0),48,58,(x,w,h)=>paintBuilding(x,w,h,{wall:P[0],roof:P[1],accent:'#ffe08a'}));}
-  const style=opt.style||'lab';
-  return _scnGet('bld:'+style,48,60,(x,w,h)=>paintBuilding(x,w,h,BUILD_STYLES[style]||BUILD_STYLES.lab));
+const HOUSE_PALS=[['#e0c79c','#b0413c'],['#d2c19c','#3f6aa0'],['#dcc89e','#4a8f5f'],
+  ['#d0ac84','#8a5a86'],['#cdb892','#c97b3a'],['#c6c2b0','#5a7d8c']];
+
+/* ── caché de tiles de objeto (transparentes salvo edificios) ── */
+function objTile(id,f){
+  const anim=id.charCodeAt(0)===102&&id.charCodeAt(1)===110; // empieza por 'fn'
+  const fr=anim?(f&3):0, key=id+'#'+fr+'#'+_sprTs;
+  let c=_obj.get(key); if(c)return c;
+  c=_cv(16*_U,16*_U); paintObj(c.getContext('2d'),id,fr); _obj.set(key,c); return c;
+}
+function paintObj(x,id,f){
+  switch(id){
+    case 'tree':  return ot_tree(x);   case 'bush': return ot_bush(x);
+    case 'rock':  return ot_rock(x);   case 'sign': return ot_sign(x);
+    case 'lamp':  return ot_lamp(x);   case 'fenceH':return ot_fenceH(x);
+    case 'fenceV':return ot_fenceV(x); case 'garden':return ot_garden(x);
+    case 'crate': return ot_crate(x);  case 'flower':return ot_flower(x);
+  }
+  const p=id.split('|');
+  if(p[0]==='roof')return ot_roof(x,p[1],p[2]);
+  if(p[0]==='wall')return ot_wall(x,p[1]);
+  if(p[0]==='door')return ot_door(x,p[1]);
+  if(p[0]==='win') return ot_window(x,p[1]);
+  if(p[0]==='fn')  return ot_fountain(x,+p[1],+p[2],f);
+}
+/* —— vegetación / props (16×16, fondo transparente) —— */
+function ot_tree(x){const tr='#6a4a2a',td='#4f3620',cd='#1a6034',c='#2c8a4c',cl='#49ab63';
+  q(x,7,11,2,5,td); q(x,7,11,1,5,tr);
+  for(let yy=0;yy<13;yy++)for(let xx=0;xx<16;xx++){const dx=xx-8,dy=yy-6; if(dx*dx*1.05+dy*dy>41)continue;
+    const t=(dx*0.5+dy)/7; q(x,xx,yy,1,1, t<-.45?cl:(t>.5?cd:c)); }
+  q(x,5,3,2,2,cl); q(x,10.5,8,1.5,1.5,cd); q(x,8,2,1,1,cl);}
+function ot_bush(x){const d='#1a6034',g='#2c8a4c',l='#49ab63';
+  for(let yy=5;yy<15;yy++)for(let xx=1;xx<15;xx++){const dx=xx-8,dy=yy-10; if(dx*dx*0.72+dy*dy>27)continue;
+    const t=dy/5; q(x,xx,yy,1,1, t<-.3?l:(t>.45?d:g)); } q(x,5,7,1.6,1.6,l);}
+function ot_rock(x){const d='#565d70',g='#787f93',l='#9aa1b6';
+  for(let yy=5;yy<15;yy++)for(let xx=2;xx<14;xx++){const dx=xx-8,dy=yy-10.5; if(dx*dx*0.7+dy*dy>22)continue;
+    const t=dy/5; q(x,xx,yy,1,1, t<-.3?l:(t>.45?d:g)); } q(x,6,7.5,1.5,1.5,l);}
+function ot_flower(x){const C=['#f472b6','#fde047','#a78bfa','#fb7185'];
+  for(const[i,p] of [[0,[3,5]],[1,[9,3]],[2,[6,10]],[3,[12,9]]]){q(x,p[0],p[1],2,2,C[i]); q(x,p[0]+0.6,p[1]+0.6,0.7,0.7,'#fffbe6'); q(x,p[0]+0.7,p[1]+2,0.6,2,'#2c7a3f');}}
+function ot_sign(x){const w='#b58a52',wd='#7a5a32',wl='#cda671';
+  q(x,7,8,2,7,wd); q(x,6.6,8,0.6,7,'#5e4628');
+  q(x,2,2,12,7,w); q(x,2,2,12,1,wl); q(x,2,8,12,1,wd); q(x,2,2,1,7,wl); q(x,13,2,1,7,wd);
+  q(x,4,4,8,1,'#4a3320'); q(x,4,6,6,1,'#4a3320');}
+function ot_lamp(x){const m='#39414f',ml='#525b6c';
+  q(x,7,4,2,11,m); q(x,6.6,4,0.6,11,ml);
+  q(x,5,1,6,4,m); q(x,5.8,1.7,4.4,2.8,'#ffe9a8'); q(x,6.4,2.1,3,1.8,'#fff6d8');}
+function ot_fenceH(x){const w='#a78a5c',wd='#71623f',wl='#c2a877';
+  q(x,0,6,16,2,w); q(x,0,6,16,0.6,wl); q(x,0,10,16,2,w); q(x,0,10,16,0.6,wl);
+  for(const px of [2,8,13]){q(x,px,4,2,10,w); q(x,px,4,0.7,10,wd);} }
+function ot_fenceV(x){const w='#a78a5c',wd='#71623f',wl='#c2a877';
+  q(x,7,0,2,16,w); q(x,6.6,0,0.6,16,wd);
+  for(const py of [3,11]){ q(x,3,py,10,1.8,w); q(x,3,py,10,0.6,wl); } }
+function ot_garden(x){q(x,1,3,14,12,'#5a3f28'); q(x,1,3,14,1.4,'#6e4f34');
+  const C=['#f472b6','#fde047','#a78bfa','#fb7185'];
+  for(let i=0;i<5;i++){const px=2.5+(i*2.8)%11, py=5+(i%2)*4.5; q(x,px,py,2,2,C[i%4]); q(x,px+0.6,py+0.6,0.8,0.8,'#fffbe6'); } }
+function ot_crate(x){const w='#ac8450',wd='#7a5d34',wl='#c79c63';
+  q(x,2,4,12,11,w); q(x,2,4,12,1,wl); q(x,2,14,12,1,wd); q(x,8,4,1,11,wd); q(x,2,9,12,1,wd);}
+/* FUENTE en 3×3 tiles (ox,oy ∈ -1..1): estanque redondo + agua animada */
+function ot_fountain(x,ox,oy,f){
+  const st='#9aa1b3',sd='#6c7488',sl='#c8cedb',w='#2f7fd6',wl='#5aa0e6',wd='#1f64ad';
+  for(let yy=0;yy<16;yy++)for(let xx=0;xx<16;xx++){
+    const gx=(ox+1)*16+xx+0.5, gy=(oy+1)*16+yy+0.5, dx=gx-24, dy=gy-24, d=Math.sqrt(dx*dx+dy*dy);
+    if(d>22.5)continue; let col;
+    if(d>18) col=dy<-3?sl:(dy>5?sd:st);
+    else if(d>15) col=sd;
+    else col = d>13.5?wd:(((Math.floor(d)+f)&3)<2?wl:w);
+    q(x,xx,yy,1,1,col);
+  }
+  if(ox===0&&oy===0){ q(x,7,3,2,9,st); q(x,6.4,3,0.6,9,sl);
+    q(x,5.5,1.5,5,2.2,st); q(x,5.5,1.5,5,0.8,sl); q(x,7,0.4,2,2,'#7fd0ff');
+    q(x,5,4+(f&1),1,2,'#bfe2ff'); q(x,10,5-(f&1),1,2,'#bfe2ff'); }
+}
+/* —— PIEZAS DE EDIFICIO (opacas; se montan en la rejilla) —— */
+function ot_wall(x,hex){const wl=shade(hex,1.13),wd=shade(hex,.78),wd2=shade(hex,.6);
+  q(x,0,0,16,16,hex); q(x,0,0,16,1.4,wl); q(x,0,0,1.4,16,wl);
+  q(x,14.6,0,1.4,16,wd); q(x,0,14.6,16,1.4,wd2);
+  for(let r=4;r<14;r+=4)q(x,1,r,14,0.5,'rgba(0,0,0,.07)');}
+function ot_window(x,hex){ot_wall(x,hex); const fr='#2a3550',a='#bfe9ff',al='#e6f6ff';
+  q(x,3.5,3.5,9,8,fr); q(x,4.3,4.3,7.4,6.4,a); q(x,4.3,4.3,3.4,2.8,al);
+  q(x,7.7,4.3,0.7,6.4,fr); q(x,4.3,7.1,7.4,0.7,fr); q(x,3.5,11.5,9,0.8,shade(hex,.7));}
+function ot_door(x,hex){ot_wall(x,hex); const d='#3a2718',dl='#6f4a2c';
+  q(x,4,4,8,12,d); q(x,4.8,5,6.4,11,dl); q(x,4.8,5,6.4,1,'#8a6038');
+  q(x,5.6,5,0.7,11,'#5a3a22'); q(x,9.6,10.5,1,1.6,'#f4d27a');}
+function ot_roof(x,hex,sub){const r=hex,rl=shade(hex,1.18),rd=shade(hex,.72),rd2=shade(hex,.55);
+  q(x,0,0,16,16,r); q(x,0,0,16,2.2,rl); q(x,0,13,16,3,rd); q(x,0,15.2,16,0.8,rd2);
+  for(let i=1;i<16;i+=3)q(x,i,3,1.3,9,shade(r,.9));
+  if(sub==='L'){ q(x,0,0,2.4,16,rd); q(x,0,0,1,16,rd2); }
+  else if(sub==='R'){ q(x,13.6,0,2.4,16,rd); q(x,15,0,1,16,rd2); }
+  else if(sub==='peak'){ q(x,7,0,2,16,rl); }
+  else if(sub==='crown'){ q(x,0,12,16,4,rd); for(let i=0;i<16;i+=4)q(x,i,0,2.2,3.6,rd); }
 }
 
 /* ════════════════════════════════
@@ -569,55 +565,61 @@ const RPG_NPCS=[
 ];
 
 /* ════════════════════════════════
-   POBLADOS — cada localidad es un caserío con edificio principal,
-   casas, tienda, cartel, jardines, parque, árboles y vallas.
-   Solo VISUAL: no altera baldosas ni colisiones (la lógica entra al
-   pisar la baldosa-letra). Distribución determinista por pueblo.
+   POBLADOS — cada localidad se COMPONE con tiles 1×1 sobre la rejilla:
+   el edificio principal se monta con piezas (tejado/pared/puerta/ventana),
+   la fuente con 3×3 tiles, y los props (árbol, cartel, farola, valla,
+   jardín…) ocupan UNA celda. Nada se solapa. Solo visual: la lógica entra
+   al pisar la baldosa-letra (= la PUERTA del edificio principal).
 ════════════════════════════════ */
 const TOWN_STYLE={villa:'lab',puerto:'port',salinas:'salt',cruce:'market',
   carbono:'factory',minas:'mine',lago:'spa',oasis:'market',desierto:'desert',
   cumbres:'factory',helix:'capital'};
-const GARDEN_COLS=[['#f472b6','#a78bfa'],['#fb7185','#fbbf24'],['#7fe7ff','#86efac'],['#f9a8d4','#fde047']];
-let _villages={};
-/* Coloca los props en una REJILLA con control de ocupación: ninguna huella
-   se solapa con otra. Cada prop = {type,x0,y0,w,h,...opt} en celdas absolutas;
-   (x0,y0)=esquina sup-izq de la huella. La baldosa-letra (tx,ty) es la PUERTA. */
-function villageProps(townChar){
-  if(_villages[townChar])return _villages[townChar];
-  const t=RPG_TOWNS[townChar]; const [tx,ty]=RPG_TOWN_POS[townChar];
-  let s=(tx*131+ty*977+7)>>>0; const rnd=()=>((s=(s*1664525+1013904223)>>>0)/4294967296);
-  const isCap=t.id==='helix';
-  const P=[], occ=new Set();
-  const free=(x0,y0,w,h)=>{for(let y=y0;y<y0+h;y++)for(let x=x0;x<x0+w;x++)if(occ.has(x+','+y))return false;return true;};
-  const mark=(x0,y0,w,h)=>{for(let y=y0;y<y0+h;y++)for(let x=x0;x<x0+w;x++)occ.add(x+','+y);};
-  const put=(type,rx,ry,opt)=>{const[w,h]=OBJ_FOOT[type]||[1,1], x0=tx+rx, y0=ty+ry;
-    if(!free(x0,y0,w,h))return false; mark(x0,y0,w,h); P.push({type,x0,y0,w,h,...(opt||{})}); return true;};
-  const putAny=(type,cands,opt)=>{for(const[rx,ry] of cands)if(put(type,rx,ry,opt))return true;return false;};
-  /* edificio principal: puerta (centro-abajo) sobre la baldosa-letra */
-  if(isCap) put('capital',-2,-3,{town:t,main:true});
-  else      put('build',-1,-2,{town:t,main:true,style:TOWN_STYLE[t.id]||'lab'});
-  /* casas y tienda */
-  put('house',-5,-2,{v:(s>>>1)%4}); put('house',3,-2,{v:(s>>>3)%4});
-  put('house',-5,2,{v:(s>>>5)%4});  put('shop',3,2,{});
-  /* parque con fuente (capital, balneario, salinas) */
-  if(isCap||t.id==='lago'||t.id==='salinas') put('fountain',-1,2,{});
-  /* cartel, farolas */
-  putAny('sign',[[1,3],[-2,3],[2,4],[-3,4]]);
-  put('lamp',-2,1); put('lamp',2,1);
-  /* jardines y vallas (a los lados, sin pisar el centro) */
-  putAny('garden',[[-5,5],[-3,5],[-6,4]],{cols:GARDEN_COLS[(s>>>7)%4]});
-  putAny('garden',[[3,5],[2,5],[4,4]],{cols:GARDEN_COLS[(s>>>9)%4]});
-  putAny('fence',[[-2,4],[-3,4]]); putAny('fence',[[2,4],[3,4]]);
-  /* arbolitos en las esquinas del poblado */
-  put('tree',-7,-1,{v:(s>>>2)%4}); put('tree',6,-1,{v:(s>>>4)%4});
-  put('tree',-7,3,{v:(s>>>6)%4});  put('tree',6,3,{v:(s>>>8)%4});
-  /* matojos en huecos libres */
-  for(const[rx,ry] of [[-3,1],[3,1],[-1,4],[1,5],[-4,0],[5,1]]) if(P.length<26) put('bush',rx,ry);
+let _tov={}, _overlayMap=null;
+function townOverlay(townChar){
+  if(_tov[townChar])return _tov[townChar];
+  const t=RPG_TOWNS[townChar], pos=RPG_TOWN_POS[townChar], tx=pos[0], ty=pos[1];
+  let s=(tx*131+ty*977+7)>>>0;
+  const bs=BUILD_STYLES[TOWN_STYLE[t.id]||'lab']||BUILD_STYLES.lab, isCap=t.id==='helix';
+  const M=new Map(), has=(x,y)=>M.has(x+','+y), set=(x,y,id)=>{if(!has(x,y))M.set(x+','+y,id);};
+  const areaFree=(x0,y0,w,h)=>{for(let y=y0;y<y0+h;y++)for(let x=x0;x<x0+w;x++)if(has(x,y))return false;return true;};
+  /* edificio: puerta (centro-abajo) en (dxc,dyc); roofRows filas de tejado encima */
+  function building(dxc,dyc,w,roofRows,roof,wall,crown){
+    const x0=dxc-((w-1)>>1), mid=(w-1)>>1;
+    for(let ry=0;ry<roofRows;ry++)for(let i=0;i<w;i++){
+      const sub=crown?'crown':(i===0?'L':(i===w-1?'R':(ry===0?'peak':'M')));
+      set(x0+i,dyc-roofRows+ry,'roof|'+roof+'|'+sub); }
+    for(let i=0;i<w;i++) set(x0+i,dyc, i===mid?('door|'+wall):('win|'+wall));
+  }
+  function tryHouse(dxc,dyc,roof,wall){const x0=dxc-1; if(!areaFree(x0,dyc-1,3,2))return; building(dxc,dyc,3,1,roof,wall,false);}
+  const prop=(x,y,id)=>{ if(areaFree(x,y,1,1)) set(x,y,id); };
+  /* PRINCIPAL — la puerta cae en la baldosa-letra (tx,ty) */
+  if(isCap) building(tx,ty,4,2,bs.roof,bs.wall,true);
+  else      building(tx,ty,3,2,bs.roof,bs.wall,false);
+  /* casas alrededor (colores variados) */
+  const H=i=>HOUSE_PALS[(s>>>i)%HOUSE_PALS.length];
+  tryHouse(tx-4,ty-1,H(1)[1],H(1)[0]); tryHouse(tx+4,ty-1,H(3)[1],H(3)[0]);
+  tryHouse(tx-4,ty+2,H(5)[1],H(5)[0]); tryHouse(tx+4,ty+2,H(7)[1],H(7)[0]);
+  /* fuente 3×3 (capital, balneario, salinas) al sur de la plaza */
+  if(isCap||t.id==='lago'||t.id==='salinas'){
+    if(areaFree(tx-1,ty+2,3,3)) for(let oy=-1;oy<=1;oy++)for(let ox=-1;ox<=1;ox++) set(tx+ox,ty+3+oy,'fn|'+ox+'|'+oy);
+  }
+  /* cartel, farolas, jardines, vallas */
+  prop(tx,ty+2,'sign'); prop(tx-2,ty+1,'lamp'); prop(tx+2,ty+1,'lamp');
+  prop(tx-2,ty+2,'garden'); prop(tx+2,ty+2,'garden');
+  prop(tx-1,ty+5,'fenceH'); prop(tx,ty+5,'fenceH'); prop(tx+1,ty+5,'fenceH');
+  /* árboles en las esquinas, matojos y flores */
+  for(const[dx,dy] of [[-6,-1],[6,-1],[-6,3],[6,3],[-3,4],[3,4]]) prop(tx+dx,ty+dy,'tree');
+  prop(tx-2,ty-1,'bush'); prop(tx+3,ty+1,'bush'); prop(tx-3,ty+1,'flower'); prop(tx+1,ty+4,'flower');
   /* cajas en puertos y mercados */
-  if(t.id==='puerto'||t.id==='cruce'||t.id==='oasis'){putAny('crate',[[-4,1],[-4,0]]); putAny('crate',[[5,2],[6,1]]);}
-  _villages[townChar]=P; return P;
+  if(t.id==='puerto'||t.id==='cruce'||t.id==='oasis'){prop(tx-4,ty+1,'crate'); prop(tx+5,ty+1,'crate');}
+  _tov[townChar]=M; return M;
 }
-/* conjunto de centros de localidad (para pavimentar la plaza) */
+/* capa de objetos global (mezcla de todos los poblados) + consulta O(1) */
+function buildOverlay(){ _overlayMap=new Map();
+  for(const ch of Object.keys(RPG_TOWN_POS)){const M=townOverlay(ch);
+    for(const [k,v] of M) if(!_overlayMap.has(k)) _overlayMap.set(k,v);} }
+function overlayAt(x,y){ if(!_overlayMap)buildOverlay(); return _overlayMap.get(x+','+y); }
+function townOf(x,y){ for(const[ch,p] of Object.entries(RPG_TOWN_POS)) if(Math.abs(x-p[0])<=3&&Math.abs(y-p[1])<=4)return RPG_TOWNS[ch]; return null; }
 const TOWN_CENTERS=Object.values(RPG_TOWN_POS);
 function nearTown(x,y){for(const[cx,cy] of TOWN_CENTERS)if(Math.abs(x-cx)<=3&&Math.abs(y-cy)<=3)return true;return false;}
 
@@ -716,16 +718,21 @@ function rpgPlaceNPCs(){
     let anchor=null;
     for(const [ch,t] of Object.entries(RPG_TOWNS))if(t.id===def.near)anchor=rpgFindTile(ch);
     if(!anchor)continue;
-    /* búsqueda en espiral de baldosas libres alrededor del pueblo */
+    /* delante (al SUR) de la puerta, sobre la plaza, sin pisar edificios/props */
     const free=[];
-    for(let r=1;r<=3&&free.length<=def.slot;r++){
-      for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){
-        if(Math.max(Math.abs(dx),Math.abs(dy))!==r)continue;
-        const x=anchor.x+dx,y=anchor.y+dy;
-        if(rpgWalkable(x,y)&&!free.some(f=>f.x===x&&f.y===y)&&!_npcs.some(n=>n.x===x&&n.y===y))
-          free.push({x,y});
-      }
+    for(let dy=1;dy<=4;dy++)for(let dx=-3;dx<=3;dx++){
+      const x=anchor.x+dx,y=anchor.y+dy;
+      if(!rpgWalkable(x,y)||overlayAt(x,y))continue;
+      if(_npcs.some(n=>n.x===x&&n.y===y))continue;
+      free.push({x,y,d:dy*2+Math.abs(dx)});
     }
+    /* fallback: cualquier celda libre alrededor si el sur está bloqueado */
+    if(!free.length)for(let r=1;r<=4;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){
+      if(Math.max(Math.abs(dx),Math.abs(dy))!==r)continue;
+      const x=anchor.x+dx,y=anchor.y+dy;
+      if(rpgWalkable(x,y)&&!overlayAt(x,y)&&!_npcs.some(n=>n.x===x&&n.y===y))free.push({x,y,d:r});
+    }
+    free.sort((a,b)=>a.d-b.d);
     const spot=free[Math.min(def.slot,free.length-1)];
     if(!spot)continue;
     _npcs.push({...def, x:spot.x, y:spot.y, hx:spot.x, hy:spot.y, dir:'down'});
@@ -741,7 +748,7 @@ function rpgNpcWander(){
     const [dx,dy,d]=dirs[Math.floor(Math.random()*4)];
     const nx=n.x+dx,ny=n.y+dy;
     if(Math.abs(nx-n.hx)>1||Math.abs(ny-n.hy)>1)continue;
-    if(!rpgWalkable(nx,ny))continue;
+    if(!rpgWalkable(nx,ny)||overlayAt(nx,ny))continue;
     if(rpgNpcAt(nx,ny))continue;
     if(ADV&&nx===ADV.x&&ny===ADV.y)continue;
     n.x=nx;n.y=ny;n.dir=d;
@@ -859,53 +866,42 @@ function rpgDraw(){
     drawEdges(ctx,x,y,gch,dx,dy,dw,dh,F);
   }
 
-  /* ── CAPA 2: OBJETOS — huella en celdas, ordenados por fila base ── */
-  const objs=[];
-  for(let vy=-6;vy<=RPG_VIEW+2;vy++)for(let vx=-4;vx<=RPG_VIEW+4;vx++){
-    const x=x0+vx,y=y0+vy; if(x<0||y<0||x>=RPG_W||y>=RPG_H)continue;
-    const ch=rpgTile(x,y), n=(x*2654435761 ^ y*40503)>>>0;
-    if(RPG_TOWNS[ch]){
-      for(const p of villageProps(ch)) objs.push({t:'scn',p, r:p.y0+p.h-1});
-    } else if(ch==='.'&&!nearTown(x,y)&&(n%47===0)){     // matojo suelto (1×1, no se solapa)
-      objs.push({t:'scn',p:{type:'bush',x0:x,y0:y,w:1,h:1}, r:y});
+  /* ── CAPA 2: OBJETOS 1×1 (overlay de tiles; nada se solapa) ── */
+  for(let vy=-1;vy<=RPG_VIEW+1;vy++)for(let vx=-1;vx<=RPG_VIEW+1;vx++){
+    const x=x0+vx,y=y0+vy;
+    let id=overlayAt(x,y);
+    if(!id){                                       // decoración dispersa en hierba (1×1)
+      const ch=rpgTile(x,y);
+      if(ch==='.'&&!nearTown(x,y)){const n=(x*2654435761 ^ y*40503)>>>0;
+        if(n%41===0)id='bush'; else if(n%97===0)id='flower'; else if(n%157===0)id='rock'; else if(n%199===0)id='tree';}
     }
+    if(id){const dx=sxAt(x),dy=syAt(y),dw=sxAt(x+1)-dx,dh=syAt(y+1)-dy;
+      const tc=objTile(id,F); ctx.drawImage(tc,0,0,tc.width,tc.height,dx,dy,dw,dh);}
   }
-  for(const npc of _npcs){
-    if(npc.x<x0-2||npc.x>x0+RPG_VIEW+2||npc.y<y0-2||npc.y>y0+RPG_VIEW+2)continue;
-    objs.push({t:'char',npc, r:npc.y});
-  }
-  objs.push({t:'char',player:true,px,py, r:py});
 
-  objs.sort((a,b)=> (a.r-b.r) || ((a.t==='char'?1:0)-(b.t==='char'?1:0)) );
+  /* ── CAPA 3: PERSONAJES (siempre por encima de los tiles) ── */
+  const drawChar=(tx,tyy,dir,fr,palK,pal,glow)=>{
+    const cx=sxAt(tx)+(sxAt(tx+1)-sxAt(tx))/2, by=syAt(tyy+1), c=charCanvas(palK,pal,dir,fr);
+    if(glow){ctx.save();ctx.shadowColor='rgba(34,211,238,.45)';ctx.shadowBlur=ts*.18;}
+    ctx.drawImage(c,Math.round(cx-c.width/2),Math.round(by-c.height));
+    if(glow)ctx.restore();
+  };
+  for(const npc of _npcs){ if(npc.x<x0-2||npc.x>x0+RPG_VIEW+2||npc.y<y0-2||npc.y>y0+RPG_VIEW+2)continue;
+    drawChar(npc.x,npc.y,npc.dir,0,npc.pal,NPC_PALS[npc.pal]||PAL_PLAYER,false); }
+  drawChar(px,py,ADV.dir,_walkFrame,'player',PAL_PLAYER,true);
+
+  /* ── CAPA 4: rótulo y estado de cada localidad visible ── */
   ctx.textAlign='center';ctx.textBaseline='middle';
-  for(const o of objs){
-    if(o.t==='char'){
-      const tx=o.player?o.px:o.npc.x, tyy=o.player?o.py:o.npc.y;
-      const dir=o.player?ADV.dir:o.npc.dir, fr=o.player?_walkFrame:0;
-      const palK=o.player?'player':o.npc.pal, pal=o.player?PAL_PLAYER:(NPC_PALS[o.npc.pal]||PAL_PLAYER);
-      const cx=sxAt(tx)+(sxAt(tx+1)-sxAt(tx))/2, by=syAt(tyy+1);
-      const c=charCanvas(palK,pal,dir,fr);
-      _shadow(ctx,cx,by,c.width*0.95);
-      if(o.player){ctx.save();ctx.shadowColor='rgba(34,211,238,.5)';ctx.shadowBlur=ts*.2;}
-      ctx.drawImage(c,Math.round(cx-c.width/2),Math.round(by-c.height));
-      if(o.player)ctx.restore();
-    } else {
-      const p=o.p, spr=objSprite(p.type,p,F);
-      const x0p=sxAt(p.x0), wpx=sxAt(p.x0+p.w)-x0p, by=syAt(p.y0+p.h);
-      const hpx=wpx*(spr.hpx/spr.wpx);
-      if(p.type!=='garden'&&p.type!=='fence') _shadow(ctx,x0p+wpx/2,by,wpx*0.9);
-      ctx.drawImage(spr.cv,0,0,spr.cv.width,spr.cv.height, x0p, by-hpx, wpx, hpx);
-      if(p.main&&p.town){                          // estado del pueblo sobre el edificio principal
-        const cx=x0p+wpx/2, top=by-hpx-ts*0.12, tn=p.town;
-        const locked=tn.boss&&advWins()<ADV_CAPITAL_WINS&&!ADV.cleared[tn.id];
-        ctx.font=(ts*.55)+'px serif';
-        if(locked)ctx.fillText('🔒',cx,top); else if(ADV.cleared[tn.id])ctx.fillText('✅',cx,top);
-        ctx.font='700 '+(ts*.32)+'px Exo 2,sans-serif';
-        const nm=tn.name, tw=ctx.measureText(nm).width;
-        ctx.fillStyle='rgba(8,12,30,.8)'; ctx.fillRect(cx-tw/2-4,top-ts*.58,tw+8,ts*.4);
-        ctx.fillStyle='#eef2ff'; ctx.fillText(nm,cx,top-ts*.38);
-      }
-    }
+  for(const [ch,p] of Object.entries(RPG_TOWN_POS)){
+    const tx2=p[0],ty2=p[1];
+    if(tx2<x0-1||tx2>x0+RPG_VIEW+1||ty2<y0-1||ty2>y0+RPG_VIEW+2)continue;
+    const tn=RPG_TOWNS[ch], cx=sxAt(tx2)+(sxAt(tx2+1)-sxAt(tx2))/2, top=syAt(ty2-2);
+    const locked=tn.boss&&advWins()<ADV_CAPITAL_WINS&&!ADV.cleared[tn.id];
+    ctx.font='700 '+(ts*.3)+'px Exo 2,sans-serif';
+    const nm=tn.name, tw=ctx.measureText(nm).width;
+    ctx.fillStyle='rgba(8,12,30,.82)'; ctx.fillRect(cx-tw/2-4,top-ts*.46,tw+8,ts*.38);
+    ctx.fillStyle='#eef2ff'; ctx.fillText(nm,cx,top-ts*.27);
+    if(locked||ADV.cleared[tn.id]){ctx.font=(ts*.5)+'px serif'; ctx.fillText(locked?'🔒':'✅',cx,top-ts*.85);}
   }
 
   /* HUD */
