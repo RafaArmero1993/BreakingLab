@@ -256,7 +256,7 @@ function mkPal(o){return {
   B:o.boot||shade(o.pants,.6),
   G:o.accent };}
 
-const PAL_PLAYER=mkPal({skin:'#f4c9a0',hair:'#2b3357',coat:'#eef3fb',shirt:'#22d3ee',pants:'#2c3566',boot:'#1a2036',accent:'#22d3ee'});
+const PAL_PLAYER=mkPal({skin:'#f6cda2',hair:'#6b4a2c',coat:'#f1f4fb',shirt:'#26c6d6',pants:'#3a4470',boot:'#272036',accent:'#26c6d6'});
 const NPC_PALS={
  profe:   mkPal({skin:'#ecc09a',hair:'#cfd4e8',coat:'#e6def4',shirt:'#a78bfa',pants:'#4a3f73',accent:'#a78bfa'}),
  abuela:  mkPal({skin:'#eebfa0',hair:'#e6e8f0',coat:'#c8718f',shirt:'#9c5277',pants:'#6e4458',accent:'#f0a8c4'}),
@@ -272,37 +272,50 @@ const NPC_PALS={
  viejo:   mkPal({skin:'#e0a87a',hair:'#d8d8d8',coat:'#7a6a4a',shirt:'#5e523a',pants:'#4a4232',accent:'#cbd5e1'}),
 };
 
-/* matrices del muñeco — 11×14, '.'=transparente, espejo para 'right' */
-const CHAR={
-down:[[
-'...OOOOO...','..OHHHHHO..','.OHHHHHHHO.','.OHFFFFFHO.','.OFFFFFFFO.',
-'.OFEFFFEFO.','.OFFFFFFFO.','..OfFFFfO..','.OCCCCCCCO.','OCCCSSSCCCO',
-'OCcCSSScCcO','.OCcSSScCO.','..PPP.PPP..','..BB...BB..',
-],[
-'...OOOOO...','..OHHHHHO..','.OHHHHHHHO.','.OHFFFFFHO.','.OFFFFFFFO.',
-'.OFEFFFEFO.','.OFFFFFFFO.','..OfFFFfO..','.OCCCCCCCO.','OCCCSSSCCCO',
-'OCcCSSScCcO','.OCcSSScCO.','..PPP.PPP..','.BB.....BB.',
-]],
-up:[[
-'...OOOOO...','..OHHHHHO..','.OHHHHHHHO.','.OHHHHHHHO.','.OHHHHHHHO.',
-'.OHHHHHHHO.','.OHHHHHHHO.','..OHHHHHO..','.OCCCCCCCO.','OCCCCCCCCCO',
-'OCcCCCCCcCO','.OCcCCCcCO.','..PPP.PPP..','..BB...BB..',
-],[
-'...OOOOO...','..OHHHHHO..','.OHHHHHHHO.','.OHHHHHHHO.','.OHHHHHHHO.',
-'.OHHHHHHHO.','.OHHHHHHHO.','..OHHHHHO..','.OCCCCCCCO.','OCCCCCCCCCO',
-'OCcCCCCCcCO','.OCcCCCcCO.','..PPP.PPP..','.BB.....BB.',
-]],
-left:[[
-'..OOOOO....','.OHHHHHO...','OHHHHHHHO..','OHFFFFHO...','OHFFFFFO...',
-'OEFFFFFO...','OFFFFFFO...','.OfFFFfO...','.OCCCCCO...','OCCSCCCO...',
-'OCcSCCcO...','.OCSCCcO...','..PPPP.....','..BBBB.....',
-],[
-'..OOOOO....','.OHHHHHO...','OHHHHHHHO..','OHFFFFHO...','OHFFFFFO...',
-'OEFFFFFO...','OFFFFFFO...','.OfFFFfO...','.OCCCCCO...','OCCSCCCO...',
-'OCcSCCcO...','.OCSCCcO...','..PP.PP....','.BB..BB....',
-]],
-};
-CHAR.right=CHAR.left;
+/* MUÑECO chibi dibujado por bloques (14×20 art); el contorno se añade
+   automáticamente en charCanvas. 'right' = 'left' espejado (FL). */
+function drawCharFills(g,pal,dir,fr){
+  const H=pal.H,Hs=pal.h,Hl=shade(pal.H,1.25),F=pal.F,Fs=pal.f,C=pal.C,Cs=pal.c,Cl=shade(pal.C,1.08),
+        S=pal.S,Ss=pal.s,P=pal.P,Ps=pal.p,B=pal.B||'#241a30';
+  const E='#243049',Wt='#ffffff',blush='#ec9c98';
+  const FL=dir==='right', prof=FL||dir==='left', up=dir==='up', down=dir==='down';
+  const b=(ax,ay,w,h,c)=>{g.fillStyle=c; g.fillRect((FL?14-ax-w:ax)+1, ay+1, w, h);};
+  const st=fr&1;
+  /* piernas + botas (con animación de paso) */
+  if(prof){ const a=st?1:0,k=st?0:1;
+    b(7,16,3,2+k,P); b(7,16,1,2,Ps); b(7,18+k,3,1,B);
+    b(4,16,3,2+a,P); b(4,16,1,2,Ps); b(4,18+a,3,1,B);
+  }else{ const dl=st?1:0,dr=st?0:1;
+    b(4,15,2,3+dl,P); b(4,15,1,3,Ps); b(4,18+dl,2,1,B);
+    b(8,15,2,3+dr,P); b(8,15,1,3,Ps); b(8,18+dr,2,1,B); }
+  /* cuerpo (bata de laboratorio) */
+  if(prof){
+    b(4,9,6,7,C); b(4,9,1,7,Cs); b(9,9,1,7,Cs); b(5,9,1,7,Cl); b(4,15,6,1,Cs);
+    b(5,9,2,2,S);
+    const sw=st?1:0; b(4,10+sw,2,4,C); b(4,10+sw,1,4,Cs); b(4,13+sw,2,1,F);   // brazo+mano
+  }else{
+    b(3,9,8,7,C); b(3,9,1,7,Cs); b(10,9,1,7,Cs); b(3,9,1,1,Cl); b(3,15,8,1,Cs);
+    if(down){ b(6,9,2,3,S); b(6,9,2,1,Ss); } else { b(4,9,6,1,Cs); }
+    b(2,9,1,5,C); b(2,9,1,5,Cs); b(11,9,1,5,C); b(11,9,1,5,Cs);               // brazos
+    b(2,12+(st?1:0),1,1,F); b(11,12+(st?0:1),1,1,F);                          // manos (alternan)
+  }
+  /* cabeza */
+  if(down){
+    b(3,0,8,2,H); b(2,1,10,2,H); b(2,3,2,4,H); b(10,3,2,4,H); b(3,3,8,1,H);
+    b(3,0,6,1,Hl); b(3,2,2,1,Hs); b(9,2,2,1,Hs);
+    b(4,3,6,6,F); b(3,4,1,3,F); b(10,4,1,3,F); b(4,9,6,1,Fs);
+    b(4,4,2,2,E); b(8,4,2,2,E); b(4,4,1,1,Wt); b(8,4,1,1,Wt);
+    b(3,6,1,1,blush); b(10,6,1,1,blush); b(6,7,2,1,Fs);
+  }else if(up){
+    b(3,0,8,2,H); b(2,1,10,2,H); b(2,3,2,5,H); b(10,3,2,5,H); b(3,3,8,5,H);
+    b(3,0,6,1,Hl); b(3,7,8,1,Hs);
+  }else{
+    b(3,0,8,2,H); b(2,1,8,2,H); b(7,3,4,5,H); b(2,3,2,1,H);
+    b(3,0,5,1,Hl);
+    b(3,3,5,5,F); b(2,4,1,3,F); b(3,8,4,1,Fs);
+    b(3,4,2,2,E); b(3,4,1,1,Wt); b(3,6,1,1,blush); b(3,7,2,1,Fs);
+  }
+}
 
 /* ════════════════════════════════
    CACHÉ DE SPRITES (lienzos fuera de pantalla al tamaño de baldosa)
@@ -322,14 +335,22 @@ function q(ctx,x,y,w,h,col){const x0=Math.round(x*_U),y0=Math.round(y*_U),x1=Mat
 
 /* —— MUÑECO —— */
 function charCanvas(palKey,pal,dir,frame){
-  const key=palKey+'|'+dir+'|'+frame+'|'+_sprTs;
+  const key=palKey+'|'+dir+'|'+(frame&1)+'|'+_sprTs;
   let c=_charC.get(key); if(c)return c;
-  const W=11,H=14, mat=(CHAR[dir]||CHAR.down)[frame%2], flip=dir==='right';
-  c=_cv(W*_PX,H*_PX); const x=c.getContext('2d');
-  for(let r=0;r<H;r++){const line=mat[r]||''; for(let col=0;col<W;col++){
-    const ch=line[flip?W-1-col:col]||'.'; if(ch==='.')continue;
-    _b(x,col,r,1,1,pal[ch]||'#fff');
-  }}
+  const MW=16,MH=22;                                   // 14×20 art + 1px de margen para el contorno
+  const tiny=_cv(MW,MH), g=tiny.getContext('2d');
+  drawCharFills(g,pal,dir,frame);
+  /* contorno automático: cada píxel transparente pegado a uno opaco → color O */
+  const img=g.getImageData(0,0,MW,MH), d=img.data, O=_hex(pal.O);
+  const A=(x,y)=> x>=0&&y>=0&&x<MW&&y<MH&&d[(y*MW+x)*4+3]>0;
+  const out=[];
+  for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){ if(d[(y*MW+x)*4+3]>0)continue;
+    if(A(x-1,y)||A(x+1,y)||A(x,y-1)||A(x,y+1)) out.push((y*MW+x)*4); }
+  for(const i of out){ d[i]=O[0]; d[i+1]=O[1]; d[i+2]=O[2]; d[i+3]=255; }
+  g.putImageData(img,0,0);
+  /* escalado nítido a tamaño de pantalla */
+  c=_cv(MW*_U,MH*_U); const f=c.getContext('2d'); f.imageSmoothingEnabled=false;
+  f.drawImage(tiny,0,0,MW,MH,0,0,MW*_U,MH*_U);
   _charC.set(key,c); return c;
 }
 
